@@ -217,17 +217,55 @@ class DocumentPipeline:
     def _load_phase(self, nodes: List[Dict], relationships: List[Dict], batch_size: int) -> Dict[str, Any]:
         """加载阶段"""
         try:
-            load_result = self.loader.load_batch(nodes, relationships, batch_size)
+            nodes_created = 0
+            relationships_created = 0
 
-            if load_result.success:
-                self.stats['nodes_created'] = load_result.nodes_created
-                self.stats['relationships_created'] = load_result.relationships_created
+            # 按标签分组节点
+            nodes_by_label = {}
+            for node in nodes:
+                label = node.get('label', 'RegulatoryDocument')
+                if label not in nodes_by_label:
+                    nodes_by_label[label] = []
+                nodes_by_label[label].append(node.get('properties', {}))
+
+            # 加载节点
+            for label, records in nodes_by_label.items():
+                if label == 'RegulatoryDocument':
+                    count = self.loader.load_nodes(
+                        label=label,
+                        records=records,
+                        merge_key='document_id'
+                    )
+                    nodes_created += count
+                else:
+                    count = self.loader.load_nodes(
+                        label=label,
+                        records=records,
+                        merge_key='primary_id'
+                    )
+                    nodes_created += count
+
+            # 加载关系
+            if relationships:
+                # 按类型分组关系
+                rels_by_type = {}
+                for rel in relationships:
+                    rel_type = rel.get('relationship_type', 'REFERENCES')
+                    if rel_type not in rels_by_type:
+                        rels_by_type[rel_type] = []
+                    rels_by_type[rel_type].append(rel)
+
+                for rel_type, rels in rels_by_type.items():
+                    count = self.loader.load_relationships(rels)
+                    relationships_created += count
+
+            self.stats['nodes_created'] = nodes_created
+            self.stats['relationships_created'] = relationships_created
 
             return {
-                'success': load_result.success,
-                'nodes_created': load_result.nodes_created if load_result.success else 0,
-                'relationships_created': load_result.relationships_created if load_result.success else 0,
-                'error': load_result.error if not load_result.success else None
+                'success': True,
+                'nodes_created': nodes_created,
+                'relationships_created': relationships_created
             }
         except Exception as e:
             logger.error(f"加载阶段失败: {e}")

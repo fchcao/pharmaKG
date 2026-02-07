@@ -42,7 +42,7 @@ class ETLConfig(BaseModel):
         env="NEO4J_USER"
     )
     neo4j_password: str = Field(
-        default="password",
+        default="pharmaKG2024!",
         description="Neo4j 密码",
         env="NEO4J_PASSWORD"
     )
