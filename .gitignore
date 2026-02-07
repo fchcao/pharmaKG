@@ -1,0 +1,57 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+*/.ipynb_checkpoints/*
+
+# Neo4j runtime and data
+neo4j/current/data/
+neo4j/current/logs/
+neo4j/current/run/
+neo4j/*/data/
+neo4j/*/logs/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.log
+*.bak
+
+# AutoDL specific (runtime data only, not configs)
+autodl-tmp/pj-pharmaKG/neo4j/current/data/*
+autodl-tmp/pj-pharmaKG/neo4j/current/logs/*

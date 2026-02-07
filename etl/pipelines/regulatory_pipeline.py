@@ -13,6 +13,7 @@ from datetime import datetime
 from pathlib import Path
 
 from ..config import get_etl_config
+from ..loaders import Neo4jBatchLoader
 
 
 logger = logging.getLogger(__name__)

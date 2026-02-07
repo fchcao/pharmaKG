@@ -6,7 +6,29 @@
 
 ### 2026-02-07
 
+#### 基础设施 / Infrastructure
+- **新增**: Neo4j 5.26.21 安装 (AutoDL 环境)
+  - 使用 RPM 包安装，版本: neo4j-community-5.26.21-1.noarch
+  - 安装 OpenJDK 17 作为运行环境
+  - 配置初始认证: neo4j/pharmaKG2024!
+  - 服务运行在 HTTP 7474, Bolt 7687
+
 #### 文档 / Documentation
+- **新增**: `docs/NEO4J_INSTALL_AUTODL.md` - Neo4j 安装详细指南
+  - 多种安装方法 (JupyterLab 上传, scp, 手动解压)
+  - 故障排除指南
+  - 常用命令参考
+
+- **更新**: `scripts/install_neo4j.sh` - Neo4j 安装脚本
+  - 改进的错误处理和用户提示
+  - 集成配置文件复制
+  - Java 环境检查
+
+- **新增**: `scripts/run_etl_test.py` - ETL 测试运行器
+  - 环境检查功能
+  - 支持单管道或全部管道测试
+  - 数据导入验证功能
+
 - **新增**: `CLAUDE.md` - 为 Claude Code 提供项目指导文档
   - 项目概述和开发命令
   - 架构概览和目录结构
@@ -25,6 +47,18 @@
   - Python API 连接部分添加环境激活和依赖检查
   - 开发工作流部分添加环境激活说明
   - GPU 加速部分添加环境激活步骤
+
+#### ETL 系统 / ETL System
+- **修复**: ETL 模块导入错误
+  - `etl/extractors/base.py`: 添加 `ExtractionResult` 数据类
+  - `etl/extractors/__init__.py`: 修正 `ExtractionStatus` → `ExtractorStatus`
+  - `etl/transformers/compound.py`: 添加 `Any` 类型导入
+  - `etl/pipelines/regulatory_pipeline.py`: 添加 `Neo4jBatchLoader` 导入
+  - `etl/transformers/target_disease.py`: 添加 `TransformationStatus` 导入
+
+- **测试**: ETL 管道测试运行成功
+  - R&D 管道连接测试通过
+  - 数据抽取框架正常工作
 
 ---
 

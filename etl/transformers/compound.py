@@ -8,7 +8,7 @@
 
 import logging
 import re
-from typing import Dict, Optional, List
+from typing import Dict, Optional, List, Any
 from .base import BaseTransformer, TransformationResult, FieldMapping
 
 

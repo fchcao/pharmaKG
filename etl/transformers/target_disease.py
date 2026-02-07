@@ -9,7 +9,7 @@
 import logging
 import re
 from typing import Dict, Optional, List
-from .base import BaseTransformer, TransformationResult, FieldMapping
+from .base import BaseTransformer, TransformationResult, TransformationStatus, FieldMapping
 
 
 logger = logging.getLogger(__name__)

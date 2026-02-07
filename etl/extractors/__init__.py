@@ -11,7 +11,7 @@ from .base import (
     PaginatedExtractor,
     FileBasedExtractor,
     ExtractionResult,
-    ExtractionStatus
+    ExtractorStatus
 )
 
 from .chembl import ChEMBLExtractor
@@ -26,7 +26,7 @@ __all__ = [
     "PaginatedExtractor",
     "FileBasedExtractor",
     "ExtractionResult",
-    "ExtractionStatus",
+    "ExtractorStatus",
 
     # Data Source Extractors
     "ChEMBLExtractor",

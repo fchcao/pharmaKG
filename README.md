@@ -1,8 +1,8 @@
 # 制药行业知识图谱 (PharmaKG)
 
-**项目版本**: v1.0
-**最后更新**: 2025-02-06
-**项目状态**: 技术实施阶段 (Phase 1)
+**项目版本**: v1.1
+**最后更新**: 2026-02-07
+**项目状态**: 技术实施阶段 (Phase 1 - 基础设施完成)
 
 ---
 
@@ -35,6 +35,7 @@
 |-----|------|
 | 快速开始指南 | [deploy/QUICKSTART_AUTODL.md](deploy/QUICKSTART_AUTODL.md) |
 | 完整部署指南 | [deploy/README_AUTODL.md](deploy/README_AUTODL.md) |
+| Neo4j 安装指南 | [docs/NEO4J_INSTALL_AUTODL.md](docs/NEO4J_INSTALL_AUTODL.md) ✅ 新增 |
 | 部署脚本 | `./deploy/deploy-autodl.sh` |
 
 **特点**:
@@ -42,6 +43,7 @@
 - ✅ 针对 AutoDL 容器环境优化
 - ✅ 一键部署脚本
 - ✅ 集成 JupyterLab 开发
+- ✅ Neo4j 5.26.21 + Java 17 已安装 ✅ 新增
 
 #### 方式 B: Docker 部署
 
@@ -74,6 +76,37 @@
 **认证信息**:
 - 用户名: neo4j
 - 密码: pharmaKG2024!
+
+---
+
+## 部署环境状态
+
+**AutoDL 环境 (当前运行环境)**:
+
+| 组件 | 状态 | 版本 | 说明 |
+|------|------|------|------|
+| Neo4j | ✅ 运行中 | 5.26.21 | RPM 包安装 |
+| Java | ✅ 已安装 | OpenJDK 17.0.18 | 系统级安装 |
+| Python | ✅ 已配置 | 3.11.14 | conda 环境 `pharmakg-api` |
+| Neo4j Python Driver | ✅ 已安装 | 5.14.1 | ETL 管道依赖 |
+
+**服务端口**:
+- HTTP: 7474 (Neo4j Browser)
+- Bolt: 7687 (Cypher/Python)
+
+**相关命令**:
+```bash
+# 启动 Neo4j
+cd /root/autodl-tmp/pj-pharmaKG/neo4j/current
+export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+./bin/neo4j start
+
+# 运行 ETL 测试
+conda activate pharmakg-api
+python3 scripts/run_etl_test.py --all -l 10 -v
+```
+
+详细安装指南: [docs/NEO4J_INSTALL_AUTODL.md](docs/NEO4J_INSTALL_AUTODL.md)
 
 ---
 
@@ -148,6 +181,9 @@ pj-pharmaKG/
 | 文档 | 描述 |
 |-----|------|
 | [部署README](deploy/README.md) | Docker部署，故障排除，维护指南 |
+| [Neo4j 安装指南](docs/NEO4J_INSTALL_AUTODL.md) | AutoDL 环境下 Neo4j 安装（RPM/Tarball） ✅ 新增 |
+| [Git 工作流指南](docs/GIT_WORKFLOW.md) | Git 提交规范，分支策略 ✅ 新增 |
+| [变更日志](CHANGELOG.md) | 项目变更记录 ✅ 新增 |
 
 ---
 

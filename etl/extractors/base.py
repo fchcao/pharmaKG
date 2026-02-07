@@ -52,6 +52,20 @@ class ExtractionMetrics:
         if self.errors is None:
             self.errors = []
 
+
+@dataclass
+class ExtractionResult:
+    """抽取结果"""
+    source_name: str
+    success: bool
+    records: List[Dict[str, Any]] = None
+    error: Optional[str] = None
+    metrics: Optional[ExtractionMetrics] = None
+
+    def __post_init__(self):
+        if self.records is None:
+            self.records = []
+
     @property
     def duration(self) -> Optional[float]:
         """获取抽取持续时间（秒）"""
