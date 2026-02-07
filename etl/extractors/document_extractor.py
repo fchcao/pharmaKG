@@ -13,7 +13,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 import mimetypes
 
-from .base import BaseExtractor, ExtractionResult, ExtractorStatus, ExtractionMetrics
+from .base import ExtractionResult, ExtractionMetrics
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +32,7 @@ class DocumentMetadata:
     accessed_time: Optional[datetime] = None
 
 
-class DocumentExtractor(BaseExtractor):
+class DocumentExtractor:
     """
     文档提取器
 
@@ -51,7 +51,6 @@ class DocumentExtractor(BaseExtractor):
                 - extract_content: 是否提取内容
                 - content_max_length: 内容最大长度
         """
-        super().__init__(config)
         self.base_path = config.get('base_path', '') if config else ''
         self.supported_formats = config.get('supported_formats', [
             '.pdf', '.docx', '.doc', '.txt'
@@ -79,19 +78,19 @@ class DocumentExtractor(BaseExtractor):
                 return ExtractionResult(
                     source_name=source,
                     success=False,
-                    error=f"路径不存在: {source}",
-                    status=ExtractorStatus.FAILED
+                    error=f"路径不存在: {source}"
                 )
 
             records = []
-            metrics = ExtractionMetrics()
+            metrics = ExtractionMetrics(source_name=source)
 
             if path.is_file():
                 # 处理单个文件
                 result = self._extract_file(path)
                 if result:
                     records.append(result)
-                    metrics.records_processed += 1
+                    metrics.total_records += 1
+                    metrics.successful_records += 1
             elif path.is_dir():
                 # 处理目录
                 recursive = kwargs.get('recursive', False)
@@ -101,14 +100,14 @@ class DocumentExtractor(BaseExtractor):
                     result = self._extract_file(file_path)
                     if result:
                         records.append(result)
-                        metrics.records_processed += 1
+                        metrics.total_records += 1
+                        metrics.successful_records += 1
 
             return ExtractionResult(
                 source_name=source,
                 success=True,
                 records=records,
-                metrics=metrics,
-                status=ExtractorStatus.COMPLETED
+                metrics=metrics
             )
 
         except Exception as e:
@@ -116,8 +115,7 @@ class DocumentExtractor(BaseExtractor):
             return ExtractionResult(
                 source_name=source,
                 success=False,
-                error=str(e),
-                status=ExtractorStatus.FAILED
+                error=str(e)
             )
 
     def _scan_directory(self, directory: Path, recursive: bool, pattern: str) -> List[Path]:

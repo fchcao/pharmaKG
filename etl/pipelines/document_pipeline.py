@@ -5,17 +5,17 @@
 import logging
 from typing import Dict, List, Optional, Any
 from pathlib import Path
+from datetime import datetime
 
 from ..extractors import DocumentExtractor
 from ..transformers import DocumentTransformer
 from ..loaders import Neo4jBatchLoader
 from ..config import get_etl_config
-from ..base import BasePipeline, PipelineResult, PipelineStatus
 
 logger = logging.getLogger(__name__)
 
 
-class DocumentPipeline(BasePipeline):
+class DocumentPipeline:
     """
     文档 ETL 管道
 
@@ -29,12 +29,11 @@ class DocumentPipeline(BasePipeline):
         Args:
             config: 配置字典
         """
-        super().__init__(config)
         self.name = "DocumentPipeline"
+        self.config = config or {}
 
         # 获取 ETL 配置
         etl_config = get_etl_config()
-        neo4j_config = etl_config.get('neo4j', {})
 
         # 初始化组件
         extractor_config = {
@@ -53,110 +52,186 @@ class DocumentPipeline(BasePipeline):
 
         self.extractor = DocumentExtractor(extractor_config)
         self.transformer = DocumentTransformer(transformer_config)
-        self.loader = Neo4jBatchLoader(neo4j_config)
+        self.loader = Neo4jBatchLoader(
+            uri=etl_config.neo4j_uri,
+            user=etl_config.neo4j_user,
+            password=etl_config.neo4j_password,
+            database=etl_config.neo4j_database,
+            batch_size=etl_config.batch_size,
+            timeout=etl_config.timeout,
+            max_retries=etl_config.max_retries,
+            dry_run=etl_config.dry_run
+        )
+
+        # 统计数据
+        self.stats = {
+            "files_processed": 0,
+            "files_failed": 0,
+            "nodes_created": 0,
+            "relationships_created": 0
+        }
 
     def run(
         self,
         source: str,
-        **kwargs
-    ) -> PipelineResult:
+        recursive: bool = False,
+        pattern: str = '*',
+        load_to_neo4j: bool = True,
+        dry_run: bool = False,
+        batch_size: int = 100
+    ) -> Dict[str, Any]:
         """
         运行文档管道
 
         Args:
             source: 文件或目录路径
-            **kwargs: 额外参数
-                - recursive: 是否递归处理目录
-                - pattern: 文件名模式过滤
-                - batch_size: 批次大小
-                - load_data: 是否加载数据到 Neo4j
+            recursive: 是否递归处理目录
+            pattern: 文件名模式过滤
+            load_to_neo4j: 是否加载数据到 Neo4j
+            dry_run: 试运行模式
+            batch_size: 批次大小
 
         Returns:
-            PipelineResult: 管道运行结果
+            执行结果统计
         """
+        logger.info("=" * 60)
+        logger.info("开始运行文档 ETL 管道")
+        logger.info("=" * 60)
+        logger.info(f"数据源: {source}")
+        logger.info(f"递归处理: {recursive}")
+        logger.info(f"文件模式: {pattern}")
+
+        start_time = datetime.now()
+
         try:
-            logger.info(f"开始运行文档管道: {source}")
-            self.status = PipelineStatus.RUNNING
+            # 1. 抽取阶段
+            logger.info("\n[1/3] 抽取阶段")
+            extracted_data = self._extract_phase(source, recursive, pattern)
 
-            # 验证数据源
-            if not self.extractor.validate_source(source):
-                raise ValueError(f"无效的数据源: {source}")
+            if not extracted_data.get('success'):
+                raise RuntimeError(f"文档抽取失败: {extracted_data.get('error')}")
 
-            # 1. 提取
-            logger.info("开始提取文档...")
-            recursive = kwargs.get('recursive', False)
-            pattern = kwargs.get('pattern', '*')
-            extraction_result = self.extractor.extract(source, recursive=recursive, pattern=pattern)
+            self.stats['files_processed'] = extracted_data.get('records_processed', 0)
 
-            if not extraction_result.success:
-                raise RuntimeError(f"文档提取失败: {extraction_result.error}")
+            # 2. 转换阶段
+            logger.info("\n[2/3] 转换阶段")
+            transformed_data = self._transform_phase(extracted_data.get('records', []))
 
-            logger.info(f"提取完成，共 {extraction_result.metrics.records_processed} 个文档")
+            if not transformed_data.get('success'):
+                raise RuntimeError(f"数据转换失败: {transformed_data.get('error')}")
 
-            # 2. 转换
-            logger.info("开始转换数据...")
-            transformation_result = self.transformer.transform_batch(extraction_result.records)
-
-            if not transformation_result.success:
-                raise RuntimeError(f"数据转换失败: {transformation_result.error}")
-
-            logger.info(f"转换完成，生成 {len(transformation_result.nodes)} 个节点")
-
-            # 3. 加载
-            load_data = kwargs.get('load_data', True)
-            load_result = None
-            if load_data:
-                logger.info("开始加载数据到 Neo4j...")
-                batch_size = kwargs.get('batch_size', 100)
-                load_result = self.loader.load_batch(
-                    transformation_result.nodes,
-                    transformation_result.relationships,
-                    batch_size=batch_size
+            # 3. 加载阶段
+            load_results = {"dry_run": dry_run}
+            if load_to_neo4j and not dry_run:
+                logger.info("\n[3/3] 加载阶段")
+                load_results = self._load_phase(
+                    transformed_data.get('nodes', []),
+                    transformed_data.get('relationships', []),
+                    batch_size
                 )
+            else:
+                logger.info("\n[3/3] 加载阶段 (跳过)")
 
-                if not load_result.success:
-                    raise RuntimeError(f"数据加载失败: {load_result.error}")
+            end_time = datetime.now()
+            duration = (end_time - start_time).total_seconds()
 
-                logger.info(f"加载完成，创建 {load_result.nodes_created} 个节点，{load_result.relationships_created} 个关系")
+            result = {
+                "pipeline": "DocumentPipeline",
+                "status": "success",
+                "duration_seconds": duration,
+                "source": source,
+                "extraction": {
+                    "files_processed": self.stats["files_processed"],
+                    "files_failed": self.stats.get("files_failed", 0)
+                },
+                "transformation": {
+                    "nodes_generated": len(transformed_data.get('nodes', [])),
+                    "relationships_generated": len(transformed_data.get('relationships', []))
+                },
+                "loading": load_results
+            }
 
-            # 构建结果
-            result = PipelineResult(
-                success=True,
-                status=PipelineStatus.COMPLETED,
-                pipeline_name=self.name,
-                source=source,
-                metadata={
-                    'extraction': {
-                        'records_processed': extraction_result.metrics.records_processed,
-                        'duration_seconds': extraction_result.metrics.duration_seconds
-                    },
-                    'transformation': {
-                        'nodes_created': len(transformation_result.nodes),
-                        'relationships_created': len(transformation_result.relationships),
-                        'failed_records': transformation_result.metadata.get('failed_records', []) if transformation_result.metadata else []
-                    },
-                    'loading': {
-                        'nodes_created': load_result.nodes_created if load_result else 0,
-                        'relationships_created': load_result.relationships_created if load_result else 0,
-                        'duration_seconds': load_result.duration_seconds if load_result else 0
-                    } if load_result else None
-                }
-            )
+            logger.info("\n" + "=" * 60)
+            logger.info(f"文档 ETL 管道完成，耗时 {duration:.2f} 秒")
+            logger.info(f"处理文件: {self.stats['files_processed']}")
+            logger.info(f"创建节点: {load_results.get('nodes_created', 0)}")
+            logger.info(f"创建关系: {load_results.get('relationships_created', 0)}")
+            logger.info("=" * 60)
 
-            self.status = PipelineStatus.COMPLETED
-            logger.info("文档管道运行完成")
             return result
 
         except Exception as e:
-            logger.error(f"文档管道运行失败: {e}")
-            self.status = PipelineStatus.FAILED
-            return PipelineResult(
-                success=False,
-                status=PipelineStatus.FAILED,
-                pipeline_name=self.name,
-                source=source,
-                error=str(e)
-            )
+            logger.error(f"文档 ETL 管道运行失败: {e}", exc_info=True)
+            return {
+                "pipeline": "DocumentPipeline",
+                "status": "failed",
+                "error": str(e),
+                "extraction": {
+                    "files_processed": self.stats.get("files_processed", 0)
+                }
+            }
+
+    def _extract_phase(self, source: str, recursive: bool, pattern: str) -> Dict[str, Any]:
+        """抽取阶段"""
+        try:
+            extraction_result = self.extractor.extract(source, recursive=recursive, pattern=pattern)
+
+            if not extraction_result.success:
+                return {
+                    'success': False,
+                    'error': extraction_result.error,
+                    'records_processed': 0
+                }
+
+            return {
+                'success': True,
+                'records': extraction_result.records,
+                'records_processed': extraction_result.metrics.total_records if extraction_result.metrics else 0
+            }
+        except Exception as e:
+            logger.error(f"抽取阶段失败: {e}")
+            return {'success': False, 'error': str(e), 'records_processed': 0}
+
+    def _transform_phase(self, records: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """转换阶段"""
+        try:
+            transformation_result = self.transformer.transform_batch(records)
+
+            if not transformation_result.success:
+                return {
+                    'success': False,
+                    'error': transformation_result.error,
+                    'nodes': [],
+                    'relationships': []
+                }
+
+            return {
+                'success': True,
+                'nodes': transformation_result.nodes,
+                'relationships': transformation_result.relationships
+            }
+        except Exception as e:
+            logger.error(f"转换阶段失败: {e}")
+            return {'success': False, 'error': str(e), 'nodes': [], 'relationships': []}
+
+    def _load_phase(self, nodes: List[Dict], relationships: List[Dict], batch_size: int) -> Dict[str, Any]:
+        """加载阶段"""
+        try:
+            load_result = self.loader.load_batch(nodes, relationships, batch_size)
+
+            if load_result.success:
+                self.stats['nodes_created'] = load_result.nodes_created
+                self.stats['relationships_created'] = load_result.relationships_created
+
+            return {
+                'success': load_result.success,
+                'nodes_created': load_result.nodes_created if load_result.success else 0,
+                'relationships_created': load_result.relationships_created if load_result.success else 0,
+                'error': load_result.error if not load_result.success else None
+            }
+        except Exception as e:
+            logger.error(f"加载阶段失败: {e}")
+            return {'success': False, 'error': str(e), 'nodes_created': 0, 'relationships_created': 0}
 
     def validate_source(self, source: str) -> bool:
         """
@@ -180,9 +255,10 @@ def run_document_pipeline(
     recursive: bool = False,
     pattern: str = '*',
     load_data: bool = True,
+    dry_run: bool = False,
     batch_size: int = 100,
     **config
-) -> PipelineResult:
+) -> Dict[str, Any]:
     """
     运行文档管道的便捷函数
 
@@ -191,17 +267,19 @@ def run_document_pipeline(
         recursive: 是否递归处理目录
         pattern: 文件名模式过滤
         load_data: 是否加载数据到 Neo4j
+        dry_run: 是否试运行
         batch_size: 批次大小
         **config: 额外配置
 
     Returns:
-        PipelineResult: 管道运行结果
+        执行结果统计
     """
     pipeline = DocumentPipeline(config)
     return pipeline.run(
         source,
         recursive=recursive,
         pattern=pattern,
-        load_data=load_data,
+        load_to_neo4j=load_data,
+        dry_run=dry_run,
         batch_size=batch_size
     )
