@@ -55,3 +55,18 @@ Thumbs.db
 # AutoDL specific (runtime data only, not configs)
 autodl-tmp/pj-pharmaKG/neo4j/current/data/*
 autodl-tmp/pj-pharmaKG/neo4j/current/logs/*
+
+# Data directories
+data/sources/
+data/processed/
+data/validated/
+data/import/
+data/*.json
+data/*.md
+
+# Neo4j runtime (all directories)
+neo4j/
+
+# ETL cache
+etl/__pycache__/
+*.pyc
