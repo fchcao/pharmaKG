@@ -9,6 +9,7 @@ CREATE CONSTRAINT trial_id IF NOT EXISTS FOR (ct:ClinicalTrial) REQUIRE ct.trial
 CREATE CONSTRAINT subject_id IF NOT EXISTS FOR (s:Subject) REQUIRE s.subject_id IS UNIQUE;
 CREATE CONSTRAINT supplier_id IF NOT EXISTS FOR (s:Supplier) REQUIRE s.supplier_id IS UNIQUE;
 CREATE CONSTRAINT submission_id IF NOT EXISTS FOR (rs:RegulatorySubmission) REQUIRE rs.submission_id IS UNIQUE;
+CREATE CONSTRAINT document_id IF NOT EXISTS FOR (d:RegulatoryDocument) REQUIRE d.document_id IS UNIQUE;
 
 // 创建节点存在性约束（用于关系）
 CREATE CONSTRAINT compound_exists IF NOT EXISTS FOR () REQUIRE primary_id IS NODE KEY;
@@ -88,6 +89,14 @@ CREATE INDEX submission_type IF NOT EXISTS FOR (rs:RegulatorySubmission) ON (rs.
 CREATE INDEX submission_status IF NOT EXISTS FOR (rs:RegulatorySubmission) ON (rs.submission_status);
 CREATE INDEX submission_date IF NOT EXISTS FOR (rs:RegulatorySubmission) ON (rs.submission_date);
 
+// RegulatoryDocument 索引
+CREATE INDEX document_title IF NOT EXISTS FOR (d:RegulatoryDocument) ON (d.document_title);
+CREATE INDEX document_type IF NOT EXISTS FOR (d:RegulatoryDocument) ON (d.document_type);
+CREATE INDEX document_format IF NOT EXISTS FOR (d:RegulatoryDocument) ON (d.file_format);
+CREATE INDEX document_status IF NOT EXISTS FOR (d:RegulatoryDocument) ON (d.document_status);
+CREATE INDEX document_publication IF NOT EXISTS FOR (d:RegulatoryDocument) ON (d.publication_date);
+CREATE INDEX document_agency IF NOT EXISTS FOR (d:RegulatoryDocument) ON (d.source_agency);
+
 // SafetyEvent 索引
 CREATE INDEX safety_date IF NOT EXISTS FOR (se:SafetyEvent) ON (se.event_date);
 CREATE INDEX safety_type IF NOT EXISTS FOR (se:SafetyEvent) ON (se.event_type);
@@ -127,6 +136,13 @@ CALL db.index.fulltext.createNodeIndex(
   'trialTitles',
   ['ClinicalTrial'],
   ['trial_name', 'protocol_id']
+);
+
+// RegulatoryDocument 全文搜索
+CALL db.index.fulltext.createNodeIndex(
+  'documentContent',
+  ['RegulatoryDocument'],
+  ['document_title', 'content_snippet', 'keywords']
 );
 
 //===========================================================

@@ -10,6 +10,7 @@ from .rd_pipeline import RDPipeline, run_rd_pipeline
 from .clinical_pipeline import ClinicalPipeline, run_clinical_pipeline
 from .sc_pipeline import SupplyChainPipeline, run_supply_chain_pipeline
 from .regulatory_pipeline import RegulatoryPipeline, run_regulatory_pipeline
+from .document_pipeline import DocumentPipeline, run_document_pipeline
 
 
 __all__ = [
@@ -20,7 +21,9 @@ __all__ = [
     "SupplyChainPipeline",
     "run_supply_chain_pipeline",
     "RegulatoryPipeline",
-    "run_regulatory_pipeline"
+    "run_regulatory_pipeline",
+    "DocumentPipeline",
+    "run_document_pipeline"
 ]
 
 
@@ -29,7 +32,8 @@ PIPELINES = {
     "rd": ("R&D Domain", RDPipeline, run_rd_pipeline),
     "clinical": ("Clinical Domain", ClinicalPipeline, run_clinical_pipeline),
     "sc": ("Supply Chain Domain", SupplyChainPipeline, run_supply_chain_pipeline),
-    "regulatory": ("Regulatory Domain", RegulatoryPipeline, run_regulatory_pipeline)
+    "regulatory": ("Regulatory Domain", RegulatoryPipeline, run_regulatory_pipeline),
+    "document": ("Document Import", DocumentPipeline, run_document_pipeline)
 }
 
 

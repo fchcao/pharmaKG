@@ -18,6 +18,7 @@ from .chembl import ChEMBLExtractor
 from .clinicaltrials import ClinicalTrialsGovExtractor
 from .drugbank import DrugBankExtractor
 from .fda import FDAExtractors
+from .document_extractor import DocumentExtractor
 
 
 __all__ = [
@@ -32,5 +33,8 @@ __all__ = [
     "ChEMBLExtractor",
     "ClinicalTrialsGovExtractor",
     "DrugBankExtractor",
-    "FDAExtractors"
+    "FDAExtractors",
+
+    # Document Extractor
+    "DocumentExtractor"
 ]

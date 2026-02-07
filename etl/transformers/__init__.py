@@ -30,6 +30,8 @@ from .trial import (
     transform_trials
 )
 
+from .document_transformer import DocumentTransformer
+
 
 __all__ = [
     # Base
@@ -50,5 +52,8 @@ __all__ = [
 
     # Clinical Trial
     "ClinicalTrialTransformer",
-    "transform_trials"
+    "transform_trials",
+
+    # Document
+    "DocumentTransformer"
 ]

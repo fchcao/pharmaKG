@@ -4,6 +4,64 @@
 
 ## [未发布 / Unreleased]
 
+### 2026-02-07 (续)
+
+#### 本体 / Ontology
+- **新增**: RegulatoryDocument 实体到监管合规领域本体
+  - 文件: `ontologies/pharma-sc-regulatory-core.ttl`
+  - 20+ 属性: document_id, document_title, file_path, content_snippet, etc.
+  - 10+ 关系: governs, references, cites, applies_to_manufacturer, etc.
+  - 文档类型枚举: Guidance, Policy, Regulation, Guideline, Standard, Notice, etc.
+  - 文档状态枚举: Draft, Public_Review, Final, Revised, Superseded, Withdrawn
+  - SHACL 约束: RegulatoryDocumentShape
+
+#### 数据库 / Database
+- **更新**: Neo4j 约束和索引
+  - 文件: `deploy/scripts/init_constraints.cypher`
+  - 新增约束: document_id (RegulatoryDocument)
+  - 新增索引: document_title, document_type, file_format, document_status, publication_date, source_agency
+  - 全文搜索索引: documentContent (需 APOC 插件)
+
+#### ETL 系统 / ETL System
+- **新增**: 文档 ETL 管道
+  - `etl/extractors/document_extractor.py`: 文档提取器
+    - 支持 PDF、DOCX、DOC、TXT 格式
+    - 自动生成文档 ID 和校验和
+    - 内容提取和片段生成
+  - `etl/transformers/document_transformer.py`: 文档转换器
+    - 字段映射和数据转换
+    - 支持自定义配置
+  - `etl/pipelines/document_pipeline.py`: 文档导入管道
+    - 批量处理文件
+    - 与 Neo4j 集成
+  - 更新 `etl/extractors/__init__.py`: 导出 DocumentExtractor
+  - 更新 `etl/transformers/__init__.py`: 导出 DocumentTransformer
+  - 更新 `etl/pipelines/__init__.py`: 导出 DocumentPipeline
+
+#### 工具脚本 / Scripts
+- **新增**: `scripts/download_data_sources.py` - 外部数据源下载脚本
+  - 支持按领域下载: rd, clinical, sc, regulatory
+  - 支持批量下载 (--all)
+  - 集成网络加速 (network_turbo)
+  - 数据源:
+    - R&D: ChEMBL SQLite 数据
+    - Clinical: ClinicalTrials.gov XML 数据
+    - Supply Chain: FDA 药品短缺数据
+    - Regulatory: FDA 产品和应用数据
+
+#### ETL 系统 / ETL System (之前)
+- **修复**: ETL 模块导入错误
+  - `etl/extractors/base.py`: 添加 `ExtractionResult` 数据类
+  - `etl/extractors/__init__.py`: 修正 `ExtractionStatus` → `ExtractorStatus`
+  - `etl/transformers/compound.py`: 添加 `Any` 类型导入
+  - `etl/pipelines/regulatory_pipeline.py`: 添加 `Neo4jBatchLoader` 导入
+  - `etl/transformers/target_disease.py`: 添加 `TransformationStatus` 导入
+
+- **测试**: ETL 管道测试运行成功
+  - R&D 管道连接测试通过
+
+---
+
 ### 2026-02-07
 
 #### 基础设施 / Infrastructure
@@ -47,17 +105,6 @@
   - Python API 连接部分添加环境激活和依赖检查
   - 开发工作流部分添加环境激活说明
   - GPU 加速部分添加环境激活步骤
-
-#### ETL 系统 / ETL System
-- **修复**: ETL 模块导入错误
-  - `etl/extractors/base.py`: 添加 `ExtractionResult` 数据类
-  - `etl/extractors/__init__.py`: 修正 `ExtractionStatus` → `ExtractorStatus`
-  - `etl/transformers/compound.py`: 添加 `Any` 类型导入
-  - `etl/pipelines/regulatory_pipeline.py`: 添加 `Neo4jBatchLoader` 导入
-  - `etl/transformers/target_disease.py`: 添加 `TransformationStatus` 导入
-
-- **测试**: ETL 管道测试运行成功
-  - R&D 管道连接测试通过
   - 数据抽取框架正常工作
 
 ---

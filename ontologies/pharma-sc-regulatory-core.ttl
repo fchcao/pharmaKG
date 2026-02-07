@@ -1982,6 +1982,266 @@ regulatory:Condition_Surveillance a regulatory:ApprovalCondition ;
     rdfs:comment "上市后监测" .
 
 #===========================================================
+# 9. RegulatoryDocument (监管文档)
+#===========================================================
+
+regulatory:RegulatoryDocument a owl:Class ;
+    rdfs:label "Regulatory Document" ;
+    rdfs:subClassOf pharma:Entity ;
+    rdfs:comment "监管法规文档，包括指南、政策、法规、指导文件等" .
+
+regulatory:has_document_id a owl:DatatypeProperty , owl:FunctionalProperty ;
+    rdfs:label "has document identifier" ;
+    rdfs:comment "文档唯一标识符" ;
+    rdfs:domain regulatory:RegulatoryDocument ;
+    rdfs:range xsd:string .
+
+regulatory:has_document_title a owl:DatatypeProperty ;
+    rdfs:label "has document title" ;
+    rdfs:comment "文档标题" ;
+    rdfs:domain regulatory:RegulatoryDocument ;
+    rdfs:range xsd:string .
+
+regulatory:has_document_type a owl:DatatypeProperty ;
+    rdfs:label "has document type" ;
+    rdfs:comment "文档类型（字符串形式）" ;
+    rdfs:domain regulatory:RegulatoryDocument ;
+    rdfs:range xsd:string .
+
+regulatory:has_file_path a owl:DatatypeProperty ;
+    rdfs:label "has file path" ;
+    rdfs:comment "本地文件路径" ;
+    rdfs:domain regulatory:RegulatoryDocument ;
+    rdfs:range xsd:string .
+
+regulatory:has_file_url a owl:DatatypeProperty ;
+    rdfs:label "has file URL" ;
+    rdfs:comment "文件URL（可访问地址）" ;
+    rdfs:domain regulatory:RegulatoryDocument ;
+    rdfs:range xsd:anyURI .
+
+regulatory:has_file_format a owl:DatatypeProperty ;
+    rdfs:label "has file format" ;
+    rdfs:comment "文件格式（PDF/DOCX/TXT等）" ;
+    rdfs:domain regulatory:RegulatoryDocument ;
+    rdfs:range xsd:string .
+
+regulatory:has_publication_date a owl:DatatypeProperty ;
+    rdfs:label "has publication date" ;
+    rdfs:comment "发布日期" ;
+    rdfs:domain regulatory:RegulatoryDocument ;
+    rdfs:range xsd:date .
+
+regulatory:has_effective_date a owl:DatatypeProperty ;
+    rdfs:label "has effective date" ;
+    rdfs:comment "生效日期" ;
+    rdfs:domain regulatory:RegulatoryDocument ;
+    rdfs:range xsd:date .
+
+regulatory:has_revision_date a owl:DatatypeProperty ;
+    rdfs:label "has revision date" ;
+    rdfs:comment "修订日期" ;
+    rdfs:domain regulatory:RegulatoryDocument ;
+    rdfs:range xsd:date .
+
+regulatory:has_content_snippet a owl:DatatypeProperty ;
+    rdfs:label "has content snippet" ;
+    rdfs:comment "内容摘要/片段（用于检索）" ;
+    rdfs:domain regulatory:RegulatoryDocument ;
+    rdfs:range xsd:string .
+
+regulatory:has_full_text a owl:DatatypeProperty ;
+    rdfs:label "has full text" ;
+    rdfs:comment "全文内容（可选，用于全文搜索）" ;
+    rdfs:domain regulatory:RegulatoryDocument ;
+    rdfs:range xsd:string .
+
+regulatory:has_page_count a owl:DatatypeProperty ;
+    rdfs:label "has page count" ;
+    rdfs:comment "页数" ;
+    rdfs:domain regulatory:RegulatoryDocument ;
+    rdfs:range xsd:integer .
+
+regulatory:has_file_size a owl:DatatypeProperty ;
+    rdfs:label "has file size" ;
+    rdfs:comment "文件大小（字节）" ;
+    rdfs:domain regulatory:RegulatoryDocument ;
+    rdfs:range xsd:integer .
+
+regulatory:has_checksum a owl:DatatypeProperty ;
+    rdfs:label "has checksum" ;
+    rdfs:comment "文件校验和（SHA256）" ;
+    rdfs:domain regulatory:RegulatoryDocument ;
+    rdfs:range xsd:string .
+
+regulatory:has_version a owl:DatatypeProperty ;
+    rdfs:label "has version" ;
+    rdfs:comment "文档版本" ;
+    rdfs:domain regulatory:RegulatoryDocument ;
+    rdfs:range xsd:string .
+
+regulatory:has_language a owl:DatatypeProperty ;
+    rdfs:label "has language" ;
+    rdfs:comment "文档语言" ;
+    rdfs:domain regulatory:RegulatoryDocument ;
+    rdfs:range xsd:string .
+
+regulatory:has_keywords a owl:DatatypeProperty ;
+    rdfs:label "has keywords" ;
+    rdfs:comment "关键词（逗号分隔）" ;
+    rdfs:domain regulatory:RegulatoryDocument ;
+    rdfs:range xsd:string .
+
+regulatory:has_source_agency a owl:DatatypeProperty ;
+    rdfs:label "has source agency" ;
+    rdfs:comment "发布机构" ;
+    rdfs:domain regulatory:RegulatoryDocument ;
+    rdfs:range xsd:string .
+
+# Document relationships
+regulatory:governs a owl:ObjectProperty ;
+    rdfs:label "governs" ;
+    rdfs:comment "文档管辖/规范某个指南或合规行动" ;
+    rdfs:domain regulatory:RegulatoryDocument ;
+    rdfs:range regulatory:Guideline .
+
+regulatory:references a owl:ObjectProperty ;
+    rdfs:label "references" ;
+    rdfs:comment "文档引用其他文档或资源" ;
+    rdfs:domain regulatory:RegulatoryDocument ;
+    rdfs:range regulatory:RegulatoryDocument .
+
+regulatory:cites a owl:ObjectProperty ;
+    rdfs:label "cites" ;
+    rdfs:comment "文档引用某个法规或标准" ;
+    rdfs:domain regulatory:RegulatoryDocument ;
+    rdfs:range regulatory:Guideline .
+
+regulatory:applies_to_manufacturer a owl:ObjectProperty ;
+    rdfs:label "applies to manufacturer" ;
+    rdfs:comment "适用于制造商" ;
+    rdfs:domain regulatory:RegulatoryDocument ;
+    rdfs:range sc:Manufacturer .
+
+regulatory:related_to_submission a owl:ObjectProperty ;
+    rdfs:label "related to submission" ;
+    rdfs:comment "相关监管申报" ;
+    rdfs:domain regulatory:RegulatoryDocument ;
+    rdfs:range regulatory:Submission .
+
+regulatory:related_to_compound a owl:ObjectProperty ;
+    rdfs:label "related to compound" ;
+    rdfs:comment "相关化合物/药品" ;
+    rdfs:domain regulatory:RegulatoryDocument ;
+    rdfs:range rd:Compound .
+
+regulatory:has_attachment a owl:ObjectProperty ;
+    rdfs:label "has attachment" ;
+    rdfs:comment "文档附件" ;
+    rdfs:domain regulatory:RegulatoryDocument ;
+    rdfs:range regulatory:RegulatoryDocument .
+
+regulatory:supersedes a owl:ObjectProperty ;
+    rdfs:label "supersedes" ;
+    rdfs:comment "替代/废止旧文档" ;
+    rdfs:domain regulatory:RegulatoryDocument ;
+    rdfs:range regulatory:RegulatoryDocument .
+
+regulatory:superseded_by a owl:ObjectProperty ;
+    rdfs:label "superseded by" ;
+    rdfs:comment "被新文档替代" ;
+    rdfs:domain regulatory:RegulatoryDocument ;
+    rdfs:range regulatory:RegulatoryDocument .
+
+# Document types
+regulatory:DocumentType a owl:Class ;
+    rdfs:label "Document Type" ;
+    rdfs:comment "文档类型枚举" .
+
+regulatory:DocumentType_Guidance a regulatory:DocumentType ;
+    rdfs:label "Guidance" ;
+    rdfs:comment "指导文件" .
+
+regulatory:DocumentType_Policy a regulatory:DocumentType ;
+    rdfs:label "Policy" ;
+    rdfs:comment "政策文件" .
+
+regulatory:DocumentType_Regulation a regulatory:DocumentType ;
+    rdfs:label "Regulation" ;
+    rdfs:comment "法规文件" .
+
+regulatory:DocumentType_Guideline a regulatory:DocumentType ;
+    rdfs:label "Guideline" ;
+    rdfs:comment "指南文件" .
+
+regulatory:DocumentType_Standard a regulatory:DocumentType ;
+    rdfs:label "Standard" ;
+    rdfs:comment "标准文件" .
+
+regulatory:DocumentType_Notice a regulatory:DocumentType ;
+    rdfs:label "Notice" ;
+    rdfs:comment "通知文件" .
+
+regulatory:DocumentType_Letter a regulatory:DocumentType ;
+    rdfs:label "Letter" ;
+    rdfs:comment "函件文件" .
+
+regulatory:DocumentType_Form a regulatory:DocumentType ;
+    rdfs:label "Form" ;
+    rdfs:comment "表格文件" .
+
+regulatory:DocumentType_Manual a regulatory:DocumentType ;
+    rdfs:label "Manual" ;
+    rdfs:comment "手册文件" .
+
+regulatory:DocumentType_Procedure a regulatory:DocumentType ;
+    rdfs:label "Procedure" ;
+    rdfs:comment "程序文件" .
+
+regulatory:DocumentType_Circular a regulatory:DocumentType ;
+    rdfs:label "Circular" ;
+    rdfs:comment "公告文件" .
+
+regulatory:has_document_type_enum a owl:ObjectProperty ;
+    rdfs:label "has document type (enum)" ;
+    rdfs:domain regulatory:RegulatoryDocument ;
+    rdfs:range regulatory:DocumentType .
+
+# Document status
+regulatory:DocumentStatus a owl:Class ;
+    rdfs:label "Document Status" ;
+    rdfs:comment "文档状态" .
+
+regulatory:DocumentStatus_Draft a regulatory:DocumentStatus ;
+    rdfs:label "Draft" ;
+    rdfs:comment "草案" .
+
+regulatory:DocumentStatus_Public_Review a regulatory:DocumentStatus ;
+    rdfs:label "Public Review" ;
+    rdfs:comment "公开征求意见" .
+
+regulatory:DocumentStatus_Final a regulatory:DocumentStatus ;
+    rdfs:label "Final" ;
+    rdfs:comment "正式发布" .
+
+regulatory:DocumentStatus_Revised a regulatory:DocumentStatus ;
+    rdfs:label "Revised" ;
+    rdfs:comment "已修订" .
+
+regulatory:DocumentStatus_Superseded a regulatory:DocumentStatus ;
+    rdfs:label "Superseded" ;
+    rdfs:comment "已废止" .
+
+regulatory:DocumentStatus_Withdrawn a regulatory:DocumentStatus ;
+    rdfs:label "Withdrawn" ;
+    rdfs:comment "已撤回" .
+
+regulatory:has_document_status a owl:ObjectProperty ;
+    rdfs:label "has document status" ;
+    rdfs:domain regulatory:RegulatoryDocument ;
+    rdfs:range regulatory:DocumentStatus .
+
+#===========================================================
 # SHACL 约束示例
 #===========================================================
 
@@ -2006,6 +2266,40 @@ regulatory:SubmissionShape a sh:NodeShape ;
         sh:minCount 1 ;
         sh:maxCount 1 ;
         sh:datatype xsd:string ;
+    ] .
+
+regulatory:RegulatoryDocumentShape a sh:NodeShape ;
+    sh:targetClass regulatory:RegulatoryDocument ;
+    sh:property [
+        sh:path regulatory:has_document_id ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+    ] ;
+    sh:property [
+        sh:path regulatory:has_document_title ;
+        sh:minCount 1 ;
+        sh:datatype xsd:string ;
+    ] ;
+    sh:property [
+        sh:path regulatory:has_file_path ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+    ] ;
+    sh:property [
+        sh:path regulatory:has_file_url ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:anyURI ;
+    ] ;
+    sh:property [
+        sh:path regulatory:has_document_type ;
+        sh:minCount 1 ;
+        sh:datatype xsd:string ;
+    ] ;
+    sh:property [
+        sh:path regulatory:has_document_status ;
+        sh:maxCount 1 ;
+        sh:class regulatory:DocumentStatus ;
     ] .
 
 #===========================================================
