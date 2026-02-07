@@ -1,0 +1,2013 @@
+#===========================================================
+# 制药行业知识图谱 - 供应链与监管合规核心本体
+# Pharmaceutical Knowledge Graph - Supply Chain & Regulatory Ontology
+//===========================================================
+# 版本: v1.0
+# 创建日期: 2025-02-06
+# 描述: 定义供应链管理和监管合规领域的核心实体类、属性和关系
+//===========================================================
+
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix dct: <http://purl.org/dc/terms/> .
+@prefix pharma: <http://pharmakg.org/ontology/> .
+@prefix sc: <http://pharmakg.org/ontology/supplychain/> .
+@prefix regulatory: <http://pharmakg.org/ontology/regulatory/> .
+@prefix sio: <http://semanticscience.org/resource/SIO_> .
+
+#===========================================================
+# 本体元数据
+#===========================================================
+
+pharma:SupplyChainRegulatoryKG a owl:Ontology ;
+    rdfs:label "Pharmaceutical Knowledge Graph - Supply Chain & Regulatory Domain Ontology" ;
+    rdfs:comment "供应链与监管合规领域本体，定义制造商、供应商、监管机构、批准等核心实体" ;
+    owl:versionInfo "v1.0" ;
+    owl:versionIRI <http://pharmakg.org/ontology/sc-regulatory/1.0> ;
+    dc:date "2025-02-06"^^xsd:date ;
+    dc:creator "PharmaKG Project Team" .
+
+#===========================================================
+# ============================================================
+# 供应链领域 (Supply Chain Domain)
+# ============================================================
+#===========================================================
+
+#===========================================================
+# 1. Manufacturer (制造商)
+#===========================================================
+
+sc:Manufacturer a owl:Class ;
+    rdfs:label "Manufacturer" ;
+    rdfs:subClassOf pharma:Entity ;
+    rdfs:comment "药品制造商，包括原料药和制剂生产商" .
+
+sc:has_manufacturer_id a owl:DatatypeProperty , owl:FunctionalProperty ;
+    rdfs:label "has manufacturer identifier" ;
+    rdfs:comment "制造商唯一标识符" ;
+    rdfs:domain sc:Manufacturer ;
+    rdfs:range xsd:string .
+
+sc:has_manufacturer_name a owl:DatatypeProperty ;
+    rdfs:label "has manufacturer name" ;
+    rdfs:comment "制造商名称" ;
+    rdfs:domain sc:Manufacturer ;
+    rdfs:range xsd:string .
+
+sc:has_manufacturer_type a owl:ObjectProperty ;
+    rdfs:label "has manufacturer type" ;
+    rdfs:comment "制造商类型" ;
+    rdfs:domain sc:Manufacturer ;
+    rdfs:range sc:ManufacturerType .
+
+sc:has_establishment_id a owl:DatatypeProperty ;
+    rdfs:label "has establishment identifier" ;
+    rdfs:comment "生产场地标识符（如FDA FEI）" ;
+    rdfs:domain sc:Manufacturer ;
+    rdfs:range xsd:string .
+
+sc:has_fei_code a owl:DatatypeProperty ;
+    rdfs:label "has FEI code" ;
+    rdfs:comment "FDA Establishment Identifier" ;
+    rdfs:domain sc:Manufacturer ;
+    rdfs:range xsd:string .
+
+sc:has_address a owl:DatatypeProperty ;
+    rdfs:label "has address" ;
+    rdfs:comment "地址" ;
+    rdfs:domain sc:Manufacturer ;
+    rdfs:range xsd:string .
+
+sc:has_city a owl:DatatypeProperty ;
+    rdfs:label "has city" ;
+    rdfs:comment "城市" ;
+    rdfs:domain sc:Manufacturer ;
+    rdfs:range xsd:string .
+
+sc:has_state a owl:DatatypeProperty ;
+    rdfs:label "has state" ;
+    rdfs:comment "州/省" ;
+    rdfs:domain sc:Manufacturer ;
+    rdfs:range xsd:string .
+
+sc:has_country a owl:DatatypeProperty ;
+    rdfs:label "has country" ;
+    rdfs:comment "国家" ;
+    rdfs:domain sc:Manufacturer ;
+    rdfs:range xsd:string .
+
+sc:has_postal_code a owl:DatatypeProperty ;
+    rdfs:label "has postal code" ;
+    rdfs:comment "邮政编码" ;
+    rdfs:domain sc:Manufacturer ;
+    rdfs:range xsd:string .
+
+sc:has_website a owl:DatatypeProperty ;
+    rdfs:label "has website" ;
+    rdfs:comment "网站" ;
+    rdfs:domain sc:Manufacturer ;
+    rdfs:range xsd:string .
+
+sc:has_email a owl:DatatypeProperty ;
+    rdfs:label "has email" ;
+    rdfs:comment "邮箱" ;
+    rdfs:domain sc:Manufacturer ;
+    rdfs:range xsd:string .
+
+sc:has_phone a owl:DatatypeProperty ;
+    rdfs:label "has phone" ;
+    rdfs:comment "电话" ;
+    rdfs:domain sc:Manufacturer ;
+    rdfs:range xsd:string .
+
+sc:has_manufacturing_capacity a owl:DatatypeProperty ;
+    rdfs:label "has manufacturing capacity" ;
+    rdfs:comment "生产能力（单位/年）" ;
+    rdfs:domain sc:Manufacturer ;
+    rdfs:range xsd:decimal .
+
+sc:has_certification a owl:ObjectProperty ;
+    rdfs:label "has certification" ;
+    rdfs:comment "认证资质（如GMP）" ;
+    rdfs:domain sc:Manufacturer ;
+    rdfs:range sc:Certification .
+
+sc:has_regulatory_status a owl:ObjectProperty ;
+    rdfs:label "has regulatory status" ;
+    rdfs:comment "监管状态" ;
+    rdfs:domain sc:Manufacturer ;
+    rdfs:range regulatory:RegulatoryStatus .
+
+sc:manufactures_drug a owl:ObjectProperty ;
+    rdfs:label "manufactures drug" ;
+    rdfs:comment "生产的药品" ;
+    rdfs:domain sc:Manufacturer ;
+    rdfs:range rd:Compound .
+
+sc:produces_api a owl:ObjectProperty ;
+    rdfs:label "produces API" ;
+    rdfs:comment "生产的原料药" ;
+    rdfs:domain sc:Manufacturer ;
+    rdfs:range sc:ActivePharmaceuticalIngredient .
+
+sc:has_facility a owl:ObjectProperty ;
+    rdfs:label "has facility" ;
+    rdfs:comment "生产设施" ;
+    rdfs:domain sc:Manufacturer ;
+    rdfs:range sc:Facility .
+
+sc:has_inspection a owl:ObjectProperty ;
+    rdfs:label "has inspection" ;
+    rdfs:comment "检查记录" ;
+    rdfs:domain sc:Manufacturer ;
+    rdfs:range regulatory:Inspection .
+
+#===========================================================
+# 2. Supplier (供应商)
+#===========================================================
+
+sc:Supplier a owl:Class ;
+    rdfs:label "Supplier" ;
+    rdfs:subClassOf pharma:Entity ;
+    rdfs:comment "供应商，包括原料、包装材料供应商" .
+
+sc:has_supplier_id a owl:DatatypeProperty , owl:FunctionalProperty ;
+    rdfs:label "has supplier identifier" ;
+    rdfs:comment "供应商唯一标识符" ;
+    rdfs:domain sc:Supplier ;
+    rdfs:range xsd:string .
+
+sc:has_supplier_name a owl:DatatypeProperty ;
+    rdfs:label "has supplier name" ;
+    rdfs:comment "供应商名称" ;
+    rdfs:domain sc:Supplier ;
+    rdfs:range xsd:string .
+
+sc:has_supplier_type a owl:ObjectProperty ;
+    rdfs:label "has supplier type" ;
+    rdfs:comment "供应商类型" ;
+    rdfs:domain sc:Supplier ;
+    rdfs:range sc:SupplierType .
+
+sc:has_rating a owl:DatatypeProperty ;
+    rdfs:label "has rating" ;
+    rdfs:comment "供应商评级" ;
+    rdfs:domain sc:Supplier ;
+    rdfs:range xsd:string .
+
+sc:supplies_material a owl:ObjectProperty ;
+    rdfs:label "supplies material" ;
+    rdfs:comment "供应材料" ;
+    rdfs:domain sc:Supplier ;
+    rdfs:range sc:Material .
+
+sc:supplies_to a owl:ObjectProperty ;
+    rdfs:label "supplies to" ;
+    rdfs:comment "供应给制造商" ;
+    rdfs:domain sc:Supplier ;
+    rdfs:range sc:Manufacturer .
+
+#===========================================================
+# 3. AuthorizationHolder (授权持有人/MAH)
+#===========================================================
+
+sc:AuthorizationHolder a owl:Class ;
+    rdfs:label "Authorization Holder" ;
+    rdfs:subClassOf pharma:Entity ;
+    rdfs:comment "药品上市许可持有人（Marketing Authorization Holder）" .
+
+sc:has_mah_id a owl:DatatypeProperty , owl:FunctionalProperty ;
+    rdfs:label "has MAH identifier" ;
+    rdfs:comment "MAH唯一标识符" ;
+    rdfs:domain sc:AuthorizationHolder ;
+    rdfs:range xsd:string .
+
+sc:has_mah_name a owl:DatatypeProperty ;
+    rdfs:label "has MAH name" ;
+    rdfs:comment "MAH名称" ;
+    rdfs:domain sc:AuthorizationHolder ;
+    rdfs:range xsd:string .
+
+sc:has_authorization_number a owl:DatatypeProperty ;
+    rdfs:label "has authorization number" ;
+    rdfs:comment "批准文号" ;
+    rdfs:domain sc:AuthorizationHolder ;
+    rdfs:range xsd:string .
+
+sc:has_authorization_type a owl:ObjectProperty ;
+    rdfs:label "has authorization type" ;
+    rdfs:comment "批准类型" ;
+    rdfs:domain sc:AuthorizationHolder ;
+    rdfs:range sc:AuthorizationType .
+
+sc:has_authorization_status a owl:ObjectProperty ;
+    rdfs:label "has authorization status" ;
+    rdfs:comment "批准状态" ;
+    rdfs:domain sc:AuthorizationHolder ;
+    rdfs:range sc:AuthorizationStatus .
+
+sc:holds_authorization_for a owl:ObjectProperty ;
+    rdfs:label "holds authorization for" ;
+    rdfs:comment "持有的药品批准" ;
+    rdfs:domain sc:AuthorizationHolder ;
+    rdfs:range rd:Compound .
+
+sc:contracts_manufacturer a owl:ObjectProperty ;
+    rdfs:label "contracts manufacturer" ;
+    rdfs:comment "委托生产商" ;
+    rdfs:domain sc:AuthorizationHolder ;
+    rdfs:range sc:Manufacturer .
+
+#===========================================================
+# 4. ActivePharmaceuticalIngredient (原料药/API)
+#===========================================================
+
+sc:ActivePharmaceuticalIngredient a owl:Class ;
+    rdfs:label "Active Pharmaceutical Ingredient" ;
+    rdfs:subClassOf pharma:Entity ;
+    rdfs:comment "原料药/活性药物成分" .
+
+sc:has_api_id a owl:DatatypeProperty , owl:FunctionalProperty ;
+    rdfs:label "has API identifier" ;
+    rdfs:comment "API唯一标识符" ;
+    rdfs:domain sc:ActivePharmaceuticalIngredient ;
+    rdfs:range xsd:string .
+
+sc:has_api_name a owl:DatatypeProperty ;
+    rdfs:label "has API name" ;
+    rdfs:comment "API名称" ;
+    rdfs:domain sc:ActivePharmaceuticalIngredient ;
+    rdfs:range xsd:string .
+
+sc:has_cas_number a owl:DatatypeProperty ;
+    rdfs:label "has CAS number" ;
+    rdfs:comment "CAS登记号" ;
+    rdfs:domain sc:ActivePharmaceuticalIngredient ;
+    rdfs:range xsd:string .
+
+sc:has_unii a owl:DatatypeProperty ;
+    rdfs:label "has UNII" ;
+    rdfs:comment "唯一成分标识符" ;
+    rdfs:domain sc:ActivePharmaceuticalIngredient ;
+    rdfs:range xsd:string .
+
+sc:has_purity a owl:DatatypeProperty ;
+    rdfs:label "has purity" ;
+    rdfs:comment "纯度" ;
+    rdfs:domain sc:ActivePharmaceuticalIngredient ;
+    rdfs:range xsd:decimal .
+
+sc:has_purity_standard a owl:ObjectProperty ;
+    rdfs:label "has purity standard" ;
+    rdfs:comment "纯度标准" ;
+    rdfs:domain sc:ActivePharmaceuticalIngredient ;
+    rdfs:range sc:QualityStandard .
+
+sc:has_synthesis_route a owl:DatatypeProperty ;
+    rdfs:label "has synthesis route" ;
+    rdfs:comment "合成路线" ;
+    rdfs:domain sc:ActivePharmaceuticalIngredient ;
+    rdfs:range xsd:string .
+
+sc:has_manufacturing_process a owl:ObjectProperty ;
+    rdfs:label "has manufacturing process" ;
+    rdfs:comment "生产工艺" ;
+    rdfs:domain sc:ActivePharmaceuticalIngredient ;
+    rdfs:range sc:ManufacturingProcess .
+
+sc:is_component_of a owl:ObjectProperty ;
+    rdfs:label "is component of" ;
+    rdfs:comment "是...的成分" ;
+    rdfs:domain sc:ActivePharmaceuticalIngredient ;
+    rdfs:range rd:Compound .
+
+sc:has_supplier a owl:ObjectProperty ;
+    rdfs:label "has supplier" ;
+    rdfs:comment "供应商" ;
+    rdfs:domain sc:ActivePharmaceuticalIngredient ;
+    rdfs:range sc:Supplier .
+
+#===========================================================
+# 5. DrugShortage (药品短缺)
+#===========================================================
+
+sc:DrugShortage a owl:Class ;
+    rdfs:label "Drug Shortage" ;
+    rdfs:subClassOf pharma:Entity ;
+    rdfs:comment "药品短缺事件" .
+
+sc:has_shortage_id a owl:DatatypeProperty , owl:FunctionalProperty ;
+    rdfs:label "has shortage identifier" ;
+    rdfs:comment "短缺事件唯一标识符" ;
+    rdfs:domain sc:DrugShortage ;
+    rdfs:range xsd:string .
+
+sc:has_shortage_type a owl:ObjectProperty ;
+    rdfs:label "has shortage type" ;
+    rdfs:comment "短缺类型" ;
+    rdfs:domain sc:DrugShortage ;
+    rdfs:range sc:ShortageType .
+
+sc:has_shortage_reason a owl:ObjectProperty ;
+    rdfs:label "has shortage reason" ;
+    rdfs:comment "短缺原因" ;
+    rdfs:domain sc:DrugShortage ;
+    rdfs:range sc:ShortageReason .
+
+sc:has_shortage_status a owl:ObjectProperty ;
+    rdfs:label "has shortage status" ;
+    rdfs:comment "短缺状态" ;
+    rdfs:domain sc:DrugShortage ;
+    rdfs:range sc:ShortageStatus .
+
+sc:has_start_date a owl:DatatypeProperty ;
+    rdfs:label "has start date" ;
+    rdfs:comment "短缺开始日期" ;
+    rdfs:domain sc:DrugShortage ;
+    rdfs:range xsd:date .
+
+sc:has_end_date a owl:DatatypeProperty ;
+    rdfs:label "has end date" ;
+    rdfs:comment "短缺结束日期" ;
+    rdfs:domain sc:DrugShortage ;
+    rdfs:range xsd:date .
+
+sc:has_affected_drug a owl:ObjectProperty ;
+    rdfs:label "has affected drug" ;
+    rdfs:comment "受影响的药品" ;
+    rdfs:domain sc:DrugShortage ;
+    rdfs:range rd:Compound .
+
+sc:has_affected_manufacturer a owl:ObjectProperty ;
+    rdfs:label "has affected manufacturer" ;
+    rdfs:comment "受影响的制造商" ;
+    rdfs:domain sc:DrugShortage ;
+    rdfs:range sc:Manufacturer .
+
+sc:has_affected_region a owl:DatatypeProperty ;
+    rdfs:label "has affected region" ;
+    rdfs:comment "受影响地区" ;
+    rdfs:domain sc:DrugShortage ;
+    rdfs:range xsd:string .
+
+sc:has_impact_level a owl:ObjectProperty ;
+    rdfs:label "has impact level" ;
+    rdfs:comment "影响程度" ;
+    rdfs:domain sc:DrugShortage ;
+    rdfs:range sc:ImpactLevel .
+
+sc:has_alternative_drug a owl:ObjectProperty ;
+    rdfs:label "has alternative drug" ;
+    rdfs:comment "替代药品" ;
+    rdfs:domain sc:DrugShortage ;
+    rdfs:range rd:Compound .
+
+sc:has_remedial_action a owl:DatatypeProperty ;
+    rdfs:label "has remedial action" ;
+    rdfs:comment "补救措施" ;
+    rdfs:domain sc:DrugShortage ;
+    rdfs:range xsd:string .
+
+#===========================================================
+# 6. Distribution (分销)
+#===========================================================
+
+sc:Distribution a owl:Class ;
+    rdfs:label "Distribution" ;
+    rdfs:subClassOf pharma:Entity ;
+    rdfs:comment "药品分销" .
+
+sc:has_distribution_id a owl:DatatypeProperty , owl:FunctionalProperty ;
+    rdfs:label "has distribution identifier" ;
+    rdfs:comment "分销记录标识符" ;
+    rdfs:domain sc:Distribution ;
+    rdfs:range xsd:string .
+
+sc:has_distribution_type a owl:ObjectProperty ;
+    rdfs:label "has distribution type" ;
+    rdfs:comment "分销类型" ;
+    rdfs:domain sc:Distribution ;
+    rdfs:range sc:DistributionType .
+
+sc:has_shipment_date a owl:DatatypeProperty ;
+    rdfs:label "has shipment date" ;
+    rdfs:comment "发货日期" ;
+    rdfs:domain sc:Distribution ;
+    rdfs:range xsd:date .
+
+sc:has_delivery_date a owl:DatatypeProperty ;
+    rdfs:label "has delivery date" ;
+    rdfs:comment "交付日期" ;
+    rdfs:domain sc:Distribution ;
+    rdfs:range xsd:date .
+
+sc:has_quantity a owl:DatatypeProperty ;
+    rdfs:label "has quantity" ;
+    rdfs:comment "数量" ;
+    rdfs:domain sc:Distribution ;
+    rdfs:range xsd:integer .
+
+sc:has_unit a owl:DatatypeProperty ;
+    rdfs:label "has unit" ;
+    rdfs:comment "单位" ;
+    rdfs:domain sc:Distribution ;
+    rdfs:range xsd:string .
+
+sc:has_batch_number a owl:DatatypeProperty ;
+    rdfs:label "has batch number" ;
+    rdfs:comment "批号" ;
+    rdfs:domain sc:Distribution ;
+    rdfs:range xsd:string .
+
+sc:from_manufacturer a owl:ObjectProperty ;
+    rdfs:label "from manufacturer" ;
+    rdfs:comment "来自制造商" ;
+    rdfs:domain sc:Distribution ;
+    rdfs:range sc:Manufacturer .
+
+sc:to_distributor a owl:ObjectProperty ;
+    rdfs:label "to distributor" ;
+    rdfs:comment "去向分销商" ;
+    rdfs:domain sc:Distribution ;
+    rdfs:range sc:Distributor .
+
+sc:distributes_drug a owl:ObjectProperty ;
+    rdfs:label "distributes drug" ;
+    rdfs:comment "分销的药品" ;
+    rdfs:domain sc:Distribution ;
+    rdfs:range rd:Compound .
+
+#===========================================================
+# 7. Distributor (分销商)
+#===========================================================
+
+sc:Distributor a owl:Class ;
+    rdfs:label "Distributor" ;
+    rdfs:subClassOf pharma:Entity ;
+    rdfs:comment "药品分销商" .
+
+sc:has_distributor_id a owl:DatatypeProperty , owl:FunctionalProperty ;
+    rdfs:label "has distributor identifier" ;
+    rdfs:comment "分销商唯一标识符" ;
+    rdfs:domain sc:Distributor ;
+    rdfs:range xsd:string .
+
+sc:has_distributor_name a owl:DatatypeProperty ;
+    rdfs:label "has distributor name" ;
+    rdfs:comment "分销商名称" ;
+    rdfs:domain sc:Distributor ;
+    rdfs:range xsd:string .
+
+sc:has_distributor_level a owl:ObjectProperty ;
+    rdfs:label "has distributor level" ;
+    rdfs:comment "分销商级别" ;
+    rdfs:domain sc:Distributor ;
+    rdfs:range sc:DistributorLevel .
+
+#===========================================================
+# 8. Facility (设施)
+#===========================================================
+
+sc:Facility a owl:Class ;
+    rdfs:label "Facility" ;
+    rdfs:subClassOf pharma:Entity ;
+    rdfs:comment "生产/仓储设施" .
+
+sc:has_facility_id a owl:DatatypeProperty , owl:FunctionalProperty ;
+    rdfs:label "has facility identifier" ;
+    rdfs:comment "设施唯一标识符" ;
+    rdfs:domain sc:Facility ;
+    rdfs:range xsd:string .
+
+sc:has_facility_name a owl:DatatypeProperty ;
+    rdfs:label "has facility name" ;
+    rdfs:comment "设施名称" ;
+    rdfs:domain sc:Facility ;
+    rdfs:range xsd:string .
+
+sc:has_facility_type a owl:ObjectProperty ;
+    rdfs:label "has facility type" ;
+    rdfs:comment "设施类型" ;
+    rdfs:domain sc:Facility ;
+    rdfs:range sc:FacilityType .
+
+sc:has_capacity a owl:DatatypeProperty ;
+    rdfs:label "has capacity" ;
+    rdfs:comment "容量" ;
+    rdfs:domain sc:Facility ;
+    rdfs:range xsd:decimal .
+
+sc:has_utilization_rate a owl:DatatypeProperty ;
+    rdfs:label "has utilization rate" ;
+    rdfs:comment "利用率" ;
+    rdfs:domain sc:Facility ;
+    rdfs:range xsd:decimal .
+
+#===========================================================
+# 9. Material (材料)
+#===========================================================
+
+sc:Material a owl:Class ;
+    rdfs:label "Material" ;
+    rdfs:subClassOf pharma:Entity ;
+    rdfs:comment "原材料/包装材料" .
+
+sc:has_material_id a owl:DatatypeProperty , owl:FunctionalProperty ;
+    rdfs:label "has material identifier" ;
+    rdfs:comment "材料唯一标识符" ;
+    rdfs:domain sc:Material ;
+    rdfs:range xsd:string .
+
+sc:has_material_name a owl:DatatypeProperty ;
+    rdfs:label "has material name" ;
+    rdfs:comment "材料名称" ;
+    rdfs:domain sc:Material ;
+    rdfs:range xsd:string .
+
+sc:has_material_category a owl:ObjectProperty ;
+    rdfs:label "has material category" ;
+    rdfs:comment "材料类别" ;
+    rdfs:domain sc:Material ;
+    rdfs:range sc:MaterialCategory .
+
+sc:has_specification a owl:DatatypeProperty ;
+    rdfs:label "has specification" ;
+    rdfs:comment "规格" ;
+    rdfs:domain sc:Material ;
+    rdfs:range xsd:string .
+
+sc:has_grade a owl:DatatypeProperty ;
+    rdfs:label "has grade" ;
+    rdfs:comment "等级" ;
+    rdfs:domain sc:Material ;
+    rdfs:range xsd:string .
+
+#===========================================================
+# 10. QualityStandard (质量标准)
+#===========================================================
+
+sc:QualityStandard a owl:Class ;
+    rdfs:label "Quality Standard" ;
+    rdfs:subClassOf pharma:Entity ;
+    rdfs:comment "质量标准" .
+
+sc:has_standard_code a owl:DatatypeProperty , owl:FunctionalProperty ;
+    rdfs:label "has standard code" ;
+    rdfs:comment "标准代码" ;
+    rdfs:domain sc:QualityStandard ;
+    rdfs:range xsd:string .
+
+sc:has_standard_name a owl:DatatypeProperty ;
+    rdfs:label "has standard name" ;
+    rdfs:comment "标准名称" ;
+    rdfs:domain sc:QualityStandard ;
+    rdfs:range xsd:string .
+
+sc:has_standard_body a owl:DatatypeProperty ;
+    rdfs:label "has standard body" ;
+    rdfs:comment "制定机构" ;
+    rdfs:domain sc:QualityStandard ;
+    rdfs:range xsd:string .
+
+#===========================================================
+# 供应链辅助枚举类
+#===========================================================
+
+sc:ManufacturerType a owl:Class ;
+    rdfs:label "Manufacturer Type" ;
+    rdfs:comment "制造商类型" .
+
+sc:ManufacturerType_API a sc:ManufacturerType ;
+    rdfs:label "API Manufacturer" ;
+    rdfs:comment "原料药生产商" .
+
+sc:ManufacturerType_Formulation a sc:ManufacturerType ;
+    rdfs:label "Formulation Manufacturer" ;
+    rdfs:comment "制剂生产商" .
+
+sc:ManufacturerType_Contract a sc:ManufacturerType ;
+    rdfs:label "Contract Manufacturing Organization" ;
+    rdfs:comment "合同生产组织(CMO)" .
+
+sc:ManufacturerType_Integrated a sc:ManufacturerType ;
+    rdfs:label "Integrated Manufacturer" ;
+    rdfs:comment "一体化制造商" .
+
+sc:SupplierType a owl:Class ;
+    rdfs:label "Supplier Type" ;
+    rdfs:comment "供应商类型" .
+
+sc:SupplierType_API a sc:SupplierType ;
+    rdfs:label "API Supplier" ;
+    rdfs:comment "原料药供应商" .
+
+sc:SupplierType_Excipient a sc:SupplierType ;
+    rdfs:label "Excipient Supplier" ;
+    rdfs:comment "辅料供应商" .
+
+sc:SupplierType_Packaging a sc:SupplierType ;
+    rdfs:label "Packaging Supplier" ;
+    rdfs:comment "包装材料供应商" .
+
+sc:SupplierType_Equipment a sc:SupplierType ;
+    rdfs:label "Equipment Supplier" ;
+    rdfs:comment "设备供应商" .
+
+sc:ShortageType a owl:Class ;
+    rdfs:label "Shortage Type" ;
+    rdfs:comment "短缺类型" .
+
+sc:ShortageType_Supply a sc:ShortageType ;
+    rdfs:label "Supply Issue" ;
+    rdfs:comment "供应问题" .
+
+sc:ShortageType_Demand a sc:ShortageType ;
+    rdfs:label "Demand Increase" ;
+    rdfs:comment "需求增加" .
+
+sc:ShortageType_Quality a sc:ShortageType ;
+    rdfs:label "Quality Issue" ;
+    rdfs:comment "质量问题" .
+
+sc:ShortageType_Regulatory a sc:ShortageType ;
+    rdfs:label "Regulatory Issue" ;
+    rdfs:comment "监管问题" .
+
+sc:ShortageReason a owl:Class ;
+    rdfs:label "Shortage Reason" ;
+    rdfs:comment "短缺原因" .
+
+sc:ShortageReason_Manufacturing a sc:ShortageReason ;
+    rdfs:label "Manufacturing Problem" ;
+    rdfs:comment "生产问题" .
+
+sc:ShortageReason_Raw_Material a sc:ShortageReason ;
+    rdfs:label "Raw Material Shortage" ;
+    rdfs:comment "原料短缺" .
+
+sc:ShortageReason_Quality a sc:ShortageReason ;
+    rdfs:label "Quality Control Failure" ;
+    rdfs:comment "质控失败" .
+
+sc:ShortageReason_Regulatory a sc:ShortageReason ;
+    rdfs:label "Regulatory Action" ;
+    rdfs:comment "监管行动" .
+
+sc:ShortageReason_Logistics a sc:ShortageReason ;
+    rdfs:label "Logistics Issue" ;
+    rdfs:comment "物流问题" .
+
+sc:ShortageReason_Business a sc:ShortageReason ;
+    rdfs:label "Business Decision" ;
+    rdfs:comment "商业决策" .
+
+sc:ShortageStatus a owl:Class ;
+    rdfs:label "Shortage Status" ;
+    rdfs:comment "短缺状态" .
+
+sc:ShortageStatus_Active a sc:ShortageStatus ;
+    rdfs:label "Active" ;
+    rdfs:comment "活跃" .
+
+sc:ShortageStatus_Resolved a sc:ShortageStatus ;
+    rdfs:label "Resolved" ;
+    rdfs:comment "已解决" .
+
+sc:ShortageStatus_Mitigated a sc:ShortageStatus ;
+    rdfs:label "Mitigated" ;
+    rdfs:comment "已缓解" .
+
+sc:ImpactLevel a owl:Class ;
+    rdfs:label "Impact Level" ;
+    rdfs:comment "影响程度" .
+
+sc:ImpactLevel_Critical a sc:ImpactLevel ;
+    rdfs:label "Critical" ;
+    rdfs:comment "严重" .
+
+sc:ImpactLevel_Moderate a sc:ImpactLevel ;
+    rdfs:label "Moderate" ;
+    rdfs:comment "中等" .
+
+sc:ImpactLevel_Minor a sc:ImpactLevel ;
+    rdfs:label "Minor" ;
+    rdfs:comment "轻微" .
+
+sc:Certification a owl:Class ;
+    rdfs:label "Certification" ;
+    rdfs:comment "认证" .
+
+sc:Certification_GMP a sc:Certification ;
+    rdfs:label "GMP" ;
+    rdfs:comment "药品生产质量管理规范" .
+
+sc:Certification_ISO9001 a sc:Certification ;
+    rdfs:label "ISO 9001" ;
+    rdfs:comment "质量管理体系" .
+
+sc:Certification_FDA a sc:Certification ;
+    rdfs:label "FDA Approved" ;
+    rdfs:comment "FDA批准" .
+
+sc:DistributionType a owl:Class ;
+    rdfs:label "Distribution Type" ;
+    rdfs:comment "分销类型" .
+
+sc:DistributionType_Direct a sc:DistributionType ;
+    rdfs:label "Direct Distribution" ;
+    rdfs:comment "直接分销" .
+
+sc:DistributionType_Wholesale a sc:DistributionType ;
+    rdfs:label "Wholesale Distribution" ;
+    rdfs:comment "批发分销" .
+
+sc:DistributionType_Retail a sc:DistributionType ;
+    rdfs:label "Retail Distribution" ;
+    rdfs:comment "零售分销" .
+
+sc:DistributorLevel a owl:Class ;
+    rdfs:label "Distributor Level" ;
+    rdfs:comment "分销商级别" .
+
+sc:DistributorLevel_Primary a sc:DistributorLevel ;
+    rdfs:label "Primary Distributor" ;
+    rdfs:comment "一级分销商" .
+
+sc:DistributorLevel_Secondary a sc:DistributorLevel ;
+    rdfs:label "Secondary Distributor" ;
+    rdfs:comment "二级分销商" .
+
+sc:DistributorLevel_Tertiary a sc:DistributorLevel ;
+    rdfs:label "Tertiary Distributor" ;
+    rdfs:comment "三级分销商" .
+
+sc:FacilityType a owl:Class ;
+    rdfs:label "Facility Type" ;
+    rdfs:comment "设施类型" .
+
+sc:FacilityType_Manufacturing a sc:FacilityType ;
+    rdfs:label "Manufacturing Facility" ;
+    rdfs:comment "生产设施" .
+
+sc:FacilityType_Warehouse a sc:FacilityType ;
+    rdfs:label "Warehouse" ;
+    rdfs:comment "仓储设施" .
+
+sc:FacilityType_QC_Lab a sc:FacilityType ;
+    rdfs:label "Quality Control Lab" ;
+    rdfs:comment "质控实验室" .
+
+sc:FacilityType_R_D a sc:FacilityType ;
+    rdfs:label "R&D Facility" ;
+    rdfs:comment "研发设施" .
+
+sc:MaterialCategory a owl:Class ;
+    rdfs:label "Material Category" ;
+    rdfs:comment "材料类别" .
+
+sc:MaterialCategory_API a sc:MaterialCategory ;
+    rdfs:label "Active Pharmaceutical Ingredient" ;
+    rdfs:comment "原料药" .
+
+sc:MaterialCategory_Excipient a sc:MaterialCategory ;
+    rdfs:label "Excipient" ;
+    rdfs:comment "辅料" .
+
+sc:MaterialCategory_Packaging_Primary a sc:MaterialCategory ;
+    rdfs:label "Primary Packaging" ;
+    rdfs:comment "一级包装" .
+
+sc:MaterialCategory_Packaging_Secondary a sc:MaterialCategory ;
+    rdfs:label "Secondary Packaging" ;
+    rdfs:comment "二级包装" .
+
+sc:AuthorizationType a owl:Class ;
+    rdfs:label "Authorization Type" ;
+    rdfs:comment "批准类型" .
+
+sc:AuthorizationType_NDA a sc:AuthorizationType ;
+    rdfs:label "NDA" ;
+    rdfs:comment "新药申请" .
+
+sc:AuthorizationType_ANDA a sc:AuthorizationType ;
+    rdfs:label "ANDA" ;
+    rdfs:comment "仿制药申请" .
+
+sc:AuthorizationType_BLA a sc:AuthorizationType ;
+    rdfs:label "BLA" ;
+    rdfs:comment "生物制品许可申请" .
+
+sc:AuthorizationType_MAA a sc:AuthorizationType ;
+    rdfs:label "MAA" ;
+    rdfs:comment "上市许可申请" .
+
+sc:AuthorizationStatus a owl:Class ;
+    rdfs:label "Authorization Status" ;
+    rdfs:comment "批准状态" .
+
+sc:AuthorizationStatus_Approved a sc:AuthorizationStatus ;
+    rdfs:label "Approved" ;
+    rdfs:comment "已批准" .
+
+sc:AuthorizationStatus_Pending a sc:AuthorizationStatus ;
+    rdfs:label "Pending" ;
+    rdfs:comment "待审评" .
+
+sc:AuthorizationStatus_Suspended a sc:AuthorizationStatus ;
+    rdfs:label "Suspended" ;
+    rdfs:comment "暂停" .
+
+sc:AuthorizationStatus_Withdrawn a sc:AuthorizationStatus ;
+    rdfs:label "Withdrawn" ;
+    rdfs:comment "撤回" .
+
+sc:AuthorizationStatus_Expired a sc:AuthorizationStatus ;
+    rdfs:label "Expired" ;
+    rdfs:comment "过期" .
+
+#===========================================================
+# ============================================================
+# 监管合规领域 (Regulatory Compliance Domain)
+# ============================================================
+#===========================================================
+
+#===========================================================
+# 1. RegulatoryAgency (监管机构)
+#===========================================================
+
+regulatory:RegulatoryAgency a owl:Class ;
+    rdfs:label "Regulatory Agency" ;
+    rdfs:subClassOf pharma:Entity ;
+    rdfs:comment "药品监管机构" .
+
+regulatory:has_agency_id a owl:DatatypeProperty , owl:FunctionalProperty ;
+    rdfs:label "has agency identifier" ;
+    rdfs:comment "机构标识符" ;
+    rdfs:domain regulatory:RegulatoryAgency ;
+    rdfs:range xsd:string .
+
+regulatory:has_agency_name a owl:DatatypeProperty ;
+    rdfs:label "has agency name" ;
+    rdfs:comment "机构名称" ;
+    rdfs:domain regulatory:RegulatoryAgency ;
+    rdfs:range xsd:string .
+
+regulatory:has_agency_abbreviation a owl:DatatypeProperty ;
+    rdfs:label "has agency abbreviation" ;
+    rdfs:comment "机构缩写" ;
+    rdfs:domain regulatory:RegulatoryAgency ;
+    rdfs:range xsd:string .
+
+regulatory:has_agency_type a owl:ObjectProperty ;
+    rdfs:label "has agency type" ;
+    rdfs:comment "机构类型" ;
+    rdfs:domain regulatory:RegulatoryAgency ;
+    rdfs:range regulatory:AgencyType .
+
+regulatory:has_jurisdiction a owl:DatatypeProperty ;
+    rdfs:label "has jurisdiction" ;
+    rdfs:comment "管辖区域" ;
+    rdfs:domain regulatory:RegulatoryAgency ;
+    rdfs:range xsd:string .
+
+regulatory:has_website a owl:DatatypeProperty ;
+    rdfs:label "has website" ;
+    rdfs:comment "网站" ;
+    rdfs:domain regulatory:RegulatoryAgency ;
+    rdfs:range xsd:string .
+
+regulatory:has_address a owl:DatatypeProperty ;
+    rdfs:label "has address" ;
+    rdfs:comment "地址" ;
+    rdfs:domain regulatory:RegulatoryAgency ;
+    rdfs:range xsd:string .
+
+regulatory:has_contact_email a owl:DatatypeProperty ;
+    rdfs:label "has contact email" ;
+    rdfs:comment "联系邮箱" ;
+    rdfs:domain regulatory:RegulatoryAgency ;
+    rdfs:range xsd:string .
+
+regulatory:regulates_manufacturer a owl:ObjectProperty ;
+    rdfs:label "regulates manufacturer" ;
+    rdfs:comment "监管制造商" ;
+    rdfs:domain regulatory:RegulatoryAgency ;
+    rdfs:range sc:Manufacturer .
+
+regulatory:reviews_submission a owl:ObjectProperty ;
+    rdfs:label "reviews submission" ;
+    rdfs:comment "审评申报" ;
+    rdfs:domain regulatory:RegulatoryAgency ;
+    rdfs:range regulatory:Submission .
+
+regulatory:issues_approval a owl:ObjectProperty ;
+    rdfs:label "issues approval" ;
+    rdfs:comment "签发批准" ;
+    rdfs:domain regulatory:RegulatoryAgency ;
+    rdfs:range regulatory:Approval .
+
+regulatory:conducts_inspection a owl:ObjectProperty ;
+    rdfs:label "conducts inspection" ;
+    rdfs:comment "执行检查" ;
+    rdfs:domain regulatory:RegulatoryAgency ;
+    rdfs:range regulatory:Inspection .
+
+regulatory:issues_guideline a owl:ObjectProperty ;
+    rdfs:label "issues guideline" ;
+    rdfs:comment "发布指南" ;
+    rdfs:domain regulatory:RegulatoryAgency ;
+    rdfs:range regulatory:Guideline .
+
+regulatory:monitors_safety a owl:ObjectProperty ;
+    rdfs:label "monitors safety" ;
+    rdfs:comment "监测安全性" ;
+    rdfs:domain regulatory:RegulatoryAgency ;
+    rdfs:range clinical:AdverseEvent .
+
+#===========================================================
+# 2. Submission (申报)
+#===========================================================
+
+regulatory:Submission a owl:Class ;
+    rdfs:label "Submission" ;
+    rdfs:subClassOf pharma:Entity ;
+    rdfs:comment "监管申报" .
+
+regulatory:has_submission_id a owl:DatatypeProperty , owl:FunctionalProperty ;
+    rdfs:label "has submission identifier" ;
+    rdfs:comment "申报唯一标识符" ;
+    rdfs:domain regulatory:Submission ;
+    rdfs:range xsd:string .
+
+regulatory:has_submission_type a owl:ObjectProperty ;
+    rdfs:label "has submission type" ;
+    rdfs:comment "申报类型" ;
+    rdfs:domain regulatory:Submission ;
+    rdfs:range regulatory:SubmissionType .
+
+regulatory:has_submission_category a owl:ObjectProperty ;
+    rdfs:label "has submission category" ;
+    rdfs:comment "申报类别" ;
+    rdfs:domain regulatory:Submission ;
+    rdfs:range regulatory:SubmissionCategory .
+
+regulatory:has_submission_date a owl:DatatypeProperty ;
+    rdfs:label "has submission date" ;
+    rdfs:comment "申报日期" ;
+    rdfs:domain regulatory:Submission ;
+    rdfs:range xsd:date .
+
+regulatory:has_submission_status a owl:ObjectProperty ;
+    rdfs:label "has submission status" ;
+    rdfs:comment "申报状态" ;
+    rdfs:domain regulatory:Submission ;
+    rdfs:range regulatory:SubmissionStatus .
+
+regulatory:has_review_priority a owl:ObjectProperty ;
+    rdfs:label "has review priority" ;
+    rdfs:comment "审评优先级" ;
+    rdfs:domain regulatory:Submission ;
+    rdfs:range regulatory:ReviewPriority .
+
+regulatory:has_review_standard a owl:ObjectProperty ;
+    rdfs:label "has review standard" ;
+    rdfs:comment "审评标准" ;
+    rdfs:domain regulatory:Submission ;
+    rdfs:range regulatory:ReviewStandard .
+
+regulatory:has_submission_track a owl:ObjectProperty ;
+    rdfs:label "has submission track" ;
+    rdfs:comment "申报轨道" ;
+    rdfs:domain regulatory:Submission ;
+    rdfs:range regulatory:SubmissionTrack .
+
+regulatory:has_approval_date a owl:DatatypeProperty ;
+    rdfs:label "has approval date" ;
+    rdfs:comment "批准日期" ;
+    rdfs:domain regulatory:Submission ;
+    rdfs:range xsd:date .
+
+regulatory:has_review_days a owl:DatatypeProperty ;
+    rdfs:label "has review days" ;
+    rdfs:comment "审评天数" ;
+    rdfs:domain regulatory:Submission ;
+    rdfs:range xsd:integer .
+
+regulatory:has_review_cycles a owl:DatatypeProperty ;
+    rdfs:label "has review cycles" ;
+    rdfs:comment "审评轮次" ;
+    rdfs:domain regulatory:Submission ;
+    rdfs:range xsd:integer .
+
+regulatory:submitted_by a owl:ObjectProperty ;
+    rdfs:label "submitted by" ;
+    rdfs:comment "申报人" ;
+    rdfs:domain regulatory:Submission ;
+    rdfs:range sc:AuthorizationHolder .
+
+regulatory:submitted_to a owl:ObjectProperty ;
+    rdfs:label "submitted to" ;
+    rdfs:comment "提交给" ;
+    rdfs:domain regulatory:Submission ;
+    rdfs:range regulatory:RegulatoryAgency .
+
+regulatory:submission_for_drug a owl:ObjectProperty ;
+    rdfs:label "submission for drug" ;
+    rdfs:comment "申报药品" ;
+    rdfs:domain regulatory:Submission ;
+    rdfs:range rd:Compound .
+
+regulatory:results_in_approval a owl:ObjectProperty ;
+    rdfs:label "results in approval" ;
+    rdfs:comment "导致批准" ;
+    rdfs:domain regulatory:Submission ;
+    rdfs:range regulatory:Approval .
+
+regulatory:has_clinical_trial a owl:ObjectProperty ;
+    rdfs:label "has clinical trial" ;
+    rdfs:comment "关联临床试验" ;
+    rdfs:domain regulatory:Submission ;
+    rdfs:range clinical:ClinicalTrial .
+
+#===========================================================
+# 3. Approval (批准)
+#===========================================================
+
+regulatory:Approval a owl:Class ;
+    rdfs:label "Approval" ;
+    rdfs:subClassOf pharma:Entity ;
+    rdfs:comment "监管批准" .
+
+regulatory:has_approval_id a owl:DatatypeProperty , owl:FunctionalProperty ;
+    rdfs:label "has approval identifier" ;
+    rdfs:comment "批准唯一标识符" ;
+    rdfs:domain regulatory:Approval ;
+    rdfs:range xsd:string .
+
+regulatory:has_approval_number a owl:DatatypeProperty ;
+    rdfs:label "has approval number" ;
+    rdfs:comment "批准文号" ;
+    rdfs:domain regulatory:Approval ;
+    rdfs:range xsd:string .
+
+regulatory:has_approval_type a owl:ObjectProperty ;
+    rdfs:label "has approval type" ;
+    rdfs:comment "批准类型" ;
+    rdfs:domain regulatory:Approval ;
+    rdfs:range regulatory:ApprovalType .
+
+regulatory:has_approval_date a owl:DatatypeProperty ;
+    rdfs:label "has approval date" ;
+    rdfs:comment "批准日期" ;
+    rdfs:domain regulatory:Approval ;
+    rdfs:range xsd:date .
+
+regulatory:has_expiration_date a owl:DatatypeProperty ;
+    rdfs:label "has expiration date" ;
+    rdfs:comment "过期日期" ;
+    rdfs:domain regulatory:Approval ;
+    rdfs:range xsd:date .
+
+regulatory:has_approval_status a owl:ObjectProperty ;
+    rdfs:label "has approval status" ;
+    rdfs:comment "批准状态" ;
+    rdfs:domain regulatory:Approval ;
+    rdfs:range regulatory:ApprovalStatus .
+
+regulatory:has_indication a owl:DatatypeProperty ;
+    rdfs:label "has indication" ;
+    rdfs:comment "适应症" ;
+    rdfs:domain regulatory:Approval ;
+    rdfs:range xsd:string .
+
+regulatory:has_dosage_form a owl:DatatypeProperty ;
+    rdfs:label "has dosage form" ;
+    rdfs:comment "剂型" ;
+    rdfs:domain regulatory:Approval ;
+    rdfs:range xsd:string .
+
+regulatory:has_strength a owl:DatatypeProperty ;
+    rdfs:label "has strength" ;
+    rdfs:comment "规格" ;
+    rdfs:domain regulatory:Approval ;
+    rdfs:range xsd:string .
+
+regulatory:has_route_of_administration a owl:ObjectProperty ;
+    rdfs:label "has route of administration" ;
+    rdfs:comment "给药途径" ;
+    rdfs:domain regulatory:Approval ;
+    rdfs:range clinical:RouteOfAdministration .
+
+regulatory:has_approval_holder a owl:ObjectProperty ;
+    rdfs:label "has approval holder" ;
+    rdfs:comment "持有人" ;
+    rdfs:domain regulatory:Approval ;
+    rdfs:range sc:AuthorizationHolder .
+
+regulatory:issued_by a owl:ObjectProperty ;
+    rdfs:label "issued by" ;
+    rdfs:comment "签发机构" ;
+    rdfs:domain regulatory:Approval ;
+    rdfs:range regulatory:RegulatoryAgency .
+
+regulatory:approval_for_drug a owl:ObjectProperty ;
+    rdfs:label "approval for drug" ;
+    rdfs:comment "批准药品" ;
+    rdfs:domain regulatory:Approval ;
+    rdfs:range rd:Compound .
+
+regulatory:based_on_submission a owl:ObjectProperty ;
+    rdfs:label "based on submission" ;
+    rdfs:comment "基于申报" ;
+    rdfs:domain regulatory:Approval ;
+    rdfs:range regulatory:Submission .
+
+regulatory:has_condition a owl:ObjectProperty ;
+    rdfs:label "has condition" ;
+    rdfs:comment "批准条件" ;
+    rdfs:domain regulatory:Approval ;
+    rdfs:range regulatory:ApprovalCondition .
+
+regulatory:has_post_marketing_commitment a owl:ObjectProperty ;
+    rdfs:label "has post-marketing commitment" ;
+    rdfs:comment "上市后承诺" ;
+    rdfs:domain regulatory:Approval ;
+    rdfs:range regulatory:PostMarketingCommitment .
+
+#===========================================================
+# 4. Inspection (检查)
+#===========================================================
+
+regulatory:Inspection a owl:Class ;
+    rdfs:label "Inspection" ;
+    rdfs:subClassOf pharma:Entity ;
+    rdfs:comment "监管检查" .
+
+regulatory:has_inspection_id a owl:DatatypeProperty , owl:FunctionalProperty ;
+    rdfs:label "has inspection identifier" ;
+    rdfs:comment "检查唯一标识符" ;
+    rdfs:domain regulatory:Inspection ;
+    rdfs:range xsd:string .
+
+regulatory:has_inspection_type a owl:ObjectProperty ;
+    rdfs:label "has inspection type" ;
+    rdfs:comment "检查类型" ;
+    rdfs:domain regulatory:Inspection ;
+    rdfs:range regulatory:InspectionType .
+
+regulatory:has_inspection_purpose a owl:ObjectProperty ;
+    rdfs:label "has inspection purpose" ;
+    rdfs:comment "检查目的" ;
+    rdfs:domain regulatory:Inspection ;
+    rdfs:range regulatory:InspectionPurpose .
+
+regulatory:has_inspection_date a owl:DatatypeProperty ;
+    rdfs:label "has inspection date" ;
+    rdfs:comment "检查日期" ;
+    rdfs:domain regulatory:Inspection ;
+    rdfs:range xsd:date .
+
+regulatory:has_start_date a owl:DatatypeProperty ;
+    rdfs:label "has start date" ;
+    rdfs:comment "开始日期" ;
+    rdfs:domain regulatory:Inspection ;
+    rdfs:range xsd:date .
+
+regulatory:has_end_date a owl:DatatypeProperty ;
+    rdfs:label "has end date" ;
+    rdfs:comment "结束日期" ;
+    rdfs:domain regulatory:Inspection ;
+    rdfs:range xsd:date .
+
+regulatory:has_inspection_result a owl:ObjectProperty ;
+    rdfs:label "has inspection result" ;
+    rdfs:comment "检查结果" ;
+    rdfs:domain regulatory:Inspection ;
+    rdfs:range regulatory:InspectionResult .
+
+regulatory:has_classification a owl:ObjectProperty ;
+    rdfs:label "has classification" ;
+    rdfs:comment "分类" ;
+    rdfs:domain regulatory:Inspection ;
+    rdfs:range regulatory:InspectionClassification .
+
+regulatory:has_inspector a owl:DatatypeProperty ;
+    rdfs:label "has inspector" ;
+    rdfs:comment "检查员" ;
+    rdfs:domain regulatory:Inspection ;
+    rdfs:range xsd:string .
+
+regulatory:has_inspection_report a owl:DatatypeProperty ;
+    rdfs:label "has inspection report" ;
+    rdfs:comment "检查报告" ;
+    rdfs:domain regulatory:Inspection ;
+    rdfs:range xsd:string .
+
+regulatory:has_followup_action a owl:ObjectProperty ;
+    rdfs:label "has followup action" ;
+    rdfs:comment "后续行动" ;
+    rdfs:domain regulatory:Inspection ;
+    rdfs:range regulatory:FollowupAction .
+
+regulatory:inspects_facility a owl:ObjectProperty ;
+    rdfs:label "inspects facility" ;
+    rdfs:comment "检查设施" ;
+    rdfs:domain regulatory:Inspection ;
+    rdfs:range sc:Facility .
+
+regulatory:conducted_by a owl:ObjectProperty ;
+    rdfs:label "conducted by" ;
+    rdfs:comment "执行机构" ;
+    rdfs:domain regulatory:Inspection ;
+    rdfs:range regulatory:RegulatoryAgency .
+
+#===========================================================
+# 5. Guideline/Polic (指南/政策)
+#===========================================================
+
+regulatory:Guideline a owl:Class ;
+    rdfs:label "Guideline" ;
+    rdfs:subClassOf pharma:Entity ;
+    rdfs:comment "指南/政策" .
+
+regulatory:has_guideline_id a owl:DatatypeProperty , owl:FunctionalProperty ;
+    rdfs:label "has guideline identifier" ;
+    rdfs:comment "指南唯一标识符" ;
+    rdfs:domain regulatory:Guideline ;
+    rdfs:range xsd:string .
+
+regulatory:has_guideline_title a owl:DatatypeProperty ;
+    rdfs:label "has guideline title" ;
+    rdfs:comment "指南标题" ;
+    rdfs:domain regulatory:Guideline ;
+    rdfs:range xsd:string .
+
+regulatory:has_guideline_type a owl:ObjectProperty ;
+    rdfs:label "has guideline type" ;
+    rdfs:comment "指南类型" ;
+    rdfs:domain regulatory:Guideline ;
+    rdfs:range regulatory:GuidelineType .
+
+regulatory:has_publication_date a owl:DatatypeProperty ;
+    rdfs:label "has publication date" ;
+    rdfs:comment "发布日期" ;
+    rdfs:domain regulatory:Guideline ;
+    rdfs:range xsd:date .
+
+regulatory:has_effective_date a owl:DatatypeProperty ;
+    rdfs:label "has effective date" ;
+    rdfs:comment "生效日期" ;
+    rdfs:domain regulatory:Guideline ;
+    rdfs:range xsd:date .
+
+regulatory:has_superseded_date a owl:DatatypeProperty ;
+    rdfs:label "has superseded date" ;
+    rdfs:comment "废止日期" ;
+    rdfs:domain regulatory:Guideline ;
+    rdfs:range xsd:date .
+
+regulatory:has_guideline_status a owl:ObjectProperty ;
+    rdfs:label "has guideline status" ;
+    rdfs:comment "指南状态" ;
+    rdfs:domain regulatory:Guideline ;
+    rdfs:range regulatory:GuidelineStatus .
+
+regulatory:has_applicability a owl:DatatypeProperty ;
+    rdfs:label "has applicability" ;
+    rdfs:comment "适用范围" ;
+    rdfs:domain regulatory:Guideline ;
+    rdfs:range xsd:string .
+
+regulatory:has_topic a owl:DatatypeProperty ;
+    rdfs:label "has topic" ;
+    rdfs:comment "主题" ;
+    rdfs:domain regulatory:Guideline ;
+    rdfs:range xsd:string .
+
+regulatory:has_category a owl:DatatypeProperty ;
+    rdfs:label "has category" ;
+    rdfs:comment "类别" ;
+    rdfs:domain regulatory:Guideline ;
+    rdfs:range xsd:string .
+
+regulatory:issued_by a owl:ObjectProperty ;
+    rdfs:label "issued by" ;
+    rdfs:comment "发布机构" ;
+    rdfs:domain regulatory:Guideline ;
+    rdfs:range regulatory:RegulatoryAgency .
+
+regulatory:supersedes a owl:ObjectProperty ;
+    rdfs:label "supersedes" ;
+    rdfs:comment "替代" ;
+    rdfs:domain regulatory:Guideline ;
+    rdfs:range regulatory:Guideline .
+
+regulatory:applies_to_drug a owl:ObjectProperty ;
+    rdfs:label "applies to drug" ;
+    rdfs:comment "适用于药品" ;
+    rdfs:domain regulatory:Guideline ;
+    rdfs:range rd:Compound .
+
+regulatory:applies_to_manufacturer a owl:ObjectProperty ;
+    rdfs:label "applies to manufacturer" ;
+    rdfs:comment "适用于制造商" ;
+    rdfs:domain regulatory:Guideline ;
+    rdfs:range sc:Manufacturer .
+
+#===========================================================
+# 6. ComplianceAction (合规行动)
+#===========================================================
+
+regulatory:ComplianceAction a owl:Class ;
+    rdfs:label "Compliance Action" ;
+    rdfs:subClassOf pharma:Entity ;
+    rdfs:comment "合规行动/监管措施" .
+
+regulatory:has_action_id a owl:DatatypeProperty , owl:FunctionalProperty ;
+    rdfs:label "has action identifier" ;
+    rdfs:comment "行动标识符" ;
+    rdfs:domain regulatory:ComplianceAction ;
+    rdfs:range xsd:string .
+
+regulatory:has_action_type a owl:ObjectProperty ;
+    rdfs:label "has action type" ;
+    rdfs:comment "行动类型" ;
+    rdfs:domain regulatory:ComplianceAction ;
+    rdfs:range regulatory:ActionType .
+
+regulatory:has_action_date a owl:DatatypeProperty ;
+    rdfs:label "has action date" ;
+    rdfs:comment "行动日期" ;
+    rdfs:domain regulatory:ComplianceAction ;
+    rdfs:range xsd:date .
+
+regulatory:has_reason a owl:DatatypeProperty ;
+    rdfs:label "has reason" ;
+    rdfs:comment "原因" ;
+    rdfs:domain regulatory:ComplianceAction ;
+    rdfs:range xsd:string .
+
+regulatory:has_severity a owl:ObjectProperty ;
+    rdfs:label "has severity" ;
+    rdfs:comment "严重程度" ;
+    rdfs:domain regulatory:ComplianceAction ;
+    rdfs:range regulatory:ActionSeverity .
+
+regulatory:has_status a owl:ObjectProperty ;
+    rdfs:label "has status" ;
+    rdfs:comment "状态" ;
+    rdfs:domain regulatory:ComplianceAction ;
+    rdfs:range regulatory:ActionStatus .
+
+regulatory:has_resolution_date a owl:DatatypeProperty ;
+    rdfs:label "has resolution date" ;
+    rdfs:comment "解决日期" ;
+    rdfs:domain regulatory:ComplianceAction ;
+    rdfs:range xsd:date .
+
+regulatory:against_manufacturer a owl:ObjectProperty ;
+    rdfs:label "against manufacturer" ;
+    rdfs:comment "针对制造商" ;
+    rdfs:domain regulatory:ComplianceAction ;
+    rdfs:range sc:Manufacturer .
+
+regulatory:issued_by a owl:ObjectProperty ;
+    rdfs:label "issued by" ;
+    rdfs:comment "签发机构" ;
+    rdfs:domain regulatory:ComplianceAction ;
+    rdfs:range regulatory:RegulatoryAgency .
+
+regulatory:related_to_approval a owl:ObjectProperty ;
+    rdfs:label "related to approval" ;
+    rdfs:comment "相关批准" ;
+    rdfs:domain regulatory:ComplianceAction ;
+    rdfs:range regulatory:Approval .
+
+#===========================================================
+# 7. PostMarketingCommitment (上市后承诺)
+#===========================================================
+
+regulatory:PostMarketingCommitment a owl:Class ;
+    rdfs:label "Post Marketing Commitment" ;
+    rdfs:subClassOf pharma:Entity ;
+    rdfs:comment "上市后承诺/研究" .
+
+regulatory:has_pmc_id a owl:DatatypeProperty , owl:FunctionalProperty ;
+    rdfs:label "has PMC identifier" ;
+    rdfs:comment "PMC唯一标识符" ;
+    rdfs:domain regulatory:PostMarketingCommitment ;
+    rdfs:range xsd:string .
+
+regulatory:has_pmc_type a owl:ObjectProperty ;
+    rdfs:label "has PMC type" ;
+    rdfs:comment "PMC类型" ;
+    rdfs:domain regulatory:PostMarketingCommitment ;
+    rdfs:range regulatory:PMCType .
+
+regulatory:has_description a owl:DatatypeProperty ;
+    rdfs:label "has description" ;
+    rdfs:comment "描述" ;
+    rdfs:domain regulatory:PostMarketingCommitment ;
+    rdfs:range xsd:string .
+
+regulatory:has_submitted_date a owl:DatatypeProperty ;
+    rdfs:label "has submitted date" ;
+    rdfs:comment "提交日期" ;
+    rdfs:domain regulatory:PostMarketingCommitment ;
+    rdfs:range xsd:date .
+
+regulatory:has_due_date a owl:DatatypeProperty ;
+    rdfs:label "has due date" ;
+    rdfs:comment "截止日期" ;
+    rdfs:domain regulatory:PostMarketingCommitment ;
+    rdfs:range xsd:date .
+
+regulatory:has_completion_date a owl:DatatypeProperty ;
+    rdfs:label "has completion date" ;
+    rdfs:comment "完成日期" ;
+    rdfs:domain regulatory:PostMarketingCommitment ;
+    rdfs:range xsd:date .
+
+regulatory:has_status a owl:ObjectProperty ;
+    rdfs:label "has status" ;
+    rdfs:comment "状态" ;
+    rdfs:domain regulatory:PostMarketingCommitment ;
+    rdfs:range regulatory:PMCStatus .
+
+regulatory:pmc_for_drug a owl:ObjectProperty ;
+    rdfs:label "PMC for drug" ;
+    rdfs:comment "相关药品" ;
+    rdfs:domain regulatory:PostMarketingCommitment ;
+    rdfs:range rd:Compound .
+
+#===========================================================
+# 8. SafetySignal (安全性信号)
+#===========================================================
+
+regulatory:SafetySignal a owl:Class ;
+    rdfs:label "Safety Signal" ;
+    rdfs:subClassOf pharma:Entity ;
+    rdfs:comment "安全性信号" .
+
+regulatory:has_signal_id a owl:DatatypeProperty , owl:FunctionalProperty ;
+    rdfs:label "has signal identifier" ;
+    rdfs:comment "信号标识符" ;
+    rdfs:domain regulatory:SafetySignal ;
+    rdfs:range xsd:string .
+
+regulatory:has_signal_type a owl:ObjectProperty ;
+    rdfs:label "has signal type" ;
+    rdfs:comment "信号类型" ;
+    rdfs:domain regulatory:SafetySignal ;
+    rdfs:range regulatory:SignalType .
+
+regulatory:has_detection_date a owl:DatatypeProperty ;
+    rdfs:label "has detection date" ;
+    rdfs:comment "检测日期" ;
+    rdfs:domain regulatory:SafetySignal ;
+    rdfs:range xsd:date .
+
+regulatory:has_source a owl:DatatypeProperty ;
+    rdfs:label "has source" ;
+    rdfs:comment "来源" ;
+    rdfs:domain regulatory:SafetySignal ;
+    rdfs:range xsd:string .
+
+regulatory:has_severity a owl:ObjectProperty ;
+    rdfs:label "has severity" ;
+    rdfs:comment "严重程度" ;
+    rdfs:domain regulatory:SafetySignal ;
+    rdfs:range regulatory:SignalSeverity .
+
+regulatory:has_status a owl:ObjectProperty ;
+    rdfs:label "has status" ;
+    rdfs:comment "状态" ;
+    rdfs:domain regulatory:SafetySignal ;
+    rdfs:range regulatory:SignalStatus .
+
+regulatory:related_to_drug a owl:ObjectProperty ;
+    rdfs:label "related to drug" ;
+    rdfs:comment "相关药品" ;
+    rdfs:domain regulatory:SafetySignal ;
+    rdfs:range rd:Compound .
+
+regulatory:related_to_adverse_event a owl:ObjectProperty ;
+    rdfs:label "related to adverse event" ;
+    rdfs:comment "相关不良事件" ;
+    rdfs:domain regulatory:SafetySignal ;
+    rdfs:range clinical:AdverseEvent .
+
+#===========================================================
+# 监管辅助枚举类
+#===========================================================
+
+regulatory:AgencyType a owl:Class ;
+    rdfs:label "Agency Type" ;
+    rdfs:comment "机构类型" .
+
+regulatory:AgencyType_National a regulatory:AgencyType ;
+    rdfs:label "National Agency" ;
+    rdfs:comment "国家级机构" .
+
+regulatory:AgencyType_Regional a regulatory:AgencyType ;
+    rdfs:label "Regional Agency" ;
+    rdfs:comment "地区级机构" .
+
+regulatory:AgencyType_International a regulatory:AgencyType ;
+    rdfs:label "International Agency" ;
+    rdfs:comment "国际机构" .
+
+regulatory:SubmissionType a owl:Class ;
+    rdfs:label "Submission Type" ;
+    rdfs:comment "申报类型" .
+
+regulatory:SubmissionType_NDA a regulatory:SubmissionType ;
+    rdfs:label "NDA" ;
+    rdfs:comment "新药申请" .
+
+regulatory:SubmissionType_ANDA a regulatory:SubmissionType ;
+    rdfs:label "ANDA" ;
+    rdfs:comment "仿制药申请" .
+
+regulatory:SubmissionType_BLA a regulatory:SubmissionType ;
+    rdfs:label "BLA" ;
+    rdfs:comment "生物制品许可申请" .
+
+regulatory:SubmissionType_MAA a regulatory:SubmissionType ;
+    rdfs:label "MAA" ;
+    rdfs:comment "上市许可申请" .
+
+regulatory:SubmissionType_sNDA a regulatory:SubmissionType ;
+    rdfs:label "sNDA" ;
+    rdfs:comment "补充新药申请" .
+
+regulatory:SubmissionType_sBLA a regulatory:SubmissionType ;
+    rdfs:label "sBLA" ;
+    rdfs:comment "补充生物制品许可申请" .
+
+regulatory:SubmissionStatus a owl:Class ;
+    rdfs:label "Submission Status" ;
+    rdfs:comment "申报状态" .
+
+regulatory:SubmissionStatus_Submitted a regulatory:SubmissionStatus ;
+    rdfs:label "Submitted" ;
+    rdfs:comment "已提交" .
+
+regulatory:SubmissionStatus_Under_Review a regulatory:SubmissionStatus ;
+    rdfs:label "Under Review" ;
+    rdfs:comment "审评中" .
+
+regulatory:SubmissionStatus_Clock_Stopped a regulatory:SubmissionStatus ;
+    rdfs:label "Clock Stopped" ;
+    rdfs:comment "审评暂停" .
+
+regulatory:SubmissionStatus_Approved a regulatory:SubmissionStatus ;
+    rdfs:label "Approved" ;
+    rdfs:comment "已批准" .
+
+regulatory:SubmissionStatus_Rejected a regulatory:SubmissionStatus ;
+    rdfs:label "Rejected" ;
+    rdfs:comment "已拒绝" .
+
+regulatory:SubmissionStatus_Withdrawn a regulatory:SubmissionStatus ;
+    rdfs:label "Withdrawn" ;
+    rdfs:comment "已撤回" .
+
+regulatory:ReviewPriority a owl:Class ;
+    rdfs:label "Review Priority" ;
+    rdfs:comment "审评优先级" .
+
+regulatory:ReviewPriority_Standard a regulatory:ReviewPriority ;
+    rdfs:label "Standard Review" ;
+    rdfs:comment "标准审评" .
+
+regulatory:ReviewPriority_Priority a regulatory:ReviewPriority ;
+    rdfs:label "Priority Review" ;
+    rdfs:comment "优先审评" .
+
+regulatory:ReviewPriority_Accelerated a regulatory:ReviewPriority ;
+    rdfs:label "Accelerated Approval" ;
+    rdfs:comment "加速批准" .
+
+regulatory:ReviewPriority_Fast_Track a regulatory:ReviewPriority ;
+    rdfs:label "Fast Track" ;
+    rdfs:comment "快速通道" .
+
+regulatory:ReviewPriority_Breakthrough a regulatory:ReviewPriority ;
+    rdfs:label "Breakthrough Therapy" ;
+    rdfs:comment "突破性疗法" .
+
+regulatory:ReviewPriority_Rolling a regulatory:ReviewPriority ;
+    rdfs:label "Rolling Review" ;
+    rdfs:comment "滚动审评" .
+
+regulatory:ReviewStandard a owl:Class ;
+    rdfs:label "Review Standard" ;
+    rdfs:comment "审评标准" .
+
+regulatory:ReviewStandard_Full a regulatory:ReviewStandard ;
+    rdfs:label "Full Approval" ;
+    rdfs:comment "完全批准" .
+
+regulatory:ReviewStandard_Accelerated a regulatory:ReviewStandard ;
+    rdfs:label "Accelerated Approval" ;
+    rdfs:comment "加速批准" .
+
+regulatory:SubmissionTrack a owl:Class ;
+    rdfs:label "Submission Track" ;
+    rdfs:comment "申报轨道" .
+
+regulatory:Track_505b2 a regulatory:SubmissionTrack ;
+    rdfs:label "505(b)(2)" ;
+    rdfs:comment "505(b)(2)轨道" .
+
+regulatory:Track_Priority a regulatory:SubmissionTrack ;
+    rdfs:label "Priority Review" ;
+    rdfs:comment "优先审评轨道" .
+
+regulatory:ApprovalType a owl:Class ;
+    rdfs:label "Approval Type" ;
+    rdfs:comment "批准类型" .
+
+regulatory:ApprovalType_Full a regulatory:ApprovalType ;
+    rdfs:label "Full Approval" ;
+    rdfs:comment "完全批准" .
+
+regulatory:ApprovalType_Accelerated a regulatory:ApprovalType ;
+    rdfs:label "Accelerated Approval" ;
+    rdfs:comment "加速批准" .
+
+regulatory:ApprovalType_Tentative a regulatory:ApprovalType ;
+    rdfs:label "Tentative Approval" ;
+    rdfs:comment "暂时批准" .
+
+regulatory:ApprovalType_Emergency a regulatory:ApprovalType ;
+    rdfs:label "Emergency Use Authorization" ;
+    rdfs:comment "紧急使用授权" .
+
+regulatory:ApprovalStatus a owl:Class ;
+    rdfs:label "Approval Status" ;
+    rdfs:comment "批准状态" .
+
+regulatory:ApprovalStatus_Active a regulatory:ApprovalStatus ;
+    rdfs:label "Active" ;
+    rdfs:comment "有效" .
+
+regulatory:ApprovalStatus_Suspended a regulatory:ApprovalStatus ;
+    rdfs:label "Suspended" ;
+    rdfs:comment "暂停" .
+
+regulatory:ApprovalStatus_Withdrawn a regulatory:ApprovalStatus ;
+    rdfs:label "Withdrawn" ;
+    rdfs:comment "撤回" .
+
+regulatory:ApprovalStatus_Expired a regulatory:ApprovalStatus ;
+    rdfs:label "Expired" ;
+    rdfs:comment "过期" .
+
+regulatory:InspectionType a owl:Class ;
+    rdfs:label "Inspection Type" ;
+    rdfs:comment "检查类型" .
+
+regulatory:InspectionType_Pre_approval a regulatory:InspectionType ;
+    rdfs:label "Pre-approval Inspection" ;
+    rdfs:comment "批准前检查" .
+
+regulatory:InspectionType_Routine a regulatory:InspectionType ;
+    rdfs:label "Routine Inspection" ;
+    rdfs:comment "常规检查" .
+
+regulatory:InspectionType_For_cause a regulatory:InspectionType ;
+    rdfs:label "For-cause Inspection" ;
+    rdfs:comment "有因检查" .
+
+regulatory:InspectionType_Followup a regulatory:InspectionType ;
+    rdfs:label "Follow-up Inspection" ;
+    rdfs:comment "跟踪检查" .
+
+regulatory:InspectionResult a owl:Class ;
+    rdfs:label "Inspection Result" ;
+    rdfs:comment "检查结果" .
+
+regulatory:InspectionResult_NAI a regulatory:InspectionResult ;
+    rdfs:label "No Action Indicated" ;
+    rdfs:comment "无需采取行动" .
+
+regulatory:InspectionResult_VAI a regulatory:InspectionResult ;
+    rdfs:label "Voluntary Action Indicated" ;
+    rdfs:comment "建议自愿采取行动" .
+
+regulatory:InspectionResult_OAI a regulatory:InspectionResult ;
+    rdfs:label "Official Action Indicated" ;
+    rdfs:comment "需要官方行动" .
+
+regulatory:InspectionClassification a owl:Class ;
+    rdfs:label "Inspection Classification" ;
+    rdfs:comment "检查分类" .
+
+regulatory:Classification_PA a regulatory:InspectionClassification ;
+    rdfs:label "Pre-Approval" ;
+    rdfs:comment "批准前检查" .
+
+regulatory:Classification_RA a regulatory:InspectionClassification ;
+    rdfs:label "Routine Surveillance" ;
+    rdfs:comment "常规监督" .
+
+regulatory:Classification_FC a regulatory:InspectionClassification ;
+    rdfs:label "For-Cause" ;
+    rdfs:comment "有因检查" .
+
+regulatory:Classification_FU a regulatory:InspectionClassification ;
+    rdfs:label "Follow-Up" ;
+    rdfs:comment "跟踪检查" .
+
+regulatory:ActionType a owl:Class ;
+    rdfs:label "Action Type" ;
+    rdfs:comment "行动类型" .
+
+regulatory:ActionType_Warning_Letter a regulatory:ActionType ;
+    rdfs:label "Warning Letter" ;
+    rdfs:comment "警告信" .
+
+regulatory:ActionType_Import_Alert a regulatory:ActionType ;
+    rdfs:label "Import Alert" ;
+    rdfs:comment "进口警报" .
+
+regulatory:ActionType_Injunction a regulatory:ActionType ;
+    rdfs:label "Injunction" ;
+    rdfs:comment "禁令" .
+
+regulatory:ActionType_Seizure a regulatory:ActionType ;
+    rdfs:label "Seizure" ;
+    rdfs:comment "扣押" .
+
+regulatory:ActionType_Criminal a regulatory:ActionType ;
+    rdfs:label "Criminal Prosecution" ;
+    rdfs:comment "刑事起诉" .
+
+regulatory:ActionType_Consent_Decree a regulatory:ActionType ;
+    rdfs:label "Consent Decree" ;
+    rdfs:comment "同意法令" .
+
+regulatory:ActionType_Prosecution a regulatory:ActionType ;
+    rdfs:label "Prosecution" ;
+    rdfs:comment "起诉" .
+
+regulatory:GuidelineType a owl:Class ;
+    rdfs:label "Guideline Type" ;
+    rdfs:comment "指南类型" .
+
+regulatory:GuidelineType_Guidance a regulatory:GuidelineType ;
+    rdfs:label "Guidance" ;
+    rdfs:comment "指导原则" .
+
+regulatory:GuidelineType_Policy a regulatory:GuidelineType ;
+    rdfs:label "Policy" ;
+    rdfs:comment "政策" .
+
+regulatory:GuidelineType_Regulation a regulatory:GuidelineType ;
+    rdfs:label "Regulation" ;
+    rdfs:comment "法规" .
+
+regulatory:GuidelineType_Law a regulatory:GuidelineType ;
+    rdfs:label "Law" ;
+    rdfs:comment "法律" .
+
+regulatory:GuidelineStatus a owl:Class ;
+    rdfs:label "Guideline Status" ;
+    rdfs:comment "指南状态" .
+
+regulatory:GuidelineStatus_Draft a regulatory:GuidelineStatus ;
+    rdfs:label "Draft" ;
+    rdfs:comment "草案" .
+
+regulatory:GuidelineStatus_Final a regulatory:GuidelineStatus ;
+    rdfs:label "Final" ;
+    rdfs:comment "最终版" .
+
+regulatory:GuidelineStatus_Superseded a regulatory:GuidelineStatus ;
+    rdfs:label "Superseded" ;
+    rdfs:comment "已替代" .
+
+regulatory:GuidelineStatus_Withdrawn a regulatory:GuidelineStatus ;
+    rdfs:label "Withdrawn" ;
+    rdfs:comment "已撤回" .
+
+regulatory:PMCType a owl:Class ;
+    rdfs:label "PMC Type" ;
+    rdfs:comment "PMC类型" .
+
+regulatory:PMCType_Study a regulatory:PMCType ;
+    rdfs:label "Clinical Study" ;
+    rdfs:comment "临床研究" .
+
+regulatory:PMCType_Trial a regulatory:PMCType ;
+    rdfs:label "Clinical Trial" ;
+    rdfs:comment "临床试验" .
+
+regulatory:PMCType_Safety a regulatory:PMCType ;
+    rdfs:label "Safety Study" ;
+    rdfs:comment "安全性研究" .
+
+regulatory:PMCType_Mechanistic a regulatory:PMCType ;
+    rdfs:label "Mechanistic Study" ;
+    rdfs:comment "机制研究" .
+
+regulatory:PMCStatus a owl:Class ;
+    rdfs:label "PMC Status" ;
+    rdfs:comment "PMC状态" .
+
+regulatory:PMCStatus_Pending a regulatory:PMCStatus ;
+    rdfs:label "Pending" ;
+    rdfs:comment "待完成" .
+
+regulatory:PMCStatus_Submitted a regulatory:PMCStatus ;
+    rdfs:label "Submitted" ;
+    rdfs:comment "已提交" .
+
+regulatory:PMCStatus_In_Progress a regulatory:PMCStatus ;
+    rdfs:label "In Progress" ;
+    rdfs:comment "进行中" .
+
+regulatory:PMCStatus_Completed a regulatory:PMCStatus ;
+    rdfs:label "Completed" ;
+    rdfs:comment "已完成" .
+
+regulatory:PMCStatus_Delayed a regulatory:PMCStatus ;
+    rdfs:label "Delayed" ;
+    rdfs:comment "延期" .
+
+regulatory:PMCStatus_Released a regulatory:PMCStatus ;
+    rdfs:label "Released" ;
+    rdfs:comment "已解除" .
+
+regulatory:SignalType a owl:Class ;
+    rdfs:label "Signal Type" ;
+    rdfs:comment "信号类型" .
+
+regulatory:SignalType_ADR a regulatory:SignalType ;
+    rdfs:label "Adverse Drug Reaction" ;
+    rdfs:comment "药品不良反应" .
+
+regulatory:SignalType_Medication_Error a regulatory:SignalType ;
+    rdfs:label "Medication Error" ;
+    rdfs:comment "用药错误" .
+
+regulatory:SignalType_Quality a regulatory:SignalType ;
+    rdfs:label "Quality Issue" ;
+    rdfs:comment "质量问题" .
+
+regulatory:SignalType_Effectiveness a regulatory:SignalType ;
+    rdfs:label "Effectiveness Issue" ;
+    rdfs:comment "有效性问题" .
+
+regulatory:SignalSeverity a owl:Class ;
+    rdfs:label "Signal Severity" ;
+    rdfs:comment "信号严重程度" .
+
+regulatory:SignalSeverity_Serious a regulatory:SignalSeverity ;
+    rdfs:label "Serious" ;
+    rdfs:comment "严重" .
+
+regulatory:SignalSeverity_Moderate a regulatory:SignalSeverity ;
+    rdfs:label "Moderate" ;
+    rdfs:comment "中等" .
+
+regulatory:SignalSeverity_Minor a regulatory:SignalSeverity ;
+    rdfs:label "Minor" ;
+    rdfs:comment "轻微" .
+
+regulatory:SignalStatus a owl:Class ;
+    rdfs:label "Signal Status" ;
+    rdfs:comment "信号状态" .
+
+regulatory:SignalStatus_Detected a regulatory:SignalStatus ;
+    rdfs:label "Detected" ;
+    rdfs:comment "已检测" .
+
+regulatory:SignalStatus_Under_Investigation a regulatory:SignalStatus ;
+    rdfs:label "Under Investigation" ;
+    rdfs:comment "调查中" .
+
+regulatory:SignalStatus_Confirmed a regulatory:SignalStatus ;
+    rdfs:label "Confirmed" ;
+    rdfs:comment "已确认" .
+
+regulatory:SignalStatus_Rejected a regulatory:SignalStatus ;
+    rdfs:label "Rejected" ;
+    rdfs:comment "已拒绝" .
+
+regulatory:SignalStatus_Refuted a regulatory:SignalStatus ;
+    rdfs:label "Refuted" ;
+    rdfs:comment "已反驳" .
+
+regulatory:RegulatoryStatus a owl:Class ;
+    rdfs:label "Regulatory Status" ;
+    rdfs:comment "监管状态" .
+
+regulatory:Status_Compliant a regulatory:RegulatoryStatus ;
+    rdfs:label "Compliant" ;
+    rdfs:comment "合规" .
+
+regulatory:Status_Non_Compliant a regulatory:RegulatoryStatus ;
+    rdfs:label "Non-Compliant" ;
+    rdfs:comment "不合规" .
+
+regulatory:Status_Under_Review a regulatory:RegulatoryStatus ;
+    rdfs:label "Under Review" ;
+    rdfs:comment "审评中" .
+
+regulatory:ApprovalCondition a owl:Class ;
+    rdfs:label "Approval Condition" ;
+    rdfs:comment "批准条件" .
+
+regulatory:Condition_REMS a regulatory:ApprovalCondition ;
+    rdfs:label "REMS" ;
+    rdfs:comment "风险评估与缓解策略" .
+
+regulatory:Condition_Medication_Guide a regulatory:ApprovalCondition ;
+    rdfs:label "Medication Guide" ;
+    rdfs:comment "用药指南" .
+
+regulatory:Condition_Risk_Evaluation a regulatory:ApprovalCondition ;
+    rdfs:label "Risk Evaluation" ;
+    rdfs:comment "风险评估" .
+
+regulatory:Condition_Surveillance a regulatory:ApprovalCondition ;
+    rdfs:label "Post-Market Surveillance" ;
+    rdfs:comment "上市后监测" .
+
+#===========================================================
+# SHACL 约束示例
+#===========================================================
+
+sc:ManufacturerShape a sh:NodeShape ;
+    sh:targetClass sc:Manufacturer ;
+    sh:property [
+        sh:path sc:has_manufacturer_id ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+    ] ;
+    sh:property [
+        sh:path sc:has_manufacturer_name ;
+        sh:minCount 1 ;
+        sh:datatype xsd:string ;
+    ] .
+
+regulatory:SubmissionShape a sh:NodeShape ;
+    sh:targetClass regulatory:Submission ;
+    sh:property [
+        sh:path regulatory:has_submission_id ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+    ] .
+
+#===========================================================
+# 本体结束
+//===========================================================

@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find:*)",
+      "Bash(chmod:*)",
+      "Bash(./scripts/check_project.sh:*)",
+      "Bash(python3 scripts/check_project.py:*)"
+    ]
+  }
+}

@@ -1,0 +1,625 @@
+#===========================================================
+# 制药行业知识图谱 - R&D 领域标识符映射
+# Pharmaceutical Knowledge Graph - R&D Domain Identifier Mappings
+//===========================================================
+# 版本: v1.0
+# 创建日期: 2025-02-06
+# 描述: 定义R&D领域各实体的统一标识符系统和交叉引用规则
+//===========================================================
+
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix dct: <http://purl.org/dc/terms/> .
+@prefix pharma: <http://pharmakg.org/ontology/> .
+@prefix idmap: <http://pharmakg.org/ontology/idmap/> .
+
+#===========================================================
+# 标识符系统元数据
+#===========================================================
+
+idmap:IdentifierMapping a owl:Ontology ;
+    rdfs:label "PharmaKG Identifier Mapping System" ;
+    rdfs:comment "标识符映射系统，定义各实体的统一标识符和交叉引用规则" ;
+    owl:versionInfo "v1.0" ;
+    dct:created "2025-02-06"^^xsd:date .
+
+#===========================================================
+# 1. Compound (化合物) 标识符映射
+#===========================================================
+
+# 主标识符: InChIKey (IUPAC International Chemical Identifier)
+idmap:CompoundPrimaryIdentifier a skos:ConceptScheme ;
+    rdfs:label "Compound Primary Identifier System" ;
+    rdfs:comment "化合物主标识符系统" ;
+    skos:prefLabel "InChIKey" .
+
+idmap:InChIKey a skos:Concept ;
+    skos:inScheme idmap:CompoundPrimaryIdentifier ;
+    skos:prefLabel "InChIKey" ;
+    skos:altLabel "International Chemical Identifier Key" ;
+    rdfs:comment "IUPAC国际化学标识符密钥，27字符哈希值" ;
+    dct:format "text/plain" ;
+    dct:conformsTo <https://iupac.org/inchi/> ;
+    skos:example "CJNQAVVKURQDAF-UHFFFAOYSA-N" .
+
+# 辅助标识符
+idmap:CompoundSecondaryIdentifiers a skos:Collection ;
+    rdfs:label "Compound Secondary Identifiers" ;
+    rdfs:comment "化合物辅助标识符集合" .
+
+# PubChem CID
+idmap:PubChemCID a skos:Concept ;
+    skos:inScheme idmap:CompoundSecondaryIdentifiers ;
+    skos:prefLabel "PubChem CID" ;
+    rdfs:comment "PubChem化合物数据库标识符" ;
+    dct:source <https://pubchem.ncbi.nlm.nih.gov/> ;
+    skos:example "5291" .
+
+# ChEMBL ID
+idmap:ChEMBLID a skos:Concept ;
+    skos:inScheme idmap:CompoundSecondaryIdentifiers ;
+    skos:prefLabel "ChEMBL ID" ;
+    rdfs:comment "ChEMBL数据库标识符" ;
+    dct:source <https://www.ebi.ac.uk/chembl/> ;
+    skos:example "CHEMBL941" ;
+    skos:notationPattern "CHEMBL[0-9]+" .
+
+# DrugBank ID
+idmap:DrugBankID a skos:Concept ;
+    skos:inScheme idmap:CompoundSecondaryIdentifiers ;
+    skos:prefLabel "DrugBank ID" ;
+    rdfs:comment "DrugBank数据库标识符" ;
+    dct:source <https://go.drugbank.com/> ;
+    skos:example "DB00312" ;
+    skos:notationPattern "DB[0-9]+" .
+
+# UNII (Unique Ingredient Identifier)
+idmap:UNII a skos:Concept ;
+    skos:inScheme idmap:CompoundSecondaryIdentifiers ;
+    skos:prefLabel "UNII" ;
+    rdfs:comment "FDA唯一成分标识符" ;
+    dct:source <https://fda.gov/UNII> ;
+    skos:example "R40J748870" .
+
+# CAS Registry Number
+idmap:CASRN a skos:Concept ;
+    skos:inScheme idmap:CompoundSecondaryIdentifiers ;
+    skos:prefLabel "CAS RN" ;
+    rdfs:comment "美国化学文摘社登记号" ;
+    dct:source <https://www.cas.org/> ;
+    skos:example "107908-42-7" ;
+    skos:notationPattern "[0-9]{2,7}-[0-9]{2}-[0-9]" .
+
+# ZINC ID
+idmap:ZINCID a skos:Concept ;
+    skos:inScheme idmap:CompoundSecondaryIdentifiers ;
+    skos:prefLabel "ZINC ID" ;
+    rdfs:comment "ZINC数据库标识符" ;
+    dct:source <http://zinc.docking.org/> ;
+    skos:example "ZINC00000123" ;
+    skos:notationPattern "ZINC[0-9]+" .
+
+# ChemSpider ID
+idmap:ChemSpiderID a skos:Concept ;
+    skos:inScheme idmap:CompoundSecondaryIdentifiers ;
+    skos:prefLabel "ChemSpider ID" ;
+    rdfs:comment "ChemSpider数据库标识符" ;
+    dct:source <http://www.chemspider.com/> ;
+    skos:example "12345" .
+
+#===========================================================
+# 2. Target (靶点/基因/蛋白) 标识符映射
+#===========================================================
+
+# 主标识符: UniProt Accession
+idmap:TargetPrimaryIdentifier a skos:ConceptScheme ;
+    rdfs:label "Target Primary Identifier System" ;
+    rdfs:comment "靶点主标识符系统" ;
+    skos:prefLabel "UniProt Accession" .
+
+idmap:UniProtAccession a skos:Concept ;
+    skos:inScheme idmap:TargetPrimaryIdentifier ;
+    skos:prefLabel "UniProt Accession" ;
+    skos:altLabel "UniProt KB Entry Name" ;
+    rdfs:comment "UniProt蛋白质数据库登录号" ;
+    dct:format "text/plain" ;
+    dct:conformsTo <https://www.uniprot.org/> ;
+    skos:notationPattern "[OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9]([A-Z][A-Z0-9]{2}[0-9]){1,2}" ;
+    skos:example "P00533" .
+
+# 辅助标识符
+idmap:TargetSecondaryIdentifiers a skos:Collection ;
+    rdfs:label "Target Secondary Identifiers" ;
+    rdfs:comment "靶点辅助标识符集合" .
+
+# HGNC Gene Symbol
+idmap:HGNCGeneSymbol a skos:Concept ;
+    skos:inScheme idmap:TargetSecondaryIdentifiers ;
+    skos:prefLabel "HGNC Gene Symbol" ;
+    rdfs:comment "HUGO基因命名委员会基因符号" ;
+    dct:source <https://www.genenames.org/> ;
+    skos:example "EGFR" ;
+    skos:notationPattern "[A-Z][A-Z0-9-]*" .
+
+# Entrez Gene ID
+idmap:EntrezGeneID a skos:Concept ;
+    skos:inScheme idmap:TargetSecondaryIdentifiers ;
+    skos:prefLabel "Entrez Gene ID" ;
+    rdfs:comment "NCBI Gene数据库标识符" ;
+    dct:source <https://www.ncbi.nlm.nih.gov/gene> ;
+    skos:example "1956" .
+
+# Ensembl Gene ID
+idmap:EnsemblGeneID a skos:Concept ;
+    skos:inScheme idmap:TargetSecondaryIdentifiers ;
+    skos:prefLabel "Ensembl Gene ID" ;
+    rdfs:comment "Ensembl基因组数据库基因标识符" ;
+    dct:source <https://www.ensembl.org/> ;
+    skos:example "ENSG00000146648" ;
+    skos:notationPattern "ENS[A-Z]*G[0-9]{11}" .
+
+# RefSeq ID
+idmap:RefSeqID a skos:Concept ;
+    skos:inScheme idmap:TargetSecondaryIdentifiers ;
+    skos:prefLabel "RefSeq ID" ;
+    rdfs:comment "NCBI参考序列标识符" ;
+    dct:source <https://www.ncbi.nlm.nih.gov/refseq/> ;
+    skos:example "NM_005228" ;
+    skos:notationPattern "(NM|NP|XM|XP)_[0-9]+" .
+
+# HGNC ID
+idmap:HGNCID a skos:Concept ;
+    skos:inScheme idmap:TargetSecondaryIdentifiers ;
+    skos:prefLabel "HGNC ID" ;
+    rdfs:comment "HUGO基因命名委员会标识符" ;
+    dct:source <https://www.genenames.org/> ;
+    skos:example "HGNC:3236" ;
+    skos:notationPattern "HGNC:[0-9]+" .
+
+# UniProtKB Entry Name
+idmap:UniProtEntryName a skos:Concept ;
+    skos:inScheme idmap:TargetSecondaryIdentifiers ;
+    skos:prefLabel "UniProtKB Entry Name" ;
+    rdfs:comment "UniProt蛋白质条目名称" ;
+    dct:source <https://www.uniprot.org/> ;
+    skos:example "EGFR_HUMAN" ;
+    skos:notationPattern "[A-Z0-9]+_[A-Z]+" .
+
+# PDB ID
+idmap:PDBID a skos:Concept ;
+    skos:inScheme idmap:TargetSecondaryIdentifiers ;
+    skos:prefLabel "PDB ID" ;
+    rdfs:comment "蛋白质数据库结构标识符" ;
+    dct:source <https://www.rcsb.org/> ;
+    skos:example "1M17" ;
+    skos:notationPattern "[0-9][A-Z0-9]{3}" .
+
+#===========================================================
+# 3. Disease (疾病) 标识符映射
+#===========================================================
+
+# 主标识符: MONDO ID
+idmap:DiseasePrimaryIdentifier a skos:ConceptScheme ;
+    rdfs:label "Disease Primary Identifier System" ;
+    rdfs:comment "疾病主标识符系统" ;
+    skos:prefLabel "MONDO ID" .
+
+idmap:MONDOID a skos:Concept ;
+    skos:inScheme idmap:DiseasePrimaryIdentifier ;
+    skos:prefLabel "MONDO ID" ;
+    skos:altLabel "Monarch Disease Ontology ID" ;
+    rdfs:comment "Monarch疾病本体标识符" ;
+    dct:format "text/plain" ;
+    dct:conformsTo <https://mondo.monarchinitiative.org/> ;
+    skos:notationPattern "MONDO:[0-9]+" ;
+    skos:example "MONDO:0001913" .
+
+# 辅助标识符
+idmap:DiseaseSecondaryIdentifiers a skos:Collection ;
+    rdfs:label "Disease Secondary Identifiers" ;
+    rdfs:comment "疾病辅助标识符集合" .
+
+# ICD-10 Code
+idmap:ICD10 a skos:Concept ;
+    skos:inScheme idmap:DiseaseSecondaryIdentifiers ;
+    skos:prefLabel "ICD-10" ;
+    skos:altLabel "International Classification of Diseases 10th Revision" ;
+    rdfs:comment "国际疾病分类第10次修订版代码" ;
+    dct:source <https://icd.who.int/> ;
+    skos:example "C78" ;
+    skos:notationPattern "[A-Z][0-9][0-9.]?" .
+
+# ICD-11 Code
+idmap:ICD11 a skos:Concept ;
+    skos:inScheme idmap:DiseaseSecondaryIdentifiers ;
+    skos:prefLabel "ICD-11" ;
+    rdfs:comment "国际疾病分类第11次修订版代码" ;
+    dct:source <https://icd.who.int/> ;
+    skos:example "2A00" .
+
+# DOID (Disease Ontology ID)
+idmap:DOID a skos:Concept ;
+    skos:inScheme idmap:DiseaseSecondaryIdentifiers ;
+    skos:prefLabel "DOID" ;
+    rdfs:comment "疾病本体标识符" ;
+    dct:source <http://www.disease-ontology.org/> ;
+    skos:example "DOID:1324" ;
+    skos:notationPattern "DOID:[0-9]+" .
+
+# MeSH ID
+idmap:MeSHID a skos:Concept ;
+    skos:inScheme idmap:DiseaseSecondaryIdentifiers ;
+    skos:prefLabel "MeSH ID" ;
+    skos:altLabel "Medical Subject Headings ID" ;
+    rdfs:comment "医学主题词标识符" ;
+    dct:source <https://www.nlm.nih.gov/mesh/> ;
+    skos:example "D002289" ;
+    skos:notationPattern "D[0-9]+" .
+
+# SNOMED-CT ID
+idmap:SNOMEDCTID a skos:Concept ;
+    skos:inScheme idmap:DiseaseSecondaryIdentifiers ;
+    skos:prefLabel "SNOMED-CT ID" ;
+    rdfs:comment "系统医学临床术语集标识符" ;
+    dct:source <https://confluence.ihtsdotools.org/> ;
+    skos:example "363346000" ;
+    skos:notationPattern "[0-9]+" .
+
+# Orphanet ID
+idmap:OrphanetID a skos:Concept ;
+    skos:inScheme idmap:DiseaseSecondaryIdentifiers ;
+    skos:prefLabel "Orphanet ID" ;
+    rdfs:comment "罕见病数据库标识符" ;
+    dct:source <https://www.orpha.net/> ;
+    skos:example "228194" ;
+    skos:notationPattern "ORPHA[0-9]+" .
+
+# UMLS CUI
+idmap:UMLSCUI a skos:Concept ;
+    skos:inScheme idmap:DiseaseSecondaryIdentifiers ;
+    skos:prefLabel "UMLS CUI" ;
+    rdfs:comment "统一医学语言系统概念唯一标识符" ;
+    dct:source <https://www.nlm.nih.gov/research/umls/> ;
+    skos:example "C0023470" ;
+    skos:notationPattern "C[0-9]+" .
+
+#===========================================================
+# 4. Pathway (通路) 标识符映射
+#===========================================================
+
+# 主标识符: KEGG Pathway ID
+idmap:PathwayPrimaryIdentifier a skos:ConceptScheme ;
+    rdfs:label "Pathway Primary Identifier System" ;
+    rdfs:comment "通路主标识符系统" ;
+    skos:prefLabel "KEGG Pathway ID" .
+
+idmap:KEGGPathwayID a skos:Concept ;
+    skos:inScheme idmap:PathwayPrimaryIdentifier ;
+    skos:prefLabel "KEGG Pathway ID" ;
+    rdfs:comment "KEGG通路数据库标识符" ;
+    dct:format "text/plain" ;
+    dct:conformsTo <https://www.kegg.jp/kegg/pathway.html> ;
+    skos:notationPattern "(hsa|mmu|rno)[0-9]{5}" ;
+    skos:example "hsa04012" .
+
+# 辅助标识符
+idmap:PathwaySecondaryIdentifiers a skos:Collection ;
+    rdfs:label "Pathway Secondary Identifiers" ;
+    rdfs:comment "通路辅助标识符集合" .
+
+# Reactome ID
+idmap:ReactomeID a skos:Concept ;
+    skos:inScheme idmap:PathwaySecondaryIdentifiers ;
+    skos:prefLabel "Reactome ID" ;
+    rdfs:comment "Reactome通路数据库标识符" ;
+    dct:source <https://reactome.org/> ;
+    skos:example "R-HSA-177929" ;
+    skos:notationPattern "R-[A-Z]{3}-[0-9]+" .
+
+# WikiPathways ID
+idmap:WikiPathwaysID a skos:Concept ;
+    skos:inScheme idmap:PathwaySecondaryIdentifiers ;
+    skos:prefLabel "WikiPathways ID" ;
+    rdfs:comment "WikiPathways标识符" ;
+    dct:source <https://www.wikipathways.org/> ;
+    skos:example "WP355" ;
+    skos:notationPattern "WP[0-9]+" .
+
+# GO Biological Process ID
+idmap:GOBiologicalProcessID a skos:Concept ;
+    skos:inScheme idmap:PathwaySecondaryIdentifiers ;
+    skos:prefLabel "GO Biological Process ID" ;
+    rdfs:comment "Gene Ontology生物过程标识符" ;
+    dct:source <http://geneontology.org/> ;
+    skos:example "GO:0007165" ;
+    skos:notationPattern "GO:[0-9]{7}" .
+
+# BioCarta ID
+idmap:BioCartaID a skos:Concept ;
+    skos:inScheme idmap:PathwaySecondaryIdentifiers ;
+    skos:prefLabel "BioCarta ID" ;
+    rdfs:comment "BioCarta通路标识符" ;
+    dct:source <https://cgap.nci.nih.gov/Pathways/BioCarta_Pathways> ;
+    skos:example "h_egfrPathway" .
+
+#===========================================================
+# 5. Assay (实验) 标识符映射
+#===========================================================
+
+# 主标识符: Assay ID (自定义)
+idmap:AssayPrimaryIdentifier a skos:ConceptScheme ;
+    rdfs:label "Assay Primary Identifier System" ;
+    rdfs:comment "实验主标识符系统" ;
+    skos:prefLabel "Assay ID" .
+
+idmap:AssayID a skos:Concept ;
+    skos:inScheme idmap:AssayPrimaryIdentifier ;
+    skos:prefLabel "Assay ID" ;
+    rdfs:comment "实验唯一标识符" ;
+    dct:format "text/plain" ;
+    skos:notationPattern "ASSAY[0-9]+" ;
+    skos:example "ASSAY001" .
+
+# 辅助标识符
+idmap:AssaySecondaryIdentifiers a skos:Collection ;
+    rdfs:label "Assay Secondary Identifiers" ;
+    rdfs:comment "实验辅助标识符集合" .
+
+# PubChem AID
+idmap:PubChemAID a skos:Concept ;
+    skos:inScheme idmap:AssaySecondaryIdentifiers ;
+    skos:prefLabel "PubChem AID" ;
+    rdfs:comment "PubChem生物检测标识符" ;
+    dct:source <https://pubchem.ncbi.nlm.nih.gov/bioassay> ;
+    skos:example "1234" ;
+    skos:notationPattern "[0-9]+" .
+
+# ChEMBL Assay ID
+idmap:ChEMBLAssayID a skos:Concept ;
+    skos:inScheme idmap:AssaySecondaryIdentifiers ;
+    skos:prefLabel "ChEMBL Assay ID" ;
+    rdfs:comment "ChEMBL实验标识符" ;
+    dct:source <https://www.ebi.ac.uk/chembl/> ;
+    skos:example "CHEMBL613739" ;
+    skos:notationPattern "CHEMBL[0-9]+" .
+
+#===========================================================
+# 6. ClinicalTrial (临床试验) 标识符映射
+#===========================================================
+
+# 主标识符: NCT Number
+idmap:ClinicalTrialPrimaryIdentifier a skos:ConceptScheme ;
+    rdfs:label "Clinical Trial Primary Identifier System" ;
+    rdfs:comment "临床试验主标识符系统" ;
+    skos:prefLabel "NCT Number" .
+
+idmap:NCTNumber a skos:Concept ;
+    skos:inScheme idmap:ClinicalTrialPrimaryIdentifier ;
+    skos:prefLabel "NCT Number" ;
+    rdfs:comment "ClinicalTrials.gov标识符" ;
+    dct:format "text/plain" ;
+    dct:conformsTo <https://clinicaltrials.gov/> ;
+    skos:notationPattern "NCT[0-9]{8}" ;
+    skos:example "NCT04368728" .
+
+# 辅助标识符
+idmap:ClinicalTrialSecondaryIdentifiers a skos:Collection ;
+    rdfs:label "Clinical Trial Secondary Identifiers" ;
+    rdfs:comment "临床试验辅助标识符集合" .
+
+# EudraCT Number
+idmap:EudraCTNumber a skos:Concept ;
+    skos:inScheme idmap:ClinicalTrialSecondaryIdentifiers ;
+    skos:prefLabel "EudraCT Number" ;
+    rdfs:comment "欧盟临床试验数据库标识符" ;
+    dct:source <https://www.clinicaltrialsregister.eu/> ;
+    skos:example "2006-000105-33" ;
+    skos:notationPattern "[0-9]{4}-[0-9]{6}-[0-9]{2}" .
+
+# JCTC Number
+idmap:JCTCNumber a skos:Concept ;
+    skos:inScheme idmap:ClinicalTrialSecondaryIdentifiers ;
+    skos:prefLabel "JCTC Number" ;
+    rdfs:comment "日本临床试验标识符" ;
+    dct:source <https://jrct.niph.go.jp/> ;
+    skos:example "JPRN-Umin000012345" .
+
+# ChiCTR Number
+idmap:ChiCTRNumber a skos:Concept ;
+    skos:inScheme idmap:ClinicalTrialSecondaryIdentifiers ;
+    skos:prefLabel "ChiCTR Number" ;
+    rdfs:comment "中国临床试验注册中心标识符" ;
+    dct:source <http://www.chictr.org.cn/> ;
+    skos:example "ChiCTR2000032094" ;
+    skos:notationPattern "ChiCTR[0-9]{10}" .
+
+#===========================================================
+# 7. Organization (组织机构) 标识符映射
+#===========================================================
+
+# 主标识符: Organization ID (自定义)
+idmap:OrganizationPrimaryIdentifier a skos:ConceptScheme ;
+    rdfs:label "Organization Primary Identifier System" ;
+    rdfs:comment "组织机构主标识符系统" ;
+    skos:prefLabel "Organization ID" .
+
+idmap:OrganizationID a skos:Concept ;
+    skos:inScheme idmap:OrganizationPrimaryIdentifier ;
+    skos:prefLabel "Organization ID" ;
+    rdfs:comment "组织机构唯一标识符" ;
+    dct:format "text/plain" ;
+    skos:notationPattern "ORG[0-9]+" ;
+    skos:example "ORG001" .
+
+# 辅助标识符
+idmap:OrganizationSecondaryIdentifiers a skos:Collection ;
+    rdfs:label "Organization Secondary Identifiers" ;
+    rdfs:comment "组织机构辅助标识符集合" .
+
+# NCBI Organization ID
+idmap:NCBIOrgID a skos:Concept ;
+    skos:inScheme idmap:OrganizationSecondaryIdentifiers ;
+    skos:prefLabel "NCBI Organization ID" ;
+    rdfs:comment "NCBI组织机构标识符" ;
+    dct:source <https://www.ncbi.nlm.nih.gov/> ;
+    skos:example "2611" .
+
+# GRID ID
+idmap:GRIDID a skos:Concept ;
+    skos:inScheme idmap:OrganizationSecondaryIdentifiers ;
+    skos:prefLabel "GRID ID" ;
+    rdfs:comment "全球研究标识符数据库" ;
+    dct:source <https://www.grid.ac/> ;
+    skos:example "grid.266100.3" .
+
+# ROR ID
+idmap:RORID a skos:Concept ;
+    skos:inScheme idmap:OrganizationSecondaryIdentifiers ;
+    skos:prefLabel "ROR ID" ;
+    rdfs:comment "研究组织注册标识符" ;
+    dct:source <https://ror.org/> ;
+    skos:example "https://ror.org/03a1m4280" .
+
+#===========================================================
+# 8. 标识符映射关系定义
+#===========================================================
+
+# 同一实体在不同数据库中的映射
+idmap:sameAs a owl:SymmetricProperty ;
+    rdfs:label "same as" ;
+    rdfs:comment "表示两个标识符指向同一实体" ;
+    rdfs:domain skos:Concept ;
+    rdfs:range skos:Concept .
+
+# 标识符转换关系
+idmap:mappedFrom a owl:ObjectProperty ;
+    rdfs:label "mapped from" ;
+    rdfs:comment "从源数据库标识符映射" ;
+    rdfs:domain idmap:TargetPrimaryIdentifier ;
+    rdfs:range idmap:TargetSecondaryIdentifiers .
+
+idmap:mappedTo a owl:ObjectProperty ;
+    rdfs:label "mapped to" ;
+    rdfs:comment "映射到目标数据库标识符" ;
+    rdfs:domain idmap:TargetSecondaryIdentifiers ;
+    rdfs:range idmap:TargetPrimaryIdentifier .
+
+#===========================================================
+# 9. 标识符优先级规则
+#===========================================================
+
+# Compound 标识符优先级
+idmap:CompoundIdentifierPriority a rdf:Seq ;
+    rdfs:label "Compound Identifier Priority" ;
+    rdfs:comment "化合物标识符使用优先级" ;
+    rdf:_1 idmap:InChIKey ;           # 主标识符
+    rdf:_2 idmap:PubChemCID ;         # 首选辅助标识符
+    rdf:_3 idmap:ChEMBLID ;           # 次选辅助标识符
+    rdf:_4 idmap:DrugBankID ;         # 第三选择
+    rdf:_5 idmap:UNII ;               # 第四选择
+    rdf:_6 idmap:CASRN ;              # 第五选择
+    rdf:_7 idmap:ZINCID .             # 最后选择
+
+# Target 标识符优先级
+idmap:TargetIdentifierPriority a rdf:Seq ;
+    rdfs:label "Target Identifier Priority" ;
+    rdfs:comment "靶点标识符使用优先级" ;
+    rdf:_1 idmap:UniProtAccession ;   # 主标识符
+    rdf:_2 idmap:HGNCGeneSymbol ;     # 首选辅助标识符
+    rdf:_3 idmap:EntrezGeneID ;       # 次选辅助标识符
+    rdf:_4 idmap:EnsemblGeneID ;      # 第三选择
+    rdf:_5 idmap:RefSeqID ;           # 第四选择
+    rdf:_6 idmap:PDBID .              # 结构数据
+
+# Disease 标识符优先级
+idmap:DiseaseIdentifierPriority a rdf:Seq ;
+    rdfs:label "Disease Identifier Priority" ;
+    rdfs:comment "疾病标识符使用优先级" ;
+    rdf:_1 idmap:MONDOID ;            # 主标识符
+    rdf:_2 idmap:ICD10 ;              # 临床应用
+    rdf:_3 idmap:DOID ;               # 研究应用
+    rdf:_4 idmap:MeSHID ;             # 文献索引
+    rdf:_5 idmap:SNOMEDCTID ;         # 临床术语
+    rdf:_6 idmap:UMLSCUI .            # 综合映射
+
+# Pathway 标识符优先级
+idmap:PathwayIdentifierPriority a rdf:Seq ;
+    rdfs:label "Pathway Identifier Priority" ;
+    rdfs:comment "通路标识符使用优先级" ;
+    rdf:_1 idmap:KEGGPathwayID ;      # 主标识符
+    rdf:_2 idmap:ReactomeID ;         # 首选辅助标识符
+    rdf:_3 idmap:WikiPathwaysID ;     # 次选辅助标识符
+    rdf:_4 idmap:GOBiologicalProcessID .  # 功能注释
+
+#===========================================================
+# 10. 标识符验证规则
+#===========================================================
+
+# InChIKey 格式验证
+idmap:InChIKeyPattern a sh:PropertyShape ;
+    sh:path pharma:has_inchikey ;
+    sh:pattern "[A-Z]{14}-[A-Z]{10}-[A-Z]" ;
+    sh:flags "i" ;
+    sh:message "InChIKey必须符合格式: 14字符-10字符-1字符" .
+
+# UniProt Accession 格式验证
+idmap:UniProtPattern a sh:PropertyShape ;
+    sh:path pharma:has_uniprot_id ;
+    sh:pattern "[OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9]([A-Z][A-Z0-9]{2}[0-9]){1,2}" ;
+    sh:message "UniProt Accession格式无效" .
+
+# ChEMBL ID 格式验证
+idmap:ChEMBLPattern a sh:PropertyShape ;
+    sh:path pharma:has_chembl_id ;
+    sh:pattern "CHEMBL[0-9]+" ;
+    sh:message "ChEMBL ID必须以CHEMBL开头" .
+
+# MONDO ID 格式验证
+idmap:MONDOPattern a sh:PropertyShape ;
+    sh:path pharma:has_mondo_id ;
+    sh:pattern "MONDO:[0-9]+" ;
+    sh:message "MONDO ID必须以MONDO:开头" .
+
+# NCT Number 格式验证
+idmap:NCTPattern a sh:PropertyShape ;
+    sh:path pharma:has_nct_number ;
+    sh:pattern "NCT[0-9]{8}" ;
+    sh:message "NCT Number必须符合格式: NCT + 8位数字" .
+
+#===========================================================
+# 11. 标识符映射示例
+#===========================================================
+
+# Compound 映射示例
+idmap:ExampleCompoundMapping a rdf:Description ;
+    rdfs:label "Imatinib Identifier Mapping Example" ;
+    idmap:InChIKey "CJNQAVVKURQDAF-UHFFFAOYSA-N" ;
+    idmap:PubChemCID "5291" ;
+    idmap:ChEMBLID "CHEMBL941" ;
+    idmap:DrugBankID "DB00312" ;
+    idmap:UNII "R40J748870" .
+
+# Target 映射示例
+idmap:ExampleTargetMapping a rdf:Description ;
+    rdfs:label "EGFR Identifier Mapping Example" ;
+    idmap:UniProtAccession "P00533" ;
+    idmap:HGNCGeneSymbol "EGFR" ;
+    idmap:EntrezGeneID "1956" ;
+    idmap:EnsemblGeneID "ENSG00000146648" ;
+    idmap:UniProtEntryName "EGFR_HUMAN" .
+
+# Disease 映射示例
+idmap:ExampleDiseaseMapping a rdf:Description ;
+    rdfs:label "Lung Cancer Identifier Mapping Example" ;
+    idmap:MONDOID "MONDO:0001913" ;
+    idmap:ICD10 "C78" ;
+    idmap:DOID "DOID:1324" ;
+    idmap:MeSHID "D002289" ;
+    idmap:UMLSCUI "C0022870" .
+
+#===========================================================
+# 本体结束
+//===========================================================

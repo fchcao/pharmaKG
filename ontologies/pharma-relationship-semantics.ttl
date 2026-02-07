@@ -1,0 +1,1397 @@
+#===========================================================
+# 制药行业知识图谱 - 关系语义细化与谓词体系
+# Pharmaceutical Knowledge Graph - Relationship Semantics & Predicate System
+#===========================================================
+# 版本: v1.0
+# 创建日期: 2025-02-06
+# 描述: 定义跨四大领域的精细化关系语义，包括谓词体系、
+#       关系属性、约束规则和推理基础
+#===========================================================
+
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix pharma: <http://pharmakg.org/ontology/> .
+@prefix rd: <http://pharmakg.org/ontology/rd/> .
+@prefix clinical: <http://pharmakg.org/ontology/clinical/> .
+@prefix sc: <http://pharmakg.org/ontology/sc/> .
+@prefix regulatory: <http://pharmakg.org/ontology/regulatory/> .
+@prefix rel: <http://pharmakg.org/ontology/relationship/> .
+
+#===========================================================
+# 本体元数据
+#===========================================================
+
+pharma:RelationshipSemantics a owl:Ontology ;
+    rdfs:label "PharmaKG Relationship Semantics and Predicate System" ;
+    rdfs:comment "精细化关系语义定义，覆盖R&D、临床、供应链、监管四大领域" ;
+    owl:versionInfo "v1.0" ;
+    owl:versionIRI <http://pharmakg.org/ontology/relationship/1.0> ;
+    dc:date "2025-02-06"^^xsd:date ;
+    dc:creator "PharmaKG Project Team" .
+
+#===========================================================
+# 关系属性通用定义
+#===========================================================
+
+# 关系强度
+rel:has_strength a owl:DatatypeProperty ;
+    rdfs:label "has strength" ;
+    rdfs:comment "关系的强度或置信度 (0.0-1.0)" ;
+    rdfs:range xsd:decimal .
+
+# 关系证据级别
+rel:evidence_level a owl:DatatypeProperty ;
+    rdfs:label "evidence level" ;
+    rdfs:comment "证据级别: A(强)、B(中)、C(弱)、D(推测)" ;
+    rdfs:range xsd:string .
+
+# 关系时态信息
+rel:start_date a owl:DatatypeProperty ;
+    rdfs:label "start date" ;
+    rdfs:comment "关系生效开始日期" ;
+    rdfs:range xsd:date .
+
+rel:end_date a owl:DatatypeProperty ;
+    rdfs:label "end date" ;
+    rdfs:comment "关系生效结束日期" ;
+    rdfs:range xsd:date .
+
+# 关系数据源
+rel:source_database a owl:DatatypeProperty ;
+    rdfs:label "source database" ;
+    rdfs:comment "关系来源数据库" ;
+    rdfs:range xsd:string .
+
+# 关系来源文献
+rel:source_publication a owl:DatatypeProperty ;
+    rdfs:label "source publication" ;
+    rdfs:comment "关系来源文献DOI或PMID" ;
+    rdfs:range xsd:string .
+
+# 关系量化指标
+rel:ic50 a owl:DatatypeProperty ;
+    rdfs:label "IC50" ;
+    rdfs:comment "半抑制浓度 (nM)" ;
+    rdfs:range xsd:decimal .
+
+rel:ki a owl:DatatypeProperty ;
+    rdfs:label "Ki" ;
+    rdfs:comment "抑制常数 (nM)" ;
+    rdfs:range xsd:decimal .
+
+rel:ec50 a owl:DatatypeProperty ;
+    rdfs:label "EC50" ;
+    rdfs:comment "半有效浓度 (nM)" ;
+    rdfs:range xsd:decimal .
+
+rel:dose a owl:DatatypeProperty ;
+    rdfs:label "dose" ;
+    rdfs:comment "剂量 (mg)" ;
+    rdfs:range xsd:decimal .
+
+rel:frequency a owl:DatatypeProperty ;
+    rdfs:label "frequency" ;
+    rdfs:comment "发生频率或次数" ;
+    rdfs:range xsd:integer .
+
+#===========================================================
+# 一、R&D 领域关系定义
+#===========================================================
+
+#-----------------------------------------------------------
+# 1.1 化合物-靶点关系 (Compound-Target Relationships)
+#-----------------------------------------------------------
+
+rel:INHIBITS a owl:ObjectProperty ;
+    rdfs:label "inhibits" ;
+    rdfs:comment "化合物抑制靶点的活性" ;
+    rdfs:domain rd:Compound ;
+    rdfs:range rd:Target ;
+    rdfs:subPropertyOf rel:interacts_with_target ;
+    owl:inverseOf rel:INHIBITED_BY ;
+    rel:evidence_level "A" ;
+    rdfs:seeAlso <https://www.ebi.ac.uk/chembl/api/data/schema/> .
+
+rel:INHIBITED_BY a owl:ObjectProperty ;
+    rdfs:label "inhibited by" ;
+    rdfs:comment "靶点被化合物抑制" ;
+    rdfs:domain rd:Target ;
+    rdfs:range rd:Compound ;
+    owl:inverseOf rel:INHIBITS .
+
+rel:ACTIVATES a owl:ObjectProperty ;
+    rdfs:label "activates" ;
+    rdfs:comment "化合物激活或增强靶点的活性" ;
+    rdfs:domain rd:Compound ;
+    rdfs:range rd:Target ;
+    rdfs:subPropertyOf rel:interacts_with_target ;
+    owl:inverseOf rel:ACTIVATED_BY ;
+    rel:evidence_level "A" .
+
+rel:ACTIVATED_BY a owl:ObjectProperty ;
+    rdfs:label "activated by" ;
+    rdfs:comment "靶点被化合物激活" ;
+    rdfs:domain rd:Target ;
+    rdfs:range rd:Compound ;
+    owl:inverseOf rel:ACTIVATES .
+
+rel:BINDS_TO a owl:ObjectProperty ;
+    rdfs:label "binds to" ;
+    rdfs:comment "化合物与靶点物理结合，但不明确激活或抑制" ;
+    rdfs:domain rd:Compound ;
+    rdfs:range rd:Target ;
+    rdfs:subPropertyOf rel:interacts_with_target ;
+    owl:inverseOf rel:BINDS_COMPOUND ;
+    rel:evidence_level "B" .
+
+rel:BINDS_COMPOUND a owl:ObjectProperty ;
+    rdfs:label "binds compound" ;
+    rdfs:comment "靶点与化合物结合" ;
+    rdfs:domain rd:Target ;
+    rdfs:range rd:Compound ;
+    owl:inverseOf rel:BINDS_TO .
+
+rel:MODULATES a owl:ObjectProperty ;
+    rdfs:label "modulates" ;
+    rdfs:comment "化合物调节靶点活性（可能是双向调节）" ;
+    rdfs:domain rd:Compound ;
+    rdfs:range rd:Target ;
+    rdfs:subPropertyOf rel:interacts_with_target ;
+    owl:inverseOf rel:MODULATED_BY ;
+    rel:evidence_level "C" .
+
+rel:MODULATED_BY a owl:ObjectProperty ;
+    rdfs:label "modulated by" ;
+    rdfs:comment "靶点被化合物调节" ;
+    rdfs:domain rd:Target ;
+    rdfs:range rd:Compound ;
+    owl:inverseOf rel:MODULATES .
+
+rel:AGONIST_OF a owl:ObjectProperty ;
+    rdfs:label "agonist of" ;
+    rdfs:comment "化合物是靶点的激动剂" ;
+    rdfs:domain rd:Compound ;
+    rdfs:range rd:Target ;
+    rdfs:subPropertyOf rel:ACTIVATES ;
+    owl:inverseOf rel:HAS_AGONIST .
+
+rel:HAS_AGONIST a owl:ObjectProperty ;
+    rdfs:label "has agonist" ;
+    rdfs:comment "靶点的激动剂" ;
+    rdfs:domain rd:Target ;
+    rdfs:range rd:Compound ;
+    owl:inverseOf rel:AGONIST_OF .
+
+rel:ANTAGONIST_OF a owl:ObjectProperty ;
+    rdfs:label "antagonist of" ;
+    rdfs:comment "化合物是靶点的拮抗剂" ;
+    rdfs:domain rd:Compound ;
+    rdfs:range rd:Target ;
+    rdfs:subPropertyOf rel:INHIBITS ;
+    owl:inverseOf rel:HAS_ANTAGONIST .
+
+rel:HAS_ANTAGONIST a owl:ObjectProperty ;
+    rdfs:label "has antagonist" ;
+    rdfs:comment "靶点的拮抗剂" ;
+    rdfs:domain rd:Target ;
+    rdfs:range rd:Compound ;
+    owl:inverseOf rel:ANTAGONIST_OF .
+
+rel:ALLOSTERIC_MODULATOR_OF a owl:ObjectProperty ;
+    rdfs:label "allosteric modulator of" ;
+    rdfs:comment "化合物是靶点的变构调节剂" ;
+    rdfs:domain rd:Compound ;
+    rdfs:range rd:Target ;
+    rdfs:subPropertyOf rel:MODULATES ;
+    owl:inverseOf rel:HAS_ALLOSTERIC_MODULATOR .
+
+rel:PARTIAL_AGONIST_OF a owl:ObjectProperty ;
+    rdfs:label "partial agonist of" ;
+    rdfs:comment "化合物是靶点的部分激动剂" ;
+    rdfs:domain rd:Compound ;
+    rdfs:range rd:Target ;
+    rdfs:subPropertyOf rel:AGONIST_OF .
+
+rel:COMPETITIVE_INHIBITOR_OF a owl:ObjectProperty ;
+    rdfs:label "competitive inhibitor of" ;
+    rdfs:comment "化合物是靶点的竞争性抑制剂" ;
+    rdfs:domain rd:Compound ;
+    rdfs:range rd:Target ;
+    rdfs:subPropertyOf rel:INHIBITS .
+
+rel:NONCOMPETITIVE_INHIBITOR_OF a owl:ObjectProperty ;
+    rdfs:label "non-competitive inhibitor of" ;
+    rdfs:comment "化合物是靶点的非竞争性抑制剂" ;
+    rdfs:domain rd:Compound ;
+    rdfs:range rd:Target ;
+    rdfs:subPropertyOf rel:INHIBITS .
+
+#-----------------------------------------------------------
+# 1.2 靶点-通路关系 (Target-Pathway Relationships)
+#-----------------------------------------------------------
+
+rel:PARTICIPATES_IN a owl:ObjectProperty ;
+    rdfs:label "participates in" ;
+    rdfs:comment "靶点参与某生物学通路" ;
+    rdfs:domain rd:Target ;
+    rdfs:range rd:Pathway ;
+    owl:inverseOf rel:HAS_PARTICIPANT ;
+    rel:evidence_level "A" .
+
+rel:HAS_PARTICIPANT a owl:ObjectProperty ;
+    rdfs:label "has participant" ;
+    rdfs:comment "通路包含该靶点作为参与者" ;
+    rdfs:domain rd:Pathway ;
+    rdfs:range rd:Target ;
+    owl:inverseOf rel:PARTICIPATES_IN .
+
+rel:REGULATES_PATHWAY a owl:ObjectProperty ;
+    rdfs:label "regulates pathway" ;
+    rdfs:comment "靶点调节通路的活性" ;
+    rdfs:domain rd:Target ;
+    rdfs:range rd:Pathway ;
+    owl:inverseOf rel:REGULATED_BY_TARGET ;
+    rel:evidence_level "A" .
+
+rel:REGULATED_BY_TARGET a owl:ObjectProperty ;
+    rdfs:label "regulated by target" ;
+    rdfs:comment "通路被靶点调节" ;
+    rdfs:domain rd:Pathway ;
+    rdfs:range rd:Target ;
+    owl:inverseOf rel:REGULATES_PATHWAY .
+
+rel:UPREGULATES a owl:ObjectProperty ;
+    rdfs:label "upregulates" ;
+    rdfs:comment "靶点上调通路活性" ;
+    rdfs:domain rd:Target ;
+    rdfs:range rd:Pathway ;
+    rdfs:subPropertyOf rel:REGULATES_PATHWAY .
+
+rel:DOWNREGULATES a owl:ObjectProperty ;
+    rdfs:label "downregulates" ;
+    rdfs:comment "靶点下调通路活性" ;
+    rdfs:domain rd:Target ;
+    rdfs:range rd:Pathway ;
+    rdfs:subPropertyOf rel:REGULATES_PATHWAY .
+
+rel:ACTIVATES_PATHWAY a owl:ObjectProperty ;
+    rdfs:label "activates pathway" ;
+    rdfs:comment "靶点激活通路" ;
+    rdfs:domain rd:Target ;
+    rdfs:range rd:Pathway ;
+    rdfs:subPropertyOf rel:UPREGULATES .
+
+rel:INHIBITS_PATHWAY a owl:ObjectProperty ;
+    rdfs:label "inhibits pathway" ;
+    rdfs:comment "靶点抑制通路" ;
+    rdfs:domain rd:Target ;
+    rdfs:range rd:Pathway ;
+    rdfs:subPropertyOf rel:DOWNREGULATES .
+
+#-----------------------------------------------------------
+# 1.3 化合物-疾病关系 (Compound-Disease Relationships)
+#-----------------------------------------------------------
+
+rel:TREATS a owl:ObjectProperty ;
+    rdfs:label "treats" ;
+    rdfs:comment "化合物治疗某种疾病" ;
+    rdfs:domain rd:Compound ;
+    rdfs:range rd:Disease ;
+    owl:inverseOf rel:TREATED_BY ;
+    rel:evidence_level "A" ;
+    rdfs:seeAlso <https://www.drugbank.com/categories> .
+
+rel:TREATED_BY a owl:ObjectProperty ;
+    rdfs:label "treated by" ;
+    rdfs:comment "疾病被某化合物治疗" ;
+    rdfs:domain rd:Disease ;
+    rdfs:range rd:Compound ;
+    owl:inverseOf rel:TREATS .
+
+rel:PREVENTS a owl:ObjectProperty ;
+    rdfs:label "prevents" ;
+    rdfs:comment "化合物预防某种疾病" ;
+    rdfs:domain rd:Compound ;
+    rdfs:range rd:Disease ;
+    owl:inverseOf rel:PREVENTED_BY ;
+    rel:evidence_level "B" .
+
+rel:PREVENTED_BY a owl:ObjectProperty ;
+    rdfs:label "prevented by" ;
+    rdfs:comment "疾病被某化合物预防" ;
+    rdfs:domain rd:Disease ;
+    rdfs:range rd:Compound ;
+    owl:inverseOf rel:PREVENTS .
+
+rel:CONTRAINDICATED_FOR a owl:ObjectProperty ;
+    rdfs:label "contraindicated for" ;
+    rdfs:comment "化合物对某种疾病禁忌使用" ;
+    rdfs:domain rd:Compound ;
+    rdfs:range rd:Disease ;
+    owl:inverseOf rel:HAS_CONTRAINDICATION ;
+    rel:evidence_level "A" .
+
+rel:HAS_CONTRAINDICATION a owl:ObjectProperty ;
+    rdfs:label "has contraindication" ;
+    rdfs:comment "疾病对该化合物禁忌" ;
+    rdfs:domain rd:Disease ;
+    rdfs:range rd:Compound ;
+    owl:inverseOf rel:CONTRAINDICATED_FOR .
+
+rel:SYMPTOM_OF a owl:ObjectProperty ;
+    rdfs:label "symptom of" ;
+    rdfs:comment "化合物是某种疾病的症状或副作用" ;
+    rdfs:domain rd:Compound ;
+    rdfs:range rd:Disease ;
+    owl:inverseOf rel:CAUSES_SYMPTOM ;
+    rel:evidence_level "B" .
+
+rel:CAUSES_SYMPTOM a owl:ObjectProperty ;
+    rdfs:label "causes symptom" ;
+    rdfs:comment "疾病被化合物引起的症状" ;
+    rdfs:domain rd:Disease ;
+    rdfs:range rd:Compound ;
+    owl:inverseOf rel:SYMPTOM_OF .
+
+rel:ASSOCIATED_WITH_TREATMENT a owl:ObjectProperty ;
+    rdfs:label "associated with treatment" ;
+    rdfs:comment "化合物与疾病治疗相关联（证据较弱）" ;
+    rdfs:domain rd:Compound ;
+    rdfs:range rd:Disease ;
+    owl:inverseOf rel:TREATMENT_ASSOCIATION ;
+    rel:evidence_level "D" .
+
+rel:TREATMENT_ASSOCIATION a owl:ObjectProperty ;
+    rdfs:label "treatment association" ;
+    rdfs:comment "疾病与化合物治疗相关联" ;
+    rdfs:domain rd:Disease ;
+    rdfs:range rd:Compound ;
+    owl:inverseOf rel:ASSOCIATED_WITH_TREATMENT .
+
+rel:POTENTIALLY_TREATS a owl:ObjectProperty ;
+    rdfs:label "potentially treats" ;
+    rdfs:comment "化合物可能治疗某种疾病（基于推理）" ;
+    rdfs:domain rd:Compound ;
+    rdfs:range rd:Disease ;
+    rdfs:subPropertyOf rel:ASSOCIATED_WITH_TREATMENT ;
+    rel:evidence_level "D" .
+
+#-----------------------------------------------------------
+# 1.4 靶点-疾病关系 (Target-Disease Relationships)
+#-----------------------------------------------------------
+
+rel:ASSOCIATED_WITH_DISEASE a owl:ObjectProperty ;
+    rdfs:label "associated with disease" ;
+    rdfs:comment "靶点与疾病相关联" ;
+    rdfs:domain rd:Target ;
+    rdfs:range rd:Disease ;
+    owl:inverseOf rel:HAS_ASSOCIATED_TARGET ;
+    rel:evidence_level "B" .
+
+rel:HAS_ASSOCIATED_TARGET a owl:ObjectProperty ;
+    rdfs:label "has associated target" ;
+    rdfs:comment "疾病相关的靶点" ;
+    rdfs:domain rd:Disease ;
+    rdfs:range rd:Target ;
+    owl:inverseOf rel:ASSOCIATED_WITH_DISEASE .
+
+rel:BIOMARKER_FOR a owl:ObjectProperty ;
+    rdfs:label "biomarker for" ;
+    rdfs:comment "靶点是疾病的生物标志物" ;
+    rdfs:domain rd:Target ;
+    rdfs:range rd:Disease ;
+    rdfs:subPropertyOf rel:ASSOCIATED_WITH_DISEASE ;
+    owl:inverseOf rel:HAS_BIOMARKER ;
+    rel:evidence_level "A" .
+
+rel:HAS_BIOMARKER a owl:ObjectProperty ;
+    rdfs:label "has biomarker" ;
+    rdfs:comment "疾病的生物标志物" ;
+    rdfs:domain rd:Disease ;
+    rdfs:range rd:Target ;
+    owl:inverseOf rel:BIOMARKER_FOR .
+
+rel:CAUSES_DISEASE a owl:ObjectProperty ;
+    rdfs:label "causes disease" ;
+    rdfs:comment "靶点异常导致疾病" ;
+    rdfs:domain rd:Target ;
+    rdfs:range rd:Disease ;
+    rdfs:subPropertyOf rel:ASSOCIATED_WITH_DISEASE ;
+    owl:inverseOf rel:CAUSED_BY_TARGET ;
+    rel:evidence_level "A" .
+
+rel:CAUSED_BY_TARGET a owl:ObjectProperty ;
+    rdfs:label "caused by target" ;
+    rdfs:comment "疾病由靶点异常导致" ;
+    rdfs:domain rd:Disease ;
+    rdfs:range rd:Target ;
+    owl:inverseOf rel:CAUSES_DISEASE .
+
+#-----------------------------------------------------------
+# 1.5 实验关系 (Assay Relationships)
+#-----------------------------------------------------------
+
+rel:TESTS_COMPOUND a owl:ObjectProperty ;
+    rdfs:label "tests compound" ;
+    rdfs:comment "实验测试化合物" ;
+    rdfs:domain rd:Assay ;
+    rdfs:range rd:Compound ;
+    owl:inverseOf rel:TESTED_IN_ASSAY .
+
+rel:TESTED_IN_ASSAY a owl:ObjectProperty ;
+    rdfs:label "tested in assay" ;
+    rdfs:comment "化合物在实验中测试" ;
+    rdfs:domain rd:Compound ;
+    rdfs:range rd:Assay ;
+    owl:inverseOf rel:TESTS_COMPOUND .
+
+rel:TESTS_TARGET a owl:ObjectProperty ;
+    rdfs:label "tests target" ;
+    rdfs:comment "实验测试靶点" ;
+    rdfs:domain rd:Assay ;
+    rdfs:range rd:Target ;
+    owl:inverseOf rel:TESTED_IN_ASSAY_TARGET .
+
+rel:TESTED_IN_ASSAY_TARGET a owl:ObjectProperty ;
+    rdfs:label "tested in assay (target)" ;
+    rdfs:comment "靶点在实验中测试" ;
+    rdfs:domain rd:Target ;
+    rdfs:range rd:Assay ;
+    owl:inverseOf rel:TESTS_TARGET .
+
+rel:HAS_ASSAY_RESULT a owl:ObjectProperty ;
+    rdfs:label "has assay result" ;
+    rdfs:comment "实验产生结果" ;
+    rdfs:domain rd:Assay ;
+    rdfs:range rd:AssayResult ;
+    owl:inverseOf rel:RESULT_OF_ASSAY .
+
+rel:RESULT_OF_ASSAY a owl:ObjectProperty ;
+    rdfs:label "result of assay" ;
+    rdfs:comment "结果是某实验的" ;
+    rdfs:domain rd:AssayResult ;
+    rdfs:range rd:Assay ;
+    owl:inverseOf rel:HAS_ASSAY_RESULT .
+
+rel:HAS_SAR_DATA a owl:ObjectProperty ;
+    rdfs:label "has SAR data" ;
+    rdfs:comment "化合物具有构效关系数据" ;
+    rdfs:domain rd:Compound ;
+    rdfs:range rd:SARData ;
+    owl:inverseOf rel:SAR_DATA_FOR .
+
+rel:SAR_DATA_FOR a owl:ObjectProperty ;
+    rdfs:label "SAR data for" ;
+    rdfs:comment "SAR数据对应的化合物" ;
+    rdfs:domain rd:SARData ;
+    rdfs:range rd:Compound ;
+    owl:inverseOf rel:HAS_SAR_DATA .
+
+rel:IMPROVES_POTENCY a owl:ObjectProperty ;
+    rdfs:label "improves potency" ;
+    rdfs:comment "SAR修饰改善化合物效力" ;
+    rdfs:domain rd:SARData ;
+    rdfs:range rd:Compound .
+
+rel:REDUCES_TOXICITY a owl:ObjectProperty ;
+    rdfs:label "reduces toxicity" ;
+    rdfs:comment "SAR修饰降低化合物毒性" ;
+    rdfs:domain rd:SARData ;
+    rdfs:range rd:Compound .
+
+rel:IMPROVES_SELECTIVITY a owl:ObjectProperty ;
+    rdfs:label "improves selectivity" ;
+    rdfs:comment "SAR修饰改善化合物选择性" ;
+    rdfs:domain rd:SARData ;
+    rdfs:range rd:Compound .
+
+#===========================================================
+# 二、临床领域关系定义
+#===========================================================
+
+#-----------------------------------------------------------
+# 2.1 试验-受试者关系 (Trial-Subject Relationships)
+#-----------------------------------------------------------
+
+rel:ENROLS a owl:ObjectProperty ;
+    rdfs:label "enrols" ;
+    rdfs:comment "试验招募受试者" ;
+    rdfs:domain clinical:ClinicalTrial ;
+    rdfs:range clinical:Subject ;
+    owl:inverseOf rel:ENROLLED_IN ;
+    rel:evidence_level "A" .
+
+rel:ENROLLED_IN a owl:ObjectProperty ;
+    rdfs:label "enrolled in" ;
+    rdfs:comment "受试者被招募到试验中" ;
+    rdfs:domain clinical:Subject ;
+    rdfs:range clinical:ClinicalTrial ;
+    owl:inverseOf rel:ENROLS .
+
+rel:EXCLUDES a owl:ObjectProperty ;
+    rdfs:label "excludes" ;
+    rdfs:comment "试验排除某受试者（不符合入组标准）" ;
+    rdfs:domain clinical:ClinicalTrial ;
+    rdfs:range clinical:Subject ;
+    owl:inverseOf rel:EXCLUDED_FROM .
+
+rel:EXCLUDED_FROM a owl:ObjectProperty ;
+    rdfs:label "excluded from" ;
+    rdfs:comment "受试者被试验排除" ;
+    rdfs:domain clinical:Subject ;
+    rdfs:range clinical:ClinicalTrial ;
+    owl:inverseOf rel:EXCLUDES .
+
+rel:WITHDREW_FROM a owl:ObjectProperty ;
+    rdfs:label "withdrew from" ;
+    rdfs:comment "受试者退出试验" ;
+    rdfs:domain clinical:Subject ;
+    rdfs:range clinical:ClinicalTrial ;
+    rel:evidence_level "A" .
+
+rel:COMPLETED_TRIAL a owl:ObjectProperty ;
+    rdfs:label "completed trial" ;
+    rdfs:comment "受试者完成试验" ;
+    rdfs:domain clinical:Subject ;
+    rdfs:range clinical:ClinicalTrial ;
+    rel:evidence_level "A" .
+
+rel:ASSIGNED_TO_ARM a owl:ObjectProperty ;
+    rdfs:label "assigned to arm" ;
+    rdfs:comment "受试者被分配到某试验组" ;
+    rdfs:domain clinical:Subject ;
+    rdfs:range clinical:Arm ;
+    owl:inverseOf rel:HAS_SUBJECT .
+
+rel:HAS_SUBJECT a owl:ObjectProperty ;
+    rdfs:label "has subject" ;
+    rdfs:comment "试验组包含受试者" ;
+    rdfs:domain clinical:Arm ;
+    rdfs:range clinical:Subject ;
+    owl:inverseOf rel:ASSIGNED_TO_ARM .
+
+#-----------------------------------------------------------
+# 2.2 试验-干预关系 (Trial-Intervention Relationships)
+#-----------------------------------------------------------
+
+rel:TESTS_INTERVENTION a owl:ObjectProperty ;
+    rdfs:label "tests intervention" ;
+    rdfs:comment "试验测试某种干预措施" ;
+    rdfs:domain clinical:ClinicalTrial ;
+    rdfs:range clinical:Intervention ;
+    owl:inverseOf rel:TESTED_IN_TRIAL ;
+    rel:evidence_level "A" .
+
+rel:TESTED_IN_TRIAL a owl:ObjectProperty ;
+    rdfs:label "tested in trial" ;
+    rdfs:comment "干预措施在试验中测试" ;
+    rdfs:domain clinical:Intervention ;
+    rdfs:range clinical:ClinicalTrial ;
+    owl:inverseOf rel:TESTS_INTERVENTION .
+
+rel:COMPARES_WITH a owl:ObjectProperty ;
+    rdfs:label "compares with" ;
+    rdfs:comment "试验比较两种干预措施" ;
+    rdfs:domain clinical:ClinicalTrial ;
+    rdfs:range clinical:Intervention .
+
+rel:USES_COMPARATOR a owl:ObjectProperty ;
+    rdfs:label "uses comparator" ;
+    rdfs:comment "试验使用对照干预" ;
+    rdfs:domain clinical:ClinicalTrial ;
+    rdfs:range clinical:Intervention ;
+    rdfs:subPropertyOf rel:COMPARES_WITH .
+
+rel:USES_PLACEBO a owl:ObjectProperty ;
+    rdfs:label "uses placebo" ;
+    rdfs:comment "试验使用安慰剂对照" ;
+    rdfs:domain clinical:ClinicalTrial ;
+    rdfs:range clinical:Intervention ;
+    rdfs:subPropertyOf rel:USES_COMPARATOR .
+
+#-----------------------------------------------------------
+# 2.3 受试者-结果关系 (Subject-Outcome Relationships)
+#-----------------------------------------------------------
+
+rel:EXPERIENCED_OUTCOME a owl:ObjectProperty ;
+    rdfs:label "experienced outcome" ;
+    rdfs:comment "受试者经历了某种结果" ;
+    rdfs:domain clinical:Subject ;
+    rdfs:range clinical:Outcome ;
+    owl:inverseOf rel:OUTCOME_FOR_SUBJECT ;
+    rel:evidence_level "A" .
+
+rel:OUTCOME_FOR_SUBJECT a owl:ObjectProperty ;
+    rdfs:label "outcome for subject" ;
+    rdfs:comment "结果是某受试者的" ;
+    rdfs:domain clinical:Outcome ;
+    rdfs:range clinical:Subject ;
+    owl:inverseOf rel:EXPERIENCED_OUTCOME .
+
+rel:RESPONDED_TO_TREATMENT a owl:ObjectProperty ;
+    rdfs:label "responded to treatment" ;
+    rdfs:comment "受试者对治疗有响应" ;
+    rdfs:domain clinical:Subject ;
+    rdfs:range clinical:Intervention ;
+    rel:evidence_level "A" .
+
+rel:DID_NOT_RESPOND_TO a owl:ObjectProperty ;
+    rdfs:label "did not respond to" ;
+    rdfs:comment "受试者对治疗无响应" ;
+    rdfs:domain clinical:Subject ;
+    rdfs:range clinical:Intervention .
+
+rel:HAD_PARTIAL_RESPONSE a owl:ObjectProperty ;
+    rdfs:label "had partial response" ;
+    rdfs:comment "受试者对治疗有部分响应" ;
+    rdfs:domain clinical:Subject ;
+    rdfs:range clinical:Intervention ;
+    rdfs:subPropertyOf rel:RESPONDED_TO_TREATMENT .
+
+rel:HAD_COMPLETE_RESPONSE a owl:ObjectProperty ;
+    rdfs:label "had complete response" ;
+    rdfs:comment "受试者对治疗完全响应" ;
+    rdfs:domain clinical:Subject ;
+    rdfs:range clinical:Intervention ;
+    rdfs:subPropertyOf rel:RESPONDED_TO_TREATMENT .
+
+rel:PROGRESSED_DESPITE_TREATMENT a owl:ObjectProperty ;
+    rdfs:label "progressed despite treatment" ;
+    rdfs:comment "受试者在治疗期间病情进展" ;
+    rdfs:domain clinical:Subject ;
+    rdfs:range clinical:Intervention .
+
+#-----------------------------------------------------------
+# 2.4 试验-不良事件关系 (Trial-AdverseEvent Relationships)
+#-----------------------------------------------------------
+
+rel:REPORTED_ADVERSE_EVENT a owl:ObjectProperty ;
+    rdfs:label "reported adverse event" ;
+    rdfs:comment "试验报告了不良事件" ;
+    rdfs:domain clinical:ClinicalTrial ;
+    rdfs:range clinical:AdverseEvent ;
+    owl:inverseOf rel:ADVERSE_EVENT_IN_TRIAL ;
+    rel:evidence_level "A" .
+
+rel:ADVERSE_EVENT_IN_TRIAL a owl:ObjectProperty ;
+    rdfs:label "adverse event in trial" ;
+    rdfs:comment "不良事件发生在某试验中" ;
+    rdfs:domain clinical:AdverseEvent ;
+    rdfs:range clinical:ClinicalTrial ;
+    owl:inverseOf rel:REPORTED_ADVERSE_EVENT .
+
+rel:SUBJECT_EXPERIENCED_AE a owl:ObjectProperty ;
+    rdfs:label "subject experienced adverse event" ;
+    rdfs:comment "受试者经历了不良事件" ;
+    rdfs:domain clinical:Subject ;
+    rdfs:range clinical:AdverseEvent ;
+    owl:inverseOf rel:AE_FOR_SUBJECT .
+
+rel:AE_FOR_SUBJECT a owl:ObjectProperty ;
+    rdfs:label "adverse event for subject" ;
+    rdfs:comment "不良事件是某受试者的" ;
+    rdfs:domain clinical:AdverseEvent ;
+    rdfs:range clinical:Subject ;
+    owl:inverseOf rel:SUBJECT_EXPERIENCED_AE .
+
+rel:CAUSED_ADVERSE_EVENT a owl:ObjectProperty ;
+    rdfs:label "caused adverse event" ;
+    rdfs:comment "干预措施导致不良事件" ;
+    rdfs:domain clinical:Intervention ;
+    rdfs:range clinical:AdverseEvent ;
+    owl:inverseOf rel:ADVERSE_EVENT_CAUSED_BY ;
+    rel:evidence_level "B" .
+
+rel:ADVERSE_EVENT_CAUSED_BY a owl:ObjectProperty ;
+    rdfs:label "adverse event caused by" ;
+    rdfs:comment "不良事件由某干预引起" ;
+    rdfs:domain clinical:AdverseEvent ;
+    rdfs:range clinical:Intervention ;
+    owl:inverseOf rel:CAUSED_ADVERSE_EVENT .
+
+rel:SERIOUS_ADVERSE_EVENT a owl:ObjectProperty ;
+    rdfs:label "serious adverse event" ;
+    rdfs:comment "严重不良事件" ;
+    rdfs:domain clinical:AdverseEvent ;
+    rdfs:range clinical:ClinicalTrial ;
+    rdfs:subPropertyOf rel:REPORTED_ADVERSE_EVENT ;
+    rel:evidence_level "A" .
+
+#-----------------------------------------------------------
+# 2.5 试验-研究者关系 (Trial-Investigator Relationships)
+#-----------------------------------------------------------
+
+rel:HAS_PRINCIPAL_INVESTIGATOR a owl:ObjectProperty ;
+    rdfs:label "has principal investigator" ;
+    rdfs:comment "试验的主要研究者" ;
+    rdfs:domain clinical:ClinicalTrial ;
+    rdfs:range clinical:Investigator ;
+    owl:inverseOf rel:PI_OF_TRIAL ;
+    rel:evidence_level "A" .
+
+rel:PI_OF_TRIAL a owl:ObjectProperty ;
+    rdfs:label "principal investigator of trial" ;
+    rdfs:comment "研究者是某试验的PI" ;
+    rdfs:domain clinical:Investigator ;
+    rdfs:range clinical:ClinicalTrial ;
+    owl:inverseOf rel:HAS_PRINCIPAL_INVESTIGATOR .
+
+rel:HAS_INVESTIGATOR a owl:ObjectProperty ;
+    rdfs:label "has investigator" ;
+    rdfs:comment "试验的研究者" ;
+    rdfs:domain clinical:ClinicalTrial ;
+    rdfs:range clinical:Investigator ;
+    owl:inverseOf rel:INVESTIGATOR_OF .
+
+rel:INVESTIGATOR_OF a owl:ObjectProperty ;
+    rdfs:label "investigator of" ;
+    rdfs:comment "研究者参与的试验" ;
+    rdfs:domain clinical:Investigator ;
+    rdfs:range clinical:ClinicalTrial ;
+    owl:inverseOf rel:HAS_INVESTIGATOR .
+
+#-----------------------------------------------------------
+# 2.6 试验-研究中心关系 (Trial-Site Relationships)
+#-----------------------------------------------------------
+
+rel:CONDUCTED_AT_SITE a owl:ObjectProperty ;
+    rdfs:label "conducted at site" ;
+    rdfs:comment "试验在某研究中心进行" ;
+    rdfs:domain clinical:ClinicalTrial ;
+    rdfs:range clinical:StudySite ;
+    owl:inverseOf rel:SITE_HOSTS_TRIAL ;
+    rel:evidence_level "A" .
+
+rel:SITE_HOSTS_TRIAL a owl:ObjectProperty ;
+    rdfs:label "site hosts trial" ;
+    rdfs:comment "研究中心承办试验" ;
+    rdfs:domain clinical:StudySite ;
+    rdfs:range clinical:ClinicalTrial ;
+    owl:inverseOf rel:CONDUCTED_AT_SITE .
+
+rel:SPONSORED_BY a owl:ObjectProperty ;
+    rdfs:label "sponsored by" ;
+    rdfs:comment "试验由某机构赞助" ;
+    rdfs:domain clinical:ClinicalTrial ;
+    rdfs:range clinical:Sponsor ;
+    owl:inverseOf rel:SPONSORS_TRIAL .
+
+rel:SPONSORS_TRIAL a owl:ObjectProperty ;
+    rdfs:label "sponsors trial" ;
+    rdfs:comment "机构赞助试验" ;
+    rdfs:domain clinical:Sponsor ;
+    rdfs:range clinical:ClinicalTrial ;
+    owl:inverseOf rel:SPONSORED_BY .
+
+#===========================================================
+# 三、供应链领域关系定义
+#===========================================================
+
+#-----------------------------------------------------------
+# 3.1 制造商-产品关系 (Manufacturer-Product Relationships)
+#-----------------------------------------------------------
+
+rel:MANUFACTURES a owl:ObjectProperty ;
+    rdfs:label "manufactures" ;
+    rdfs:comment "制造商生产某药品" ;
+    rdfs:domain sc:Manufacturer ;
+    rdfs:range sc:DrugProduct ;
+    owl:inverseOf rel:MANUFACTURED_BY ;
+    rel:evidence_level "A" .
+
+rel:MANUFACTURED_BY a owl:ObjectProperty ;
+    rdfs:label "manufactured by" ;
+    rdfs:comment "药品由某制造商生产" ;
+    rdfs:domain sc:DrugProduct ;
+    rdfs:range sc:Manufacturer ;
+    owl:inverseOf rel:MANUFACTURES .
+
+rel:PRODUCES_ACTIVE_INGREDIENT a owl:ObjectProperty ;
+    rdfs:label "produces active ingredient" ;
+    rdfs:comment "制造商生产原料药(API)" ;
+    rdfs:domain sc:Manufacturer ;
+    rdfs:range sc:ActivePharmaceuticalIngredient ;
+    owl:inverseOf rel:API_PRODUCED_BY .
+
+rel:API_PRODUCED_BY a owl:ObjectProperty ;
+    rdfs:label "API produced by" ;
+    rdfs:comment "API由某制造商生产" ;
+    rdfs:domain sc:ActivePharmaceuticalIngredient ;
+    rdfs:range sc:Manufacturer ;
+    owl:inverseOf rel:PRODUCES_ACTIVE_INGREDIENT .
+
+rel:HOLDS_AUTHORIZATION_FOR a owl:ObjectProperty ;
+    rdfs:label "holds authorization for" ;
+    rdfs:comment "制造商持有某药品的生产授权" ;
+    rdfs:domain sc:Manufacturer ;
+    rdfs:range sc:DrugProduct ;
+    rdfs:subPropertyOf rel:MANUFACTURES .
+
+#-----------------------------------------------------------
+# 3.2 供应商-制造商关系 (Supplier-Manufacturer Relationships)
+#-----------------------------------------------------------
+
+rel:SUPPLIES_TO a owl:ObjectProperty ;
+    rdfs:label "supplies to" ;
+    rdfs:comment "供应商向制造商供应" ;
+    rdfs:domain sc:Supplier ;
+    rdfs:range sc:Manufacturer ;
+    owl:inverseOf rel:SUPPLIED_BY ;
+    rel:evidence_level "A" .
+
+rel:SUPPLIED_BY a owl:ObjectProperty ;
+    rdfs:label "supplied by" ;
+    rdfs:comment "制造商由供应商供应" ;
+    rdfs:domain sc:Manufacturer ;
+    rdfs:range sc:Supplier ;
+    owl:inverseOf rel:SUPPLIES_TO .
+
+rel:SUPPLIES_API_TO a owl:ObjectProperty ;
+    rdfs:label "supplies API to" ;
+    rdfs:comment "供应商向制造商供应API" ;
+    rdfs:domain sc:Supplier ;
+    rdfs:range sc:Manufacturer ;
+    rdfs:subPropertyOf rel:SUPPLIES_TO .
+
+rel:SUPPLIES_EXCIPIENT_TO a owl:ObjectProperty ;
+    rdfs:label "supplies excipient to" ;
+    rdfs:comment "供应商向制造商供应辅料" ;
+    rdfs:domain sc:Supplier ;
+    rdfs:range sc:Manufacturer ;
+    rdfs:subPropertyOf rel:SUPPLIES_TO .
+
+rel:SUPPLIES_PACKAGING_TO a owl:ObjectProperty ;
+    rdfs:label "supplies packaging to" ;
+    rdfs:comment "供应商向制造商供应包装材料" ;
+    rdfs:domain sc:Supplier ;
+    rdfs:range sc:Manufacturer ;
+    rdfs:subPropertyOf rel:SUPPLIES_TO .
+
+#-----------------------------------------------------------
+# 3.3 产品-短缺关系 (Product-Shortage Relationships)
+#-----------------------------------------------------------
+
+rel:EXPERIENCES_SHORTAGE a owl:ObjectProperty ;
+    rdfs:label "experiences shortage" ;
+    rdfs:comment "药品经历短缺" ;
+    rdfs:domain sc:DrugProduct ;
+    rdfs:range sc:DrugShortage ;
+    owl:inverseOf rel:SHORTAGE_OF ;
+    rel:evidence_level "A" .
+
+rel:SHORTAGE_OF a owl:ObjectProperty ;
+    rdfs:label "shortage of" ;
+    rdfs:comment "短缺是某药品的" ;
+    rdfs:domain sc:DrugShortage ;
+    rdfs:range sc:DrugProduct ;
+    owl:inverseOf rel:EXPERIENCES_SHORTAGE .
+
+rel:IMPACTED_BY_SHORTAGE a owl:ObjectProperty ;
+    rdfs:label "impacted by shortage" ;
+    rdfs:comment "某实体受短缺影响" ;
+    rdfs:domain sc:DrugProduct ;
+    rdfs:range sc:DrugShortage ;
+    rdfs:subPropertyOf rel:EXPERIENCES_SHORTAGE .
+
+rel:SHORTAGE_AFFECTS a owl:ObjectProperty ;
+    rdfs:label "shortage affects" ;
+    rdfs:comment "短缺影响某实体" ;
+    rdfs:domain sc:DrugShortage ;
+    rdfs:range sc:DrugProduct ;
+    owl:inverseOf rel:IMPACTED_BY_SHORTAGE .
+
+rel:HAS_SHORTAGE_REASON a owl:ObjectProperty ;
+    rdfs:label "has shortage reason" ;
+    rdfs:comment "短缺的原因" ;
+    rdfs:domain sc:DrugShortage ;
+    rdfs:range sc:ShortageReason .
+
+rel:CAUSED_BY_QUALITY_ISSUE a owl:ObjectProperty ;
+    rdfs:label "caused by quality issue" ;
+    rdfs:comment "短缺由质量问题引起" ;
+    rdfs:domain sc:DrugShortage ;
+    rdfs:range sc:Manufacturer ;
+    rdfs:subPropertyOf rel:HAS_SHORTAGE_REASON .
+
+rel:CAUSED_BY_SUPPLY_DISRUPTION a owl:ObjectProperty ;
+    rdfs:label "caused by supply disruption" ;
+    rdfs:comment "短缺由供应中断引起" ;
+    rdfs:domain sc:DrugShortage ;
+    rdfs:range sc:Supplier ;
+    rdfs:subPropertyOf rel:HAS_SHORTAGE_REASON .
+
+rel:CAUSED_BY_DEMAND_SURGE a owl:ObjectProperty ;
+    rdfs:label "caused by demand surge" ;
+    rdfs:comment "短缺由需求激增引起" ;
+    rdfs:domain sc:DrugShortage ;
+    rdfs:subPropertyOf rel:HAS_SHORTAGE_REASON .
+
+#-----------------------------------------------------------
+# 3.4 制造商-检查关系 (Manufacturer-Inspection Relationships)
+#-----------------------------------------------------------
+
+rel:SUBJECT_TO_INSPECTION a owl:ObjectProperty ;
+    rdfs:label "subject to inspection" ;
+    rdfs:comment "制造商接受检查" ;
+    rdfs:domain sc:Manufacturer ;
+    rdfs:range sc:Inspection ;
+    owl:inverseOf rel:INSPECTION_OF ;
+    rel:evidence_level "A" .
+
+rel:INSPECTION_OF a owl:ObjectProperty ;
+    rdfs:label "inspection of" ;
+    rdfs:comment "检查是某制造商的" ;
+    rdfs:domain sc:Inspection ;
+    rdfs:range sc:Manufacturer ;
+    owl:inverseOf rel:SUBJECT_TO_INSPECTION .
+
+rel:PASSED_INSPECTION a owl:ObjectProperty ;
+    rdfs:label "passed inspection" ;
+    rdfs:comment "制造商通过检查" ;
+    rdfs:domain sc:Manufacturer ;
+    rdfs:range sc:Inspection ;
+    rdfs:subPropertyOf rel:SUBJECT_TO_INSPECTION .
+
+rel:FAILED_INSPECTION a owl:ObjectProperty ;
+    rdfs:label "failed inspection" ;
+    rdfs:comment "制造商未通过检查" ;
+    rdfs:domain sc:Manufacturer ;
+    rdfs:range sc:Inspection ;
+    rdfs:subPropertyOf rel:SUBJECT_TO_INSPECTION .
+
+rel:INSPECTION_CONDUCTED_BY a owl:ObjectProperty ;
+    rdfs:label "inspection conducted by" ;
+    rdfs:comment "检查由某机构执行" ;
+    rdfs:domain sc:Inspection ;
+    rdfs:range regulatory:RegulatoryAgency ;
+    owl:inverseOf rel:CONDUCTED_INSPECTION .
+
+rel:CONDUCTED_INSPECTION a owl:ObjectProperty ;
+    rdfs:label "conducted inspection" ;
+    rdfs:comment "机构执行了检查" ;
+    rdfs:domain regulatory:RegulatoryAgency ;
+    rdfs:range sc:Inspection ;
+    owl:inverseOf rel:INSPECTION_CONDUCTED_BY .
+
+#===========================================================
+# 四、监管领域关系定义
+#===========================================================
+
+#-----------------------------------------------------------
+# 4.1 申报-批准关系 (Submission-Approval Relationships)
+#-----------------------------------------------------------
+
+rel:SUBMITTED_FOR_APPROVAL a owl:ObjectProperty ;
+    rdfs:label "submitted for approval" ;
+    rdfs:comment "提交申报以获得批准" ;
+    rdfs:domain regulatory:Submission ;
+    rdfs:range regulatory:Approval ;
+    owl:inverseOf rel:APPROVAL_FOR ;
+    rel:evidence_level "A" .
+
+rel:APPROVAL_FOR a owl:ObjectProperty ;
+    rdfs:label "approval for" ;
+    rdfs:comment "批准针对某申报" ;
+    rdfs:domain regulatory:Approval ;
+    rdfs:range regulatory:Submission ;
+    owl:inverseOf rel:SUBMITTED_FOR_APPROVAL .
+
+rel:GRANTED_APPROVAL a owl:ObjectProperty ;
+    rdfs:label "granted approval" ;
+    rdfs:comment "授予批准" ;
+    rdfs:domain regulatory:RegulatoryAgency ;
+    rdfs:range regulatory:Approval ;
+    owl:inverseOf rel:APPROVAL_GRANTED_BY .
+
+rel:APPROVAL_GRANTED_BY a owl:ObjectProperty ;
+    rdfs:label "approval granted by" ;
+    rdfs:comment "批准由某机构授予" ;
+    rdfs:domain regulatory:Approval ;
+    rdfs:range regulatory:RegulatoryAgency ;
+    owl:inverseOf rel:GRANTED_APPROVAL .
+
+rel:REJECTED_SUBMISSION a owl:ObjectProperty ;
+    rdfs:label "rejected submission" ;
+    rdfs:comment "申报被拒绝" ;
+    rdfs:domain regulatory:RegulatoryAgency ;
+    rdfs:range regulatory:Submission ;
+    owl:inverseOf rel:SUBMISSION_REJECTED_BY .
+
+rel:SUBMISSION_REJECTED_BY a owl:ObjectProperty ;
+    rdfs:label "submission rejected by" ;
+    rdfs:comment "申报被某机构拒绝" ;
+    rdfs:domain regulatory:Submission ;
+    rdfs:range regulatory:RegulatoryAgency ;
+    owl:inverseOf rel:REJECTED_SUBMISSION .
+
+rel:REQUESTED_INFO_FOR a owl:ObjectProperty ;
+    rdfs:label "requested info for" ;
+    rdfs:comment "机构为申报要求更多信息" ;
+    rdfs:domain regulatory:RegulatoryAgency ;
+    rdfs:range regulatory:Submission .
+
+#-----------------------------------------------------------
+# 4.2 产品-合规关系 (Product-Compliance Relationships)
+#-----------------------------------------------------------
+
+rel:SUBJECT_TO_RECALL a owl:ObjectProperty ;
+    rdfs:label "subject to recall" ;
+    rdfs:comment "产品被召回" ;
+    rdfs:domain sc:DrugProduct ;
+    rdfs:range regulatory:ComplianceAction ;
+    rdfs:subPropertyOf rel:HAS_COMPLIANCE_ISSUE ;
+    rel:evidence_level "A" .
+
+rel:WARNED_ABOUT a owl:ObjectProperty ;
+    rdfs:label "warned about" ;
+    rdfs:comment "产品被警告" ;
+    rdfs:domain sc:DrugProduct ;
+    rdfs:range regulatory:ComplianceAction ;
+    rdfs:subPropertyOf rel:HAS_COMPLIANCE_ISSUE .
+
+rel:PENALIZED_FOR a owl:ObjectProperty ;
+    rdfs:label "penalized for" ;
+    rdfs:comment "产品被处罚" ;
+    rdfs:domain sc:DrugProduct ;
+    rdfs:range regulatory:ComplianceAction ;
+    rdfs:subPropertyOf rel:HAS_COMPLIANCE_ISSUE .
+
+rel:HAS_COMPLIANCE_ISSUE a owl:ObjectProperty ;
+    rdfs:label "has compliance issue" ;
+    rdfs:comment "产品有合规问题" ;
+    rdfs:domain sc:DrugProduct ;
+    rdfs:range regulatory:ComplianceAction .
+
+rel:ISSUED_RECALL_FOR a owl:ObjectProperty ;
+    rdfs:label "issued recall for" ;
+    rdfs:comment "机构对产品发出召回" ;
+    rdfs:domain regulatory:RegulatoryAgency ;
+    rdfs:range sc:DrugProduct ;
+    owl:inverseOf rel:RECALLED_BY .
+
+rel:RECALLED_BY a owl:ObjectProperty ;
+    rdfs:label "recalled by" ;
+    rdfs:comment "产品被某机构召回" ;
+    rdfs:domain sc:DrugProduct ;
+    rdfs:range regulatory:RegulatoryAgency ;
+    owl:inverseOf rel:ISSUED_RECALL_FOR .
+
+#-----------------------------------------------------------
+# 4.3 安全性信号关系 (Safety Signal Relationships)
+#-----------------------------------------------------------
+
+rel:HAS_SAFETY_SIGNAL a owl:ObjectProperty ;
+    rdfs:label "has safety signal" ;
+    rdfs:comment "产品有安全性信号" ;
+    rdfs:domain sc:DrugProduct ;
+    rdfs:range regulatory:SafetySignal ;
+    owl:inverseOf rel:SAFETY_SIGNAL_FOR ;
+    rel:evidence_level "B" .
+
+rel:SAFETY_SIGNAL_FOR a owl:ObjectProperty ;
+    rdfs:label "safety signal for" ;
+    rdfs:comment "安全性信号针对某产品" ;
+    rdfs:domain regulatory:SafetySignal ;
+    rdfs:range sc:DrugProduct ;
+    owl:inverseOf rel:HAS_SAFETY_SIGNAL .
+
+rel:REPORTED_ADR_FOR a owl:ObjectProperty ;
+    rdfs:label "reported ADR for" ;
+    rdfs:comment "报告某产品的不良反应" ;
+    rdfs:domain regulatory:SafetySignal ;
+    rdfs:range sc:DrugProduct ;
+    rdfs:subPropertyOf rel:SAFETY_SIGNAL_FOR .
+
+rel:UNDER_REVIEW a owl:ObjectProperty ;
+    rdfs:label "under review" ;
+    rdfs:comment "安全性信号正在审查中" ;
+    rdfs:domain regulatory:SafetySignal ;
+    rdfs:range regulatory:RegulatoryAgency .
+
+rel:CONFIRMED_RISK a owl:ObjectProperty ;
+    rdfs:label "confirmed risk" ;
+    rdfs:comment "确认的风险" ;
+    rdfs:domain regulatory:SafetySignal ;
+    rdfs:range sc:DrugProduct ;
+    rdfs:subPropertyOf rel:SAFETY_SIGNAL_FOR ;
+    rel:evidence_level "A" .
+
+rel:POTENTIAL_RISK a owl:ObjectProperty ;
+    rdfs:label "potential risk" ;
+    rdfs:comment "潜在风险" ;
+    rdfs:domain regulatory:SafetySignal ;
+    rdfs:range sc:DrugProduct ;
+    rdfs:subPropertyOf rel:SAFETY_SIGNAL_FOR ;
+    rel:evidence_level "C" .
+
+rel:MAY_HAVE_SAFETY_ISSUE a owl:ObjectProperty ;
+    rdfs:label "may have safety issue" ;
+    rdfs:comment "可能存在安全问题（推理得出）" ;
+    rdfs:domain sc:DrugProduct ;
+    rdfs:range regulatory:SafetySignal ;
+    rdfs:subPropertyOf rel:POTENTIAL_RISK ;
+    rel:evidence_level "D" .
+
+#-----------------------------------------------------------
+# 4.4 机构-产品关系 (Agency-Product Relationships)
+#-----------------------------------------------------------
+
+rel:APPROVED_PRODUCT a owl:ObjectProperty ;
+    rdfs:label "approved product" ;
+    rdfs:comment "机构批准了某产品" ;
+    rdfs:domain regulatory:RegulatoryAgency ;
+    rdfs:range sc:DrugProduct ;
+    owl:inverseOf rel:PRODUCT_APPROVED_BY .
+
+rel:PRODUCT_APPROVED_BY a owl:ObjectProperty ;
+    rdfs:label "product approved by" ;
+    rdfs:comment "产品被某机构批准" ;
+    rdfs:domain sc:DrugProduct ;
+    rdfs:range regulatory:RegulatoryAgency ;
+    owl:inverseOf rel:APPROVED_PRODUCT .
+
+rel:REVIEWED_SUBMISSION_FOR a owl:ObjectProperty ;
+    rdfs:label "reviewed submission for" ;
+    rdfs:comment "机构审查了某产品的申报" ;
+    rdfs:domain regulatory:RegulatoryAgency ;
+    rdfs:range regulatory:Submission .
+
+rel:MONITORS_SAFETY_OF a owl:ObjectProperty ;
+    rdfs:label "monitors safety of" ;
+    rdfs:comment "机构监测某产品的安全性" ;
+    rdfs:domain regulatory:RegulatoryAgency ;
+    rdfs:range sc:DrugProduct .
+
+#-----------------------------------------------------------
+# 4.5 申报-产品关系 (Submission-Product Relationships)
+#-----------------------------------------------------------
+
+rel:SUBMISSION_FOR_PRODUCT a owl:ObjectProperty ;
+    rdfs:label "submission for product" ;
+    rdfs:comment "申报针对某产品" ;
+    rdfs:domain regulatory:Submission ;
+    rdfs:range sc:DrugProduct ;
+    owl:inverseOf rel:PRODUCT_HAS_SUBMISSION .
+
+rel:PRODUCT_HAS_SUBMISSION a owl:ObjectProperty ;
+    rdfs:label "product has submission" ;
+    rdfs:comment "产品有申报记录" ;
+    rdfs:domain sc:DrugProduct ;
+    rdfs:range regulatory:Submission ;
+    owl:inverseOf rel:SUBMISSION_FOR_PRODUCT .
+
+rel:NDA_SUBMISSION_FOR a owl:ObjectProperty ;
+    rdfs:label "NDA submission for" ;
+    rdfs:comment "新药申请(NDA)" ;
+    rdfs:domain regulatory:Submission ;
+    rdfs:range sc:DrugProduct ;
+    rdfs:subPropertyOf rel:SUBMISSION_FOR_PRODUCT .
+
+rel:ANDA_SUBMISSION_FOR a owl:ObjectProperty ;
+    rdfs:label "ANDA submission for" ;
+    rdfs:comment "仿制药申请(ANDA)" ;
+    rdfs:domain regulatory:Submission ;
+    rdfs:range sc:DrugProduct ;
+    rdfs:subPropertyOf rel:SUBMISSION_FOR_PRODUCT .
+
+rel:BLA_SUBMISSION_FOR a owl:ObjectProperty ;
+    rdfs:label "BLA submission for" ;
+    rdfs:comment "生物制品许可申请(BLA)" ;
+    rdfs:domain regulatory:Submission ;
+    rdfs:range sc:DrugProduct ;
+    rdfs:subPropertyOf rel:SUBMISSION_FOR_PRODUCT .
+
+#===========================================================
+# 五、跨域关系定义 (Cross-Domain Relationships)
+#===========================================================
+
+#-----------------------------------------------------------
+# 5.1 化合物-临床试验跨域关系
+#-----------------------------------------------------------
+
+rel:TESTED_IN_CLINICAL_TRIAL a owl:ObjectProperty ;
+    rdfs:label "tested in clinical trial" ;
+    rdfs:comment "化合物在临床试验中测试" ;
+    rdfs:domain rd:Compound ;
+    rdfs:range clinical:ClinicalTrial ;
+    owl:inverseOf rel:TRIAL_TESTED_COMPOUND ;
+    rel:evidence_level "A" .
+
+rel:TRIAL_TESTED_COMPOUND a owl:ObjectProperty ;
+    rdfs:label "trial tested compound" ;
+    rdfs:comment "试验测试了某化合物" ;
+    rdfs:domain clinical:ClinicalTrial ;
+    rdfs:range rd:Compound ;
+    owl:inverseOf rel:TESTED_IN_CLINICAL_TRIAL .
+
+rel:COMPOUND_IN_INTERVENTION a owl:ObjectProperty ;
+    rdfs:label "compound in intervention" ;
+    rdfs:comment "化合物是临床试验的干预措施" ;
+    rdfs:domain rd:Compound ;
+    rdfs:range clinical:Intervention .
+
+#-----------------------------------------------------------
+# 5.2 化合物-批准跨域关系
+#-----------------------------------------------------------
+
+rel:APPROVED_AS_DRUG a owl:ObjectProperty ;
+    rdfs:label "approved as drug" ;
+    rdfs:comment "化合物被批准为药物" ;
+    rdfs:domain rd:Compound ;
+    rdfs:range regulatory:Approval ;
+    owl:inverseOf rel:DRUG_APPROVAL_FOR_COMPOUND .
+
+rel:DRUG_APPROVAL_FOR_COMPOUND a owl:ObjectProperty ;
+    rdfs:label "drug approval for compound" ;
+    rdfs:comment "批准针对某化合物" ;
+    rdfs:domain regulatory:Approval ;
+    rdfs:range rd:Compound ;
+    owl:inverseOf rel:APPROVED_AS_DRUG .
+
+rel:HAS_MARKETING_AUTHORIZATION a owl:ObjectProperty ;
+    rdfs:label "has marketing authorization" ;
+    rdfs:comment "化合物有上市许可" ;
+    rdfs:domain rd:Compound ;
+    rdfs:range sc:DrugProduct .
+
+#-----------------------------------------------------------
+# 5.3 靶点-临床试验跨域关系
+#-----------------------------------------------------------
+
+rel:TARGET_OF_INVESTIGATIONAL_DRUG a owl:ObjectProperty ;
+    rdfs:label "target of investigational drug" ;
+    rdfs:comment "靶点是研究药物的靶点" ;
+    rdfs:domain rd:Target ;
+    rdfs:range clinical:ClinicalTrial .
+
+rel:BIOMARKER_IN_TRIAL a owl:ObjectProperty ;
+    rdfs:label "biomarker in trial" ;
+    rdfs:comment "靶点是临床试验中的生物标志物" ;
+    rdfs:domain rd:Target ;
+    rdfs:range clinical:ClinicalTrial .
+
+#-----------------------------------------------------------
+# 5.4 疾病-临床试验跨域关系
+#-----------------------------------------------------------
+
+rel:TRIAL_FOR_DISEASE a owl:ObjectProperty ;
+    rdfs:label "trial for disease" ;
+    rdfs:comment "临床试验针对某疾病" ;
+    rdfs:domain clinical:ClinicalTrial ;
+    rdfs:range rd:Disease ;
+    owl:inverseOf rel:DISEASE_HAS_TRIAL .
+
+rel:DISEASE_HAS_TRIAL a owl:ObjectProperty ;
+    rdfs:label "disease has trial" ;
+    rdfs:comment "疾病有相关临床试验" ;
+    rdfs:domain rd:Disease ;
+    rdfs:range clinical:ClinicalTrial ;
+    owl:inverseOf rel:TRIAL_FOR_DISEASE .
+
+rel:INDICATION_FOR_TRIAL a owl:ObjectProperty ;
+    rdfs:label "indication for trial" ;
+    rdfs:comment "疾病是试验的适应症" ;
+    rdfs:domain rd:Disease ;
+    rdfs:range clinical:ClinicalTrial ;
+    rdfs:subPropertyOf rel:DISEASE_HAS_TRIAL .
+
+#-----------------------------------------------------------
+# 5.5 制造商-监管跨域关系
+#-----------------------------------------------------------
+
+rel:MANUFACTURER_UNDER_SURVEILLANCE a owl:ObjectProperty ;
+    rdfs:label "manufacturer under surveillance" ;
+    rdfs:comment "制造商被监管机构监控" ;
+    rdfs:domain sc:Manufacturer ;
+    rdfs:range regulatory:RegulatoryAgency .
+
+rel:HOLDS_LICENSE_FROM a owl:ObjectProperty ;
+    rdfs:label "holds license from" ;
+    rdfs:comment "制造商持有某机构的许可证" ;
+    rdfs:domain sc:Manufacturer ;
+    rdfs:range regulatory:RegulatoryAgency .
+
+#===========================================================
+# 六、关系互斥与约束定义
+#===========================================================
+
+# 互斥关系组定义
+rel:MutuallyExclusiveActivation a owl:Class ;
+    rdfs:label "Mutually Exclusive Activation" ;
+    rdfs:comment "激活类关系的互斥组: INHIBITS vs ACTIVATES" ;
+    owl:unionOf ( rel:INHIBITS rel:ACTIVATES ) .
+
+rel:MutuallyExclusiveInspection a owl:Class ;
+    rdfs:label "Mutually Exclusive Inspection" ;
+    rdfs:comment "检查结果的互斥组: PASSED_INSPECTION vs FAILED_INSPECTION" ;
+    owl:unionOf ( rel:PASSED_INSPECTION rel:FAILED_INSPECTION ) .
+
+rel:MutuallyExclusiveTrialStatus a owl:Class ;
+    rdfs:label "Mutually Exclusive Trial Status" ;
+    rdfs:comment "试验状态的互斥组: COMPLETED vs WITHDREW" ;
+    owl:unionOf ( rel:COMPLETED_TRIAL rel:WITHDREW_FROM ) .
+
+#===========================================================
+# 七、关系传递性定义
+#===========================================================
+
+rel:transitive a owl:AnnotationProperty ;
+    rdfs:label "transitive" ;
+    rdfs:comment "标注关系是否可传递" ;
+    rdfs:range xsd:boolean .
+
+rel:PART_OF a owl:ObjectProperty ;
+    rdfs:label "part of" ;
+    rdfs:comment "部分-整体关系，可传递" ;
+    rdf:type owl:TransitiveProperty ;
+    rel:transitive true .
+
+rel:LOCATED_IN a owl:ObjectProperty ;
+    rdfs:label "located in" ;
+    rdfs:comment "位置关系，可传递" ;
+    rdf:type owl:TransitiveProperty ;
+    rel:transitive true .
+
+rel:TREATS a owl:ObjectProperty ;
+    rel:transitive false .
+
+rel:INHIBITS a owl:ObjectProperty ;
+    rel:transitive false .
+
+rel:MANUFACTURES a owl:ObjectProperty ;
+    rel:transitive false .
+
+#===========================================================
+# 八、推理规则提示（实际实现使用SHACL或SPIN）
+#===========================================================
+
+# 推理规则: 化合物抑制与疾病相关的靶点 → 可能治疗该疾病
+rel:POTENTIALLY_TREATS a owl:ObjectProperty ;
+    rdfs:label "potentially treats (inferred)" ;
+    rdfs:comment "推理: 如果化合物INHIBITS靶点，且靶点ASSOCIATED_WITH_DISEASE，则化合物POTENTIALLY_TREATS疾病" ;
+    rdfs:domain rd:Compound ;
+    rdfs:range rd:Disease ;
+    rel:evidence_level "D" .
+
+# 推理规则: 试验报告严重不良事件 → 产品可能存在安全问题
+rel:MAY_HAVE_SAFETY_ISSUE a owl:ObjectProperty ;
+    rdfs:label "may have safety issue (inferred)" ;
+    rdfs:comment "推理: 如果试验REPORTED_SERIOUS_ADVERSE_EVENT，则化合物MAY_HAVE_SAFETY_ISSUE" ;
+    rdfs:domain rd:Compound ;
+    rdfs:range regulatory:SafetySignal ;
+    rel:evidence_level "D" .
+
+# 推理规则: 制造商多次检查失败 → 可能存在质量问题
+rel:POTENTIAL_QUALITY_ISSUE a owl:ObjectProperty ;
+    rdfs:label "potential quality issue (inferred)" ;
+    rdfs:comment "推理: 如果制造商多次FAILED_INSPECTION，则POTENTIAL_QUALITY_ISSUE" ;
+    rdfs:domain sc:Manufacturer ;
+    rdfs:range sc:DrugShortage ;
+    rel:evidence_level "D" .
+
+#===========================================================
+# 文档结束
+#===========================================================

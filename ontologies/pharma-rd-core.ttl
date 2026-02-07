@@ -1,0 +1,1369 @@
+#===========================================================
+# 制药行业知识图谱 - R&D 核心本体
+# Pharmaceutical Knowledge Graph - R&D Core Ontology
+#===========================================================
+# 版本: v1.0
+# 创建日期: 2025-02-06
+# 描述: 定义研究与发现(R&D)领域的核心实体类、属性和关系
+#===========================================================
+
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix pharma: <http://pharmakg.org/ontology/> .
+@prefix rd: <http://pharmakg.org/ontology/rd/> .
+@prefix bmo: <http://purl.obolibrary.org/obo/BMO_> .
+@prefix bao: <http://www.bioassayontology.org/bao#> .
+@prefix cheminf: <http://semanticscience.org/resource/CHEMINF_> .
+@prefix sio: <http://semanticscience.org/resource/SIO_> .
+
+#===========================================================
+# 本体元数据
+#===========================================================
+
+pharma:PharmaKG_RD a owl:Ontology ;
+    rdfs:label "Pharmaceutical Knowledge Graph - R&D Domain Ontology" ;
+    rdfs:comment "R&D领域本体，定义化合物、靶点、实验、通路等核心实体" ;
+    owl:versionInfo "v1.0" ;
+    owl:versionIRI <http://pharmakg.org/ontology/rd/1.0> ;
+    dc:date "2025-02-06"^^xsd:date ;
+    dc:creator "PharmaKG Project Team" .
+
+#===========================================================
+# 抽象基类
+#===========================================================
+
+pharma:Entity a owl:Class ;
+    rdfs:label "Entity" ;
+    rdfs:comment "所有实体的抽象基类" ;
+    owl:abstract true .
+
+pharma:has_primary_id a owl:DatatypeProperty , owl:FunctionalProperty ;
+    rdfs:label "has primary identifier" ;
+    rdfs:comment "实体的主标识符（唯一标识）" ;
+    rdfs:domain pharma:Entity ;
+    rdfs:range xsd:string .
+
+pharma:has_name a owl:DatatypeProperty ;
+    rdfs:label "has name" ;
+    rdfs:comment "实体的名称" ;
+    rdfs:domain pharma:Entity ;
+    rdfs:range xsd:string .
+
+pharma:has_alternative_id a owl:DatatypeProperty ;
+    rdfs:label "has alternative identifier" ;
+    rdfs:comment "实体的备用标识符" ;
+    rdfs:domain pharma:Entity ;
+    rdfs:range xsd:string .
+
+pharma:has_description a owl:DatatypeProperty ;
+    rdfs:label "has description" ;
+    rdfs:comment "实体的描述信息" ;
+    rdfs:domain pharma:Entity ;
+    rdfs:range xsd:string .
+
+pharma:created_at a owl:DatatypeProperty , owl:FunctionalProperty ;
+    rdfs:label "created at" ;
+    rdfs:comment "实体创建时间戳" ;
+    rdfs:domain pharma:Entity ;
+    rdfs:range xsd:dateTime .
+
+pharma:updated_at a owl:DatatypeProperty , owl:FunctionalProperty ;
+    rdfs:label "updated at" ;
+    rdfs:comment "实体更新时间戳" ;
+    rdfs:domain pharma:Entity ;
+    rdfs:range xsd:dateTime .
+
+pharma:data_source a owl:DatatypeProperty ;
+    rdfs:label "data source" ;
+    rdfs:comment "数据来源" ;
+    rdfs:domain pharma:Entity ;
+    rdfs:range xsd:string .
+
+pharma:has_evidence a owl:ObjectProperty ;
+    rdfs:label "has evidence" ;
+    rdfs:comment "关联的证据来源" ;
+    rdfs:domain pharma:Entity ;
+    rdfs:range pharma:Evidence .
+
+#===========================================================
+# 1. Compound (化合物)
+#===========================================================
+
+rd:Compound a owl:Class ;
+    rdfs:label "Compound" ;
+    rdfs:subClassOf pharma:Entity ;
+    rdfs:comment "化学物质/化合物，包括小分子药物、天然产物等" ;
+    owl:equivalentClass cheminf:CHEMINF_000000 ;  # Chemical entity
+
+# ----- Compound 属性 -----
+
+rd:has_smiles a owl:DatatypeProperty ;
+    rdfs:label "has SMILES" ;
+    rdfs:comment "Simplified Molecular Input Line Entry System (SMILES) 表示" ;
+    rdfs:domain rd:Compound ;
+    rdfs:range xsd:string ;
+    owl:equivalentProperty cheminf:SIO_000018 .
+
+rd:has_inchikey a owl:DatatypeProperty , owl:FunctionalProperty ;
+    rdfs:label "has InChIKey" ;
+    rdfs:comment "International Chemical Identifier Key" ;
+    rdfs:domain rd:Compound ;
+    rdfs:range xsd:string ;
+    owl:equivalentProperty cheminf:SIO_000070 .
+
+rd:has_inchi a owl:DatatypeProperty , owl:FunctionalProperty ;
+    rdfs:label "has InChI" ;
+    rdfs:comment "International Chemical Identifier" ;
+    rdfs:domain rd:Compound ;
+    rdfs:range xsd:string .
+
+rd:has_molecular_formula a owl:DatatypeProperty ;
+    rdfs:label "has molecular formula" ;
+    rdfs:comment "分子式" ;
+    rdfs:domain rd:Compound ;
+    rdfs:range xsd:string .
+
+rd:has_molecular_weight a owl:DatatypeProperty ;
+    rdfs:label "has molecular weight" ;
+    rdfs:comment "分子量 (Da)" ;
+    rdfs:domain rd:Compound ;
+    rdfs:range xsd:decimal .
+
+rd:has_logp a owl:DatatypeProperty ;
+    rdfs:label "has LogP" ;
+    rdfs:comment "脂水分配系数 (XLogP3)" ;
+    rdfs:domain rd:Compound ;
+    rdfs:range xsd:decimal .
+
+rd:has_logS a owl:DatatypeProperty ;
+    rdfs:label "has LogS" ;
+    rdfs:comment "水溶性 (LogS)" ;
+    rdfs:domain rd:Compound ;
+    rdfs:range xsd:decimal .
+
+rd:has_polar_surface_area a owl:DatatypeProperty ;
+    rdfs:label "has polar surface area" ;
+    rdfs:comment "极性表面积 (TPSA)" ;
+    rdfs:domain rd:Compound ;
+    rdfs:range xsd:decimal .
+
+rd:has_rotatable_bonds a owl:DatatypeProperty ;
+    rdfs:label "has rotatable bonds" ;
+    rdfs:comment "可旋转键数量" ;
+    rdfs:domain rd:Compound ;
+    rdfs:range xsd:integer .
+
+rd:has_hbond_donors a owl:DatatypeProperty ;
+    rdfs:label "has H-bond donors" ;
+    rdfs:comment "氢键供体数量" ;
+    rdfs:domain rd:Compound ;
+    rdfs:range xsd:integer .
+
+rd:has_hbond_acceptors a owl:DatatypeProperty ;
+    rdfs:label "has H-bond acceptors" ;
+    rdfs:comment "氢键受体数量" ;
+    rdfs:domain rd:Compound ;
+    rdfs:range xsd:integer .
+
+rd:has_structure_type a owl:ObjectProperty ;
+    rdfs:label "has structure type" ;
+    rdfs:comment "化合物结构类型" ;
+    rdfs:domain rd:Compound ;
+    rdfs:range rd:StructureType .
+
+rd:has_development_stage a owl:ObjectProperty ;
+    rdfs:label "has development stage" ;
+    rdfs:comment "开发阶段" ;
+    rdfs:domain rd:Compound ;
+    rdfs:range rd:DevelopmentStage .
+
+rd:has_drug_likeness_score a owl:DatatypeProperty ;
+    rdfs:label "has drug-likeness score" ;
+    rdfs:comment "药物相似性评分 (如 QED)" ;
+    rdfs:domain rd:Compound ;
+    rdfs:range xsd:decimal .
+
+rd:has_lipinski_violations a owl:DatatypeProperty ;
+    rdfs:label "has Lipinski violations" ;
+    rdfs:comment "Lipinski 五法则违反数量" ;
+    rdfs:domain rd:Compound ;
+    rdfs:range xsd:integer .
+
+rd:has_pubchem_cid a owl:DatatypeProperty ;
+    rdfs:label "has PubChem CID" ;
+    rdfs:comment "PubChem Compound ID" ;
+    rdfs:domain rd:Compound ;
+    rdfs:range xsd:string .
+
+rd:has_chembl_id a owl:DatatypeProperty ;
+    rdfs:label "has ChEMBL ID" ;
+    rdfs:comment "ChEMBL 数据库ID" ;
+    rdfs:domain rd:Compound ;
+    rdfs:range xsd:string .
+
+rd:has_drugbank_id a owl:DatatypeProperty ;
+    rdfs:label "has DrugBank ID" ;
+    rdfs:comment "DrugBank 数据库ID" ;
+    rdfs:domain rd:Compound ;
+    rdfs:range xsd:string .
+
+rd:is_approved_drug a owl:DatatypeProperty ;
+    rdfs:label "is approved drug" ;
+    rdfs:comment "是否为已批准药物" ;
+    rdfs:domain rd:Compound ;
+    rdfs:range xsd:boolean .
+
+# ----- Compound 关系 -----
+
+rd:inhibits a owl:ObjectProperty ;
+    rdfs:label "inhibits" ;
+    rdfs:comment "化合物抑制靶点" ;
+    rdfs:domain rd:Compound ;
+    rdfs:range rd:Target ;
+    owl:inverseOf rd:is_inhibited_by .
+
+rd:activates a owl:ObjectProperty ;
+    rdfs:label "activates" ;
+    rdfs:comment "化合物激活靶点" ;
+    rdfs:domain rd:Compound ;
+    rdfs:range rd:Target ;
+    owl:inverseOf rd:is_activated_by .
+
+rd:binds_to a owl:ObjectProperty ;
+    rdfs:label "binds to" ;
+    rdfs:comment "化合物与靶点结合" ;
+    rdfs:domain rd:Compound ;
+    rdfs:range rd:Target ;
+    owl:inverseOf rd:is_bound_by .
+
+rd:has_sar_data a owl:ObjectProperty ;
+    rdfs:label "has SAR data" ;
+    rdfs:comment "化合物的构效关系数据" ;
+    rdfs:domain rd:Compound ;
+    rdfs:range rd:SARData .
+
+rd:is_similar_to a owl:SymmetricProperty ;
+    rdfs:label "is similar to" ;
+    rdfs:comment "化合物结构相似性" ;
+    rdfs:domain rd:Compound ;
+    rdfs:range rd:Compound .
+
+rd:has_derivative a owl:ObjectProperty ;
+    rdfs:label "has derivative" ;
+    rdfs:comment "化合物的衍生物" ;
+    rdfs:domain rd:Compound ;
+    rdfs:range rd:Compound ;
+    owl:inverseOf rd:is_derivative_of .
+
+rd:is_derivative_of a owl:ObjectProperty ;
+    rdfs:label "is derivative of" ;
+    rdfs:comment "是...的衍生物" ;
+    rdfs:domain rd:Compound ;
+    rdfs:range rd:Compound .
+
+rd:is_congener_of a owl:SymmetricProperty ;
+    rdfs:label "is congener of" ;
+    rdfs:comment "是...的同系物" ;
+    rdfs:domain rd:Compound ;
+    rdfs:range rd:Compound .
+
+rd:is_prodrug_of a owl:ObjectProperty ;
+    rdfs:label "is prodrug of" ;
+    rdfs:comment "是...的前药" ;
+    rdfs:domain rd:Compound ;
+    rdfs:range rd:Compound .
+
+rd:has_metabolite a owl:ObjectProperty ;
+    rdfs:label "has metabolite" ;
+    rdfs:comment "化合物的代谢产物" ;
+    rdfs:domain rd:Compound ;
+    rdfs:range rd:Compound .
+
+rd:is_part_of_pathway a owl:ObjectProperty ;
+    rdfs:label "is part of pathway" ;
+    rdfs:comment "化合物参与通路" ;
+    rdfs:domain rd:Compound ;
+    rdfs:range rd:Pathway .
+
+# ----- Compound 辅助类 -----
+
+rd:StructureType a owl:Class ;
+    rdfs:label "Structure Type" ;
+    rdfs:comment "化合物结构类型" .
+
+rd:StructureType_small_molecule a rd:StructureType ;
+    rdfs:label "Small Molecule" ;
+    rdfs:comment "小分子化合物" .
+
+rd:StructureType_peptide a rd:StructureType ;
+    rdfs:label "Peptide" ;
+    rdfs:comment "肽类化合物" .
+
+rd:StructureType_oligosaccharide a rd:StructureType ;
+    rdfs:label "Oligosaccharide" ;
+    rdfs:comment "寡糖" .
+
+rd:StructureType_lipid a rd:StructureType ;
+    rdfs:label "Lipid" ;
+    rdfs:comment "脂类" .
+
+rd:StructureType_natural_product a rd:StructureType ;
+    rdfs:label "Natural Product" ;
+    rdfs:comment "天然产物" .
+
+rd:DevelopmentStage a owl:Class ;
+    rdfs:label "Development Stage" ;
+    rdfs:comment "化合物开发阶段" .
+
+rd:DevelopmentStage_hit a rd:DevelopmentStage ;
+    rdfs:label "Hit" ;
+    rdfs:comment "命中化合物" .
+
+rd:DevelopmentStage_lead a rd:DevelopmentStage ;
+    rdfs:label "Lead" ;
+    rdfs:comment "先导化合物" .
+
+rd:DevelopmentStage_PCC a rd:DevelopmentStage ;
+    rdfs:label "PCC" ;
+    rdfs:comment "临床前候选化合物" .
+
+rd:DevelopmentStage_IND a rd:DevelopmentStage ;
+    rdfs:label "IND" ;
+    rdfs:comment "研究性新药" .
+
+rd:DevelopmentPhase_1 a rd:DevelopmentStage ;
+    rdfs:label "Phase 1" ;
+    rdfs:comment "临床I期" .
+
+rd:DevelopmentPhase_2 a rd:DevelopmentStage ;
+    rdfs:label "Phase 2" ;
+    rdfs:comment "临床II期" .
+
+rd:DevelopmentPhase_3 a rd:DevelopmentStage ;
+    rdfs:label "Phase 3" ;
+    rdfs:comment "临床III期" .
+
+rd:DevelopmentStage_approved a rd:DevelopmentStage ;
+    rdfs:label "Approved" ;
+    rdfs:comment "已批准" .
+
+rd:DevelopmentStage_withdrawn a rd:DevelopmentStage ;
+    rdfs:label "Withdrawn" ;
+    rdfs:comment "已撤回" .
+
+#===========================================================
+# 2. Target (靶点)
+#===========================================================
+
+rd:Target a owl:Class ;
+    rdfs:label "Target" ;
+    rdfs:subClassOf pharma:Entity ;
+    rdfs:comment "药物靶点，包括蛋白质、基因、受体等" .
+
+# ----- Target 属性 -----
+
+rd:has_target_type a owl:ObjectProperty ;
+    rdfs:label "has target type" ;
+    rdfs:comment "靶点类型" ;
+    rdfs:domain rd:Target ;
+    rdfs:range rd:TargetType .
+
+rd:has_organism a owl:DatatypeProperty ;
+    rdfs:label "has organism" ;
+    rdfs:comment "来源生物体" ;
+    rdfs:domain rd:Target ;
+    rdfs:range xsd:string .
+
+rd:has_gene_name a owl:DatatypeProperty ;
+    rdfs:label "has gene name" ;
+    rdfs:comment "基因名称" ;
+    rdfs:domain rd:Target ;
+    rdfs:range xsd:string .
+
+rd:has_gene_symbol a owl:DatatypeProperty ;
+    rdfs:label "has gene symbol" ;
+    rdfs:comment "基因符号" ;
+    rdfs:domain rd:Target ;
+    rdfs:range xsd:string .
+
+rd:has_uniprot_id a owl:DatatypeProperty ;
+    rdfs:label "has UniProt ID" ;
+    rdfs:comment "UniProt 蛋白质数据库ID" ;
+    rdfs:domain rd:Target ;
+    rdfs:range xsd:string .
+
+rd:has_ensembl_id a owl:DatatypeProperty ;
+    rdfs:label "has Ensembl ID" ;
+    rdfs:comment "Ensembl 基因组数据库ID" ;
+    rdfs:domain rd:Target ;
+    rdfs:range xsd:string .
+
+rd:has_entrez_id a owl:DatatypeProperty ;
+    rdfs:label "has Entrez ID" ;
+    rdfs:comment "Entrez Gene ID" ;
+    rdfs:domain rd:Target ;
+    rdfs:range xsd:string .
+
+rd:has_refseq_id a owl:DatatypeProperty ;
+    rdfs:label "has RefSeq ID" ;
+    rdfs:comment "NCBI RefSeq ID" ;
+    rdfs:domain rd:Target ;
+    rdfs:range xsd:string .
+
+rd:has_protein_sequence a owl:DatatypeProperty ;
+    rdfs:label "has protein sequence" ;
+    rdfs:comment "蛋白质序列" ;
+    rdfs:domain rd:Target ;
+    rdfs:range xsd:string .
+
+rd:has_sequence_length a owl:DatatypeProperty ;
+    rdfs:label "has sequence length" ;
+    rdfs:comment "序列长度（氨基酸数）" ;
+    rdfs:domain rd:Target ;
+    rdfs:range xsd:integer .
+
+rd:has_molecular_weight a owl:DatatypeProperty ;
+    rdfs:label "has molecular weight" ;
+    rdfs:comment "蛋白质分子量 (kDa)" ;
+    rdfs:domain rd:Target ;
+    rdfs:range xsd:decimal .
+
+rd:has_cellular_location a owl:DatatypeProperty ;
+    rdfs:label "has cellular location" ;
+    rdfs:comment "细胞定位" ;
+    rdfs:domain rd:Target ;
+    rdfs:range xsd:string .
+
+rd:has_subcellular_location a owl:DatatypeProperty ;
+    rdfs:label "has subcellular location" ;
+    rdfs:comment "亚细胞定位" ;
+    rdfs:domain rd:Target ;
+    rdfs:range xsd:string .
+
+rd:has_go_annotation a owl:DatatypeProperty ;
+    rdfs:label "has GO annotation" ;
+    rdfs:comment "Gene Ontology 注释" ;
+    rdfs:domain rd:Target ;
+    rdfs:range xsd:string .
+
+rd:has_druggability_score a owl:DatatypeProperty ;
+    rdfs:label "has druggability score" ;
+    rdfs:comment "可成药性评分" ;
+    rdfs:domain rd:Target ;
+    rdfs:range xsd:decimal .
+
+rd:has_safety_concern a owl:DatatypeProperty ;
+    rdfs:label "has safety concern" ;
+    rdfs:comment "安全性关注点" ;
+    rdfs:domain rd:Target ;
+    rdfs:range xsd:string .
+
+# ----- Target 关系 -----
+
+rd:is_inhibited_by a owl:ObjectProperty ;
+    rdfs:label "is inhibited by" ;
+    rdfs:comment "被化合物抑制" ;
+    rdfs:domain rd:Target ;
+    rdfs:range rd:Compound .
+
+rd:is_activated_by a owl:ObjectProperty ;
+    rdfs:label "is activated by" ;
+    rdfs:comment "被化合物激活" ;
+    rdfs:domain rd:Target ;
+    rdfs:range rd:Compound .
+
+rd:is_bound_by a owl:ObjectProperty ;
+    rdfs:label "is bound by" ;
+    rdfs:comment "被化合物结合" ;
+    rdfs:domain rd:Target ;
+    rdfs:range rd:Compound .
+
+rd:participates_in a owl:ObjectProperty ;
+    rdfs:label "participates in" ;
+    rdfs:comment "参与通路" ;
+    rdfs:domain rd:Target ;
+    rdfs:range rd:Pathway ;
+    owl:inverseOf rd:includes_target .
+
+rd:regulates a owl:ObjectProperty ;
+    rdfs:label "regulates" ;
+    rdfs:comment "调控" ;
+    rdfs:domain rd:Target ;
+    rdfs:range rd:Target .
+
+rd:is_regulated_by a owl:ObjectProperty ;
+    rdfs:label "is regulated by" ;
+    rdfs:comment "被...调控" ;
+    rdfs:domain rd:Target ;
+    rdfs:range rd:Target .
+
+rd:interacts_with a owl:SymmetricProperty ;
+    rdfs:label "interacts with" ;
+    rdfs:comment "蛋白-蛋白相互作用" ;
+    rdfs:domain rd:Target ;
+    rdfs:range rd:Target .
+
+rd:has_domain a owl:ObjectProperty ;
+    rdfs:label "has domain" ;
+    rdfs:comment "蛋白质结构域" ;
+    rdfs:domain rd:Target ;
+    rdfs:range rd:ProteinDomain .
+
+rd:has_isoform a owl:ObjectProperty ;
+    rdfs:label "has isoform" ;
+    rdfs:comment "蛋白质异构体" ;
+    rdfs:domain rd:Target ;
+    rdfs:range rd:Target .
+
+rd:associated_with_disease a owl:ObjectProperty ;
+    rdfs:label "associated with disease" ;
+    rdfs:comment "与疾病关联" ;
+    rdfs:domain rd:Target ;
+    rdfs:range clinical:Disease .
+
+# ----- Target 辅助类 -----
+
+rd:TargetType a owl:Class ;
+    rdfs:label "Target Type" ;
+    rdfs:comment "靶点类型" .
+
+rd:TargetType_receptor a rd:TargetType ;
+    rdfs:label "Receptor" ;
+    rdfs:comment "受体" .
+
+rd:TargetType_enzyme a rd:TargetType ;
+    rdfs:label "Enzyme" ;
+    rdfs:comment "酶" .
+
+rd:TargetType_ion_channel a rd:TargetType ;
+    rdfs:label "Ion Channel" ;
+    rdfs:comment "离子通道" .
+
+rd:TargetType_transporter a rd:TargetType ;
+    rdfs:label "Transporter" ;
+    rdfs:comment "转运体" .
+
+rd:TargetType_nuclear_receptor a rd:TargetType ;
+    rdfs:label "Nuclear Receptor" ;
+    rdfs:comment "核受体" .
+
+rd:TargetType_gprotein_coupled_receptor a rd:TargetType ;
+    rdfs:label "G-Protein Coupled Receptor" ;
+    rdfs:comment "G蛋白偶联受体" .
+
+rd:TargetType_kinase a rd:TargetType ;
+    rdfs:label "Kinase" ;
+    rdfs:comment "激酶" .
+
+rd:TargetType_protease a rd:TargetType ;
+    rdfs:label "Protease" ;
+    rdfs:comment "蛋白酶" .
+
+rd:TargetType_transcription_factor a rd:TargetType ;
+    rdfs:label "Transcription Factor" ;
+    rdfs:comment "转录因子" .
+
+rd:TargetType_epigenetic_target a rd:TargetType ;
+    rdfs:label "Epigenetic Target" ;
+    rdfs:comment "表观遗传靶点" .
+
+rd:ProteinDomain a owl:Class ;
+    rdfs:label "Protein Domain" ;
+    rdfs:comment "蛋白质结构域" .
+
+#===========================================================
+# 3. Assay (实验/生物检测)
+#===========================================================
+
+rd:Assay a owl:Class ;
+    rdfs:label "Assay" ;
+    rdfs:subClassOf pharma:Entity ;
+    rdfs:comment "生物检测/实验" ;
+    owl:equivalentClass bao:BAO_0000176 .  # assay
+
+# ----- Assay 属性 -----
+
+rd:has_assay_type a owl:ObjectProperty ;
+    rdfs:label "has assay type" ;
+    rdfs:comment "实验类型" ;
+    rdfs:domain rd:Assay ;
+    rdfs:range rd:AssayType .
+
+rd:has_assay_format a owl:ObjectProperty ;
+    rdfs:label "has assay format" ;
+    rdfs:comment "实验形式" ;
+    rdfs:domain rd:Assay ;
+    rdfs:range rd:AssayFormat .
+
+rd:has_detection_method a owl:ObjectProperty ;
+    rdfs:label "has detection method" ;
+    rdfs:comment "检测方法" ;
+    rdfs:domain rd:Assay ;
+    rdfs:range rd:DetectionMethod .
+
+rd:has_readout_type a owl:ObjectProperty ;
+    rdfs:label "has readout type" ;
+    rdfs:comment "读数类型" ;
+    rdfs:domain rd:Assay ;
+    rdfs:range rd:ReadoutType .
+
+rd:has_assay_design a owl:DatatypeProperty ;
+    rdfs:label "has assay design" ;
+    rdfs:comment "实验设计描述" ;
+    rdfs:domain rd:Assay ;
+    rdfs:range xsd:string .
+
+rd:has_assay_description a owl:DatatypeProperty ;
+    rdfs:label "has assay description" ;
+    rdfs:comment "实验描述" ;
+    rdfs:domain rd:Assay ;
+    rdfs:range xsd:string .
+
+rd:has_assay_protocol a owl:DatatypeProperty ;
+    rdfs:label "has assay protocol" ;
+    rdfs:comment "实验方案/步骤" ;
+    rdfs:domain rd:Assay ;
+    rdfs:range xsd:string .
+
+rd:has_cell_line a owl:DatatypeProperty ;
+    rdfs:label "has cell line" ;
+    rdfs:comment "细胞系" ;
+    rdfs:domain rd:Assay ;
+    rdfs:range xsd:string .
+
+rd:has_tissue_type a owl:DatatypeProperty ;
+    rdfs:label "has tissue type" ;
+    rdfs:comment "组织类型" ;
+    rdfs:domain rd:Assay ;
+    rdfs:range xsd:string .
+
+rd:has_organism a owl:DatatypeProperty ;
+    rdfs:label "has organism" ;
+    rdfs:comment "实验生物体" ;
+    rdfs:domain rd:Assay ;
+    rdfs:range xsd:string .
+
+rd:has_incubation_time a owl:DatatypeProperty ;
+    rdfs:label "has incubation time" ;
+    rdfs:comment "孵育时间" ;
+    rdfs:domain rd:Assay ;
+    rdfs:range xsd:decimal .
+
+rd:has_temperature a owl:DatatypeProperty ;
+    rdfs:label "has temperature" ;
+    rdfs:comment "实验温度 (°C)" ;
+    rdfs:domain rd:Assay ;
+    rdfs:range xsd:decimal .
+
+rd:has_ph a owl:DatatypeProperty ;
+    rdfs:label "has pH" ;
+    rdfs:comment "实验pH值" ;
+    rdfs:domain rd:Assay ;
+    rdfs:range xsd:decimal .
+
+rd:has_buffer_type a owl:DatatypeProperty ;
+    rdfs:label "has buffer type" ;
+    rdfs:comment "缓冲液类型" ;
+    rdfs:domain rd:Assay ;
+    rdfs:range xsd:string .
+
+rd:has_assay_quality a owl:ObjectProperty ;
+    rdfs:label "has assay quality" ;
+    rdfs:comment "实验质量评估" ;
+    rdfs:domain rd:Assay ;
+    rdfs:range rd:AssayQuality .
+
+# ----- Assay 关系 -----
+
+rd:measures a owl:ObjectProperty ;
+    rdfs:label "measures" ;
+    rdfs:comment "测量靶点活性" ;
+    rdfs:domain rd:Assay ;
+    rdfs:range rd:Target .
+
+rd:tests_compound a owl:ObjectProperty ;
+    rdfs:label "tests compound" ;
+    rdfs:comment "测试化合物" ;
+    rdfs:domain rd:Assay ;
+    rdfs:range rd:Compound .
+
+rd:produces_result a owl:ObjectProperty ;
+    rdfs:label "produces result" ;
+    rdfs:comment "产生实验结果" ;
+    rdfs:domain rd:Assay ;
+    rdfs:range rd:AssayResult .
+
+rd:uses_detection_technology a owl:ObjectProperty ;
+    rdfs:label "uses detection technology" ;
+    rdfs:comment "使用检测技术" ;
+    rdfs:domain rd:Assay ;
+    rdfs:range rd:DetectionTechnology .
+
+rd:has_control a owl:ObjectProperty ;
+    rdfs:label "has control" ;
+    rdfs:comment "实验对照" ;
+    rdfs:domain rd:Assay ;
+    rdfs:range rd:ControlType .
+
+rd:has_replicate a owl:ObjectProperty ;
+    rdfs:label "has replicate" ;
+    rdfs:comment "重复实验" ;
+    rdfs:domain rd:Assay ;
+    rdfs:range rd:Assay .
+
+# ----- Assay 辅助类 -----
+
+rd:AssayType a owl:Class ;
+    rdfs:label "Assay Type" ;
+    rdfs:comment "实验类型" .
+
+rd:AssayType_binding a rd:AssayType ;
+    rdfs:label "Binding Assay" ;
+    rdfs:comment "结合实验" .
+
+rd:AssayType_functional a rd:AssayType ;
+    rdfs:label "Functional Assay" ;
+    rdfs:comment "功能实验" .
+
+rd:AssayType_cell_based a rd:AssayType ;
+    rdfs:label "Cell-based Assay" ;
+    rdfs:comment "细胞实验" .
+
+rd:AssayType_biochemical a rd:AssayType ;
+    rdfs:label "Biochemical Assay" ;
+    rdfs:comment "生化实验" .
+
+rd:AssayType_phenotypic a rd:AssayType ;
+    rdfs:label "Phenotypic Assay" ;
+    rdfs:comment "表型筛选实验" .
+
+rd:AssayType_adme a rd:AssayType ;
+    rdfs:label "ADME Assay" ;
+    rdfs:comment "ADME实验" .
+
+rd:AssayFormat a owl:Class ;
+    rdfs:label "Assay Format" ;
+    rdfs:comment "实验形式" .
+
+rd:AssayFormat_96_well a rd:AssayFormat ;
+    rdfs:label "96-well plate" ;
+    rdfs:comment "96孔板" .
+
+rd:AssayFormat_384_well a rd:AssayFormat ;
+    rdfs:label "384-well plate" ;
+    rdfs:comment "384孔板" .
+
+rd:AssayFormat_1536_well a rd:AssayFormat ;
+    rdfs:label "1536-well plate" ;
+    rdfs:comment "1536孔板" .
+
+rd:AssayFormat_microfluidic a rd:AssayFormat ;
+    rdfs:label "Microfluidic" ;
+    rdfs:comment "微流控" .
+
+rd:DetectionMethod a owl:Class ;
+    rdfs:label "Detection Method" ;
+    rdfs:comment "检测方法" .
+
+rd:DetectionMethod_fluorescence a rd:DetectionMethod ;
+    rdfs:label "Fluorescence" ;
+    rdfs:comment "荧光检测" .
+
+rd:DetectionMethod_absorbance a rd:DetectionMethod ;
+    rdfs:label "Absorbance" ;
+    rdfs:comment "吸光度检测" .
+
+rd:DetectionMethod_luminescence a rd:DetectionMethod ;
+    rdfs:label "Luminescence" ;
+    rdfs:comment "发光检测" .
+
+rd:DetectionMethod_fret a rd:DetectionMethod ;
+    rdfs:label "FRET" ;
+    rdfs:comment "荧光共振能量转移" .
+
+rd:DetectionMethod_spr a rd:DetectionMethod ;
+    rdfs:label "SPR" ;
+    rdfs:comment "表面等离子体共振" .
+
+rd:DetectionMethod_itc a rd:DetectionMethod ;
+    rdfs:label "ITC" ;
+    rdfs:comment "等温滴定量热法" .
+
+rd:ReadoutType a owl:Class ;
+    rdfs:label "Readout Type" ;
+    rdfs:comment "读数类型" .
+
+rd:ReadoutType_ic50 a rd:ReadoutType ;
+    rdfs:label "IC50" ;
+    rdfs:comment "半抑制浓度" .
+
+rd:ReadoutType_ec50 a rd:ReadoutType ;
+    rdfs:label "EC50" ;
+    rdfs:comment "半有效浓度" .
+
+rd:ReadoutType_ki a rd:ReadoutType ;
+    rdfs:label "Ki" ;
+    rdfs:comment "抑制常数" .
+
+rd:ReadoutType_kd a rd:ReadoutType ;
+    rdfs:label "Kd" ;
+    rdfs:comment "解离常数" .
+
+rd:ReadoutType_percent_inhibition a rd:ReadoutType ;
+    rdfs:label "Percent Inhibition" ;
+    rdfs:comment "抑制率" .
+
+rd:ReadoutType_percent_activation a rd:ReadoutType ;
+    rdfs:label "Percent Activation" ;
+    rdfs:comment "激活率" .
+
+rd:AssayQuality a owl:Class ;
+    rdfs:label "Assay Quality" ;
+    rdfs:comment "实验质量" .
+
+rd:DetectionTechnology a owl:Class ;
+    rdfs:label "Detection Technology" ;
+    rdfs:comment "检测技术" .
+
+rd:ControlType a owl:Class ;
+    rdfs:label "Control Type" ;
+    rdfs:comment "对照类型" .
+
+rd:ControlType_positive a rd:ControlType ;
+    rdfs:label "Positive Control" ;
+    rdfs:comment "阳性对照" .
+
+rd:ControlType_negative a rd:ControlType ;
+    rdfs:label "Negative Control" ;
+    rdfs:comment "阴性对照" .
+
+rd:ControlType_vehicle a rd:ControlType ;
+    rdfs:label "Vehicle Control" ;
+    rdfs:comment "溶剂对照" .
+
+#===========================================================
+# 4. AssayResult (实验结果)
+#===========================================================
+
+rd:AssayResult a owl:Class ;
+    rdfs:label "Assay Result" ;
+    rdfs:subClassOf pharma:Entity ;
+    rdfs:comment "实验结果数据" .
+
+# ----- AssayResult 属性 -----
+
+rd:has_activity_value a owl:DatatypeProperty ;
+    rdfs:label "has activity value" ;
+    rdfs:comment "活性值" ;
+    rdfs:domain rd:AssayResult ;
+    rdfs:range xsd:decimal .
+
+rd:has_activity_unit a owl:DatatypeProperty ;
+    rdfs:label "has activity unit" ;
+    rdfs:comment "活性单位" ;
+    rdfs:domain rd:AssayResult ;
+    rdfs:range xsd:string .
+
+rd:has_measurement_type a owl:ObjectProperty ;
+    rdfs:label "has measurement type" ;
+    rdfs:comment "测量类型" ;
+    rdfs:domain rd:AssayResult ;
+    rdfs:range rd:ReadoutType .
+
+rd:has_confidence_interval a owl:DatatypeProperty ;
+    rdfs:label "has confidence interval" ;
+    rdfs:comment "置信区间" ;
+    rdfs:domain rd:AssayResult ;
+    rdfs:range xsd:string .
+
+rd:has_standard_deviation a owl:DatatypeProperty ;
+    rdfs:label "has standard deviation" ;
+    rdfs:comment "标准差" ;
+    rdfs:domain rd:AssayResult ;
+    rdfs:range xsd:decimal .
+
+rd:has_standard_error a owl:DatatypeProperty ;
+    rdfs:label "has standard error" ;
+    rdfs:comment "标准误差" ;
+    rdfs:domain rd:AssayResult ;
+    rdfs:range xsd:decimal .
+
+rd:has_replicate_count a owl:DatatypeProperty ;
+    rdfs:label "has replicate count" ;
+    rdfs:comment "重复次数" ;
+    rdfs:domain rd:AssayResult ;
+    rdfs:range xsd:integer .
+
+rd:has_p_value a owl:DatatypeProperty ;
+    rdfs:label "has p-value" ;
+    rdfs:comment "统计显著性p值" ;
+    rdfs:domain rd:AssayResult ;
+    rdfs:range xsd:decimal .
+
+rd:has_z_factor a owl:DatatypeProperty ;
+    rdfs:label "has Z-factor" ;
+    rdfs:comment "Z因子（实验质量指标）" ;
+    rdfs:domain rd:AssayResult ;
+    rdfs:range xsd:decimal .
+
+rd:has_signal_to_noise a owl:DatatypeProperty ;
+    rdfs:label "has signal-to-noise" ;
+    rdfs:comment "信噪比" ;
+    rdfs:domain rd:AssayResult ;
+    rdfs:range xsd:decimal .
+
+rd:has_measurement_date a owl:DatatypeProperty ;
+    rdfs:label "has measurement date" ;
+    rdfs:comment "测量日期" ;
+    rdfs:domain rd:AssayResult ;
+    rdfs:range xsd:date .
+
+rd:has_operator a owl:DatatypeProperty ;
+    rdfs:label "has operator" ;
+    rdfs:comment "实验操作员" ;
+    rdfs:domain rd:AssayResult ;
+    rdfs:range xsd:string .
+
+# ----- AssayResult 关系 -----
+
+rd:derived_from_assay a owl:ObjectProperty ;
+    rdfs:label "derived from assay" ;
+    rdfs:comment "来源于实验" ;
+    rdfs:domain rd:AssayResult ;
+    rdfs:range rd:Assay ;
+    owl:inverseOf rd:produces_result .
+
+rd:measured_for_compound a owl:ObjectProperty ;
+    rdfs:label "measured for compound" ;
+    rdfs:comment "针对化合物的测量" ;
+    rdfs:domain rd:AssayResult ;
+    rdfs:range rd:Compound .
+
+rd:measured_for_target a owl:ObjectProperty ;
+    rdfs:label "measured for target" ;
+    rdfs:comment "针对靶点的测量" ;
+    rdfs:domain rd:AssayResult ;
+    rdfs:range rd:Target .
+
+#===========================================================
+# 5. SARData (构效关系数据)
+#===========================================================
+
+rd:SARData a owl:Class ;
+    rdfs:label "SAR Data" ;
+    rdfs:subClassOf pharma:Entity ;
+    rdfs:comment "Structure-Activity Relationship 数据" .
+
+# ----- SARData 属性 -----
+
+rd:has_activity_relationship a owl:DatatypeProperty ;
+    rdfs:label "has activity relationship" ;
+    rdfs:comment "活性关系描述" ;
+    rdfs:domain rd:SARData ;
+    rdfs:range xsd:string .
+
+rd:has_potency a owl:DatatypeProperty ;
+    rdfs:label "has potency" ;
+    rdfs:comment "效价强度" ;
+    rdfs:domain rd:SARData ;
+    rdfs:range xsd:decimal .
+
+rd:has_efficacy a owl:DatatypeProperty ;
+    rdfs:label "has efficacy" ;
+    rdfs:comment "效能" ;
+    rdfs:domain rd:SARData ;
+    rdfs:range xsd:decimal .
+
+rd:has_selectivity a owl:DatatypeProperty ;
+    rdfs:label "has selectivity" ;
+    rdfs:comment "选择性" ;
+    rdfs:domain rd:SARData ;
+    rdfs:range xsd:decimal .
+
+rd:has_toxicity a owl:DatatypeProperty ;
+    rdfs:label "has toxicity" ;
+    rdfs:comment "毒性数据" ;
+    rdfs:domain rd:SARData ;
+    rdfs:range xsd:string .
+
+rd:has_pharmacokinetics a owl:DatatypeProperty ;
+    rdfs:label "has pharmacokinetics" ;
+    rdfs:comment "药代动力学参数" ;
+    rdfs:domain rd:SARData ;
+    rdfs:range xsd:string .
+
+# ----- SARData 关系 -----
+
+rd:links_compound a owl:ObjectProperty ;
+    rdfs:label "links compound" ;
+    rdfs:comment "关联化合物" ;
+    rdfs:domain rd:SARData ;
+    rdfs:range rd:Compound .
+
+rd:links_target a owl:ObjectProperty ;
+    rdfs:label "links target" ;
+    rdfs:comment "关联靶点" ;
+    rdfs:domain rd:SARData ;
+    rdfs:range rd:Target .
+
+rd:derived_from_assay a owl:ObjectProperty ;
+    rdfs:label "derived from assay" ;
+    rdfs:comment "来源于实验" ;
+    rdfs:domain rd:SARData ;
+    rdfs:range rd:Assay .
+
+rd:has_sar_series a owl:ObjectProperty ;
+    rdfs:label "has SAR series" ;
+    rdfs:comment "SAR系列化合物" ;
+    rdfs:domain rd:SARData ;
+    rdfs:range rd:SARSeries .
+
+#===========================================================
+# 6. SARSeries (SAR系列)
+#===========================================================
+
+rd:SARSeries a owl:Class ;
+    rdfs:label "SAR Series" ;
+    rdfs:subClassOf pharma:Entity ;
+    rdfs:comment "构效关系化合物系列" .
+
+rd:has_scaffold a owl:ObjectProperty ;
+    rdfs:label "has scaffold" ;
+    rdfs:comment "母核结构" ;
+    rdfs:domain rd:SARSeries ;
+    rdfs:range rd:Scaffold .
+
+rd:has_r_group a owl:ObjectProperty ;
+    rdfs:label "has R-group" ;
+    rdfs:comment "取代基" ;
+    rdfs:domain rd:SARSeries ;
+    rdfs:range rd:RGroup .
+
+rd:has_optimization_direction a owl:DatatypeProperty ;
+    rdfs:label "has optimization direction" ;
+    rdfs:comment "优化方向" ;
+    rdfs:domain rd:SARSeries ;
+    rdfs:range xsd:string .
+
+#===========================================================
+# 7. Scaffold (母核结构)
+#===========================================================
+
+rd:Scaffold a owl:Class ;
+    rdfs:label "Scaffold" ;
+    rdfs:subClassOf pharma:Entity ;
+    rdfs:comment "化合物母核/骨架结构" .
+
+rd:has_scaffold_smarts a owl:DatatypeProperty ;
+    rdfs:label "has scaffold SMARTS" ;
+    rdfs:comment "母核SMARTS模式" ;
+    rdfs:domain rd:Scaffold ;
+    rdfs:range xsd:string .
+
+rd:has_scaffold_class a owl:DatatypeProperty ;
+    rdfs:label "has scaffold class" ;
+    rdfs:comment "母核类别（如Bemis-Murcko）" ;
+    rdfs:domain rd:Scaffold ;
+    rdfs:range xsd:string .
+
+#===========================================================
+# 8. Pathway (通路)
+#===========================================================
+
+rd:Pathway a owl:Class ;
+    rdfs:label "Pathway" ;
+    rdfs:subClassOf pharma:Entity ;
+    rdfs:comment "生物通路/代谢途径" .
+
+# ----- Pathway 属性 -----
+
+rd:has_pathway_type a owl:ObjectProperty ;
+    rdfs:label "has pathway type" ;
+    rdfs:comment "通路类型" ;
+    rdfs:domain rd:Pathway ;
+    rdfs:range rd:PathwayType .
+
+rd:has_pathway_class a owl:DatatypeProperty ;
+    rdfs:label "has pathway class" ;
+    rdfs:comment "通路类别" ;
+    rdfs:domain rd:Pathway ;
+    rdfs:range xsd:string .
+
+rd:has_organism a owl:DatatypeProperty ;
+    rdfs:label "has organism" ;
+    rdfs:comment "来源生物体" ;
+    rdfs:domain rd:Pathway ;
+    rdfs:range xsd:string .
+
+rd:has_kegg_id a owl:DatatypeProperty ;
+    rdfs:label "has KEGG ID" ;
+    rdfs:comment "KEGG通路ID" ;
+    rdfs:domain rd:Pathway ;
+    rdfs:range xsd:string .
+
+rd:has_reactome_id a owl:DatatypeProperty ;
+    rdfs:label "has Reactome ID" ;
+    rdfs:comment "Reactome ID" ;
+    rdfs:domain rd:Pathway ;
+    rdfs:range xsd:string .
+
+rd:has_wikipathways_id a owl:DatatypeProperty ;
+    rdfs:label "has WikiPathways ID" ;
+    rdfs:comment "WikiPathways ID" ;
+    rdfs:domain rd:Pathway ;
+    rdfs:range xsd:string .
+
+rd:has_go_id a owl:DatatypeProperty ;
+    rdfs:label "has GO ID" ;
+    rdfs:comment "Gene Ontology生物过程ID" ;
+    rdfs:domain rd:Pathway ;
+    rdfs:range xsd:string .
+
+# ----- Pathway 关系 -----
+
+rd:includes_target a owl:ObjectProperty ;
+    rdfs:label "includes target" ;
+    rdfs:comment "通路包含靶点" ;
+    rdfs:domain rd:Pathway ;
+    rdfs:range rd:Target .
+
+rd:includes_compound a owl:ObjectProperty ;
+    rdfs:label "includes compound" ;
+    rdfs:comment "通路包含化合物" ;
+    rdfs:domain rd:Pathway ;
+    rdfs:range rd:Compound .
+
+rd:related_to_disease a owl:ObjectProperty ;
+    rdfs:label "related to disease" ;
+    rdfs:comment "与疾病相关" ;
+    rdfs:domain rd:Pathway ;
+    rdfs:range clinical:Disease .
+
+rd:has_upstream_regulator a owl:ObjectProperty ;
+    rdfs:label "has upstream regulator" ;
+    rdfs:comment "上游调控因子" ;
+    rdfs:domain rd:Pathway ;
+    rdfs:range rd:Target .
+
+rd:has_downstream_effector a owl:ObjectProperty ;
+    rdfs:label "has downstream effector" ;
+    rdfs:comment "下游效应因子" ;
+    rdfs:domain rd:Pathway ;
+    rdfs:range rd:Target .
+
+rd:interacts_with_pathway a owl:SymmetricProperty ;
+    rdfs:label "interacts with pathway" ;
+    rdfs:comment "通路间交互（crosstalk）" ;
+    rdfs:domain rd:Pathway ;
+    rdfs:range rd:Pathway .
+
+rd:is_subpathway_of a owl:ObjectProperty ;
+    rdfs:label "is subpathway of" ;
+    rdfs:comment "是...的子通路" ;
+    rdfs:domain rd:Pathway ;
+    rdfs:range rd:Pathway .
+
+# ----- Pathway 辅助类 -----
+
+rd:PathwayType a owl:Class ;
+    rdfs:label "Pathway Type" ;
+    rdfs:comment "通路类型" .
+
+rd:PathwayType_metabolic a rd:PathwayType ;
+    rdfs:label "Metabolic Pathway" ;
+    rdfs:comment "代谢通路" .
+
+rd:PathwayType_signaling a rd:PathwayType ;
+    rdfs:label "Signaling Pathway" ;
+    rdfs:comment "信号转导通路" .
+
+rd:PathwayType_gene_regulation a rd:PathwayType ;
+    rdfs:label "Gene Regulation Pathway" ;
+    rdfs:comment "基因调控通路" .
+
+rd:PathwayType_transcriptional a rd:PathwayType ;
+    rdfs:label "Transcriptional Pathway" ;
+    rdfs:comment "转录调控通路" .
+
+rd:PathwayType_translational a rd:PathwayType ;
+    rdfs:label "Translational Pathway" ;
+    rdfs:comment "翻译调控通路" .
+
+rd:PathwayType_disease a rd:PathwayType ;
+    rdfs:label "Disease Pathway" ;
+    rdfs:comment "疾病相关通路" .
+
+rd:PathwayType_drug_action a rd:PathwayType ;
+    rdfs:label "Drug Action Pathway" ;
+    rdfs:comment "药物作用通路" .
+
+#===========================================================
+# 9. Disease (疾病) - 跨域实体
+#===========================================================
+
+clinical:Disease a owl:Class ;
+    rdfs:label "Disease" ;
+    rdfs:subClassOf pharma:Entity ;
+    rdfs:comment "疾病/病症" .
+
+# ----- Disease 属性 -----
+
+rd:has_disease_class a owl:DatatypeProperty ;
+    rdfs:label "has disease class" ;
+    rdfs:comment "疾病分类" ;
+    rdfs:domain clinical:Disease ;
+    rdfs:range xsd:string .
+
+rd:has_icd10_code a owl:DatatypeProperty ;
+    rdfs:label "has ICD-10 code" ;
+    rdfs:comment "国际疾病分类代码" ;
+    rdfs:domain clinical:Disease ;
+    rdfs:range xsd:string .
+
+rd:has_mesh_id a owl:DatatypeProperty ;
+    rdfs:label "has MeSH ID" ;
+    rdfs:comment "医学主题词ID" ;
+    rdfs:domain clinical:Disease ;
+    rdfs:range xsd:string .
+
+rd:has_mondo_id a owl:DatatypeProperty ;
+    rdfs:label "has MONDO ID" ;
+    rdfs:comment "疾病本体ID" ;
+    rdfs:domain clinical:Disease ;
+    rdfs:range xsd:string .
+
+rd:has_doid a owl:DatatypeProperty ;
+    rdfs:label "has DOID" ;
+    rdfs:comment "疾病本体ID" ;
+    rdfs:domain clinical:Disease ;
+    rdfs:range xsd:string .
+
+rd:has_orphanet_id a owl:DatatypeProperty ;
+    rdfs:label "has Orphanet ID" ;
+    rdfs:comment "罕见病数据库ID" ;
+    rdfs:domain clinical:Disease ;
+    rdfs:range xsd:string .
+
+# ----- Disease 关系 (在R&D领域) -----
+
+rd:has_target_association a owl:ObjectProperty ;
+    rdfs:label "has target association" ;
+    rdfs:comment "疾病-靶点关联" ;
+    rdfs:domain clinical:Disease ;
+    rdfs:range rd:Target .
+
+rd:has_pathway_association a owl:ObjectProperty ;
+    rdfs:label "has pathway association" ;
+    rdfs:comment "疾病-通路关联" ;
+    rdfs:domain clinical:Disease ;
+    rdfs:range rd:Pathway .
+
+#===========================================================
+# 10. Evidence (证据来源)
+#===========================================================
+
+pharma:Evidence a owl:Class ;
+    rdfs:label "Evidence" ;
+    rdfs:subClassOf pharma:Entity ;
+    rdfs:comment "证据来源，用于数据溯源" .
+
+rd:has_evidence_type a owl:ObjectProperty ;
+    rdfs:label "has evidence type" ;
+    rdfs:comment "证据类型" ;
+    rdfs:domain pharma:Evidence ;
+    rdfs:range rd:EvidenceType .
+
+rd:has_source_database a owl:DatatypeProperty ;
+    rdfs:label "has source database" ;
+    rdfs:comment "来源数据库" ;
+    rdfs:domain pharma:Evidence ;
+    rdfs:range xsd:string .
+
+rd:has_publication_id a owl:DatatypeProperty ;
+    rdfs:label "has publication ID" ;
+    rdfs:comment "文献ID（如PMID）" ;
+    rdfs:domain pharma:Evidence ;
+    rdfs:range xsd:string .
+
+rd:has_confidence_score a owl:DatatypeProperty ;
+    rdfs:label "has confidence score" ;
+    rdfs:comment "置信度评分" ;
+    rdfs:domain pharma:Evidence ;
+    rdfs:range xsd:decimal .
+
+rd:EvidenceType a owl:Class ;
+    rdfs:label "Evidence Type" ;
+    rdfs:comment "证据类型" .
+
+rd:EvidenceType_experimental a rd:EvidenceType ;
+    rdfs:label "Experimental" ;
+    rdfs:comment "实验证据" .
+
+rd:EvidenceType_computational a rd:EvidenceType ;
+    rdfs:label "Computational" ;
+    rdfs:comment "计算预测" .
+
+rd:EvidenceType_literature a rd:EvidenceType ;
+    rdfs:label "Literature" ;
+    rdfs:comment "文献报道" .
+
+rd:EvidenceType_curated a rd:EvidenceType ;
+    rdfs:label "Curated" ;
+    rdfs:comment "人工审核" .
+
+#===========================================================
+# SHACL 约束示例
+#===========================================================
+
+rd:CompoundShape a sh:NodeShape ;
+    sh:targetClass rd:Compound ;
+    sh:property [
+        sh:path pharma:has_primary_id ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+    ] ;
+    sh:property [
+        sh:path rd:has_smiles ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+    ] ;
+    sh:property [
+        sh:path rd:has_inchikey ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+    ] .
+
+rd:TargetShape a sh:NodeShape ;
+    sh:targetClass rd:Target ;
+    sh:property [
+        sh:path pharma:has_primary_id ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+    ] ;
+    sh:property [
+        sh:path rd:has_target_type ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+    ] .
+
+#===========================================================
+# 交叉引用标准本体
+#===========================================================
+
+# Biolink Model
+rd:Compound owl:equivalentClass biolink:ChemicalEntity .
+rd:Target owl:equivalentClass biolink:MacromolecularMachine .
+rd:Pathway owl:equivalentClass biolink:Pathway .
+
+# SIO (SemanticScience Integrated Ontology)
+rd:has_molecular_weight owl:equivalentProperty sio:SIO_000014 .
+rd:has_smiles owl:equivalentProperty sio:SIO_000018 .
+
+#===========================================================
+# 本体结束
+#===========================================================

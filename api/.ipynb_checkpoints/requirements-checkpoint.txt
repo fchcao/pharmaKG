@@ -1,0 +1,44 @@
+#制药行业知识图谱 - API 依赖包
+# Pharmaceutical Knowledge Graph - API Requirements
+
+# FastAPI框架
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+pydantic==2.5.0
+pydantic-settings==2.1.0
+
+# Neo4j驱动
+neo4j==5.14.1
+py2neo==2021.2.4
+
+# 数据处理
+pandas==2.1.4
+numpy==1.26.2
+
+# HTTP客户端
+httpx==0.25.2
+requests==2.31.0
+
+# 认证与安全
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+python-multipart==0.0.6
+
+# 日志与监控
+python-json-logger==2.0.7
+prometheus-client==0.19.0
+
+# 工具
+python-dotenv==1.0.0
+click==8.1.7
+rich==13.7.0
+
+# 开发工具
+pytest==7.4.3
+pytest-asyncio==0.21.1
+black==23.12.0
+flake8==6.1.0
+mypy==1.7.1
+
+# CORS支持
+python-multipart==0.0.6
