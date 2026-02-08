@@ -76,6 +76,27 @@ pytest --cov=api --cov=etl --cov-report=html
 # Note: Test files may need to be created - check CHECKLIST.md for test coverage status
 ```
 
+### Data Collection Processors (NEW)
+```bash
+# ChEMBL 36 SQLite processor (tested with 28GB database)
+python3 -m processors.chembl_processor /path/to/chembl_36.db --limit-compounds 1000
+
+# UniProt API processor (with rate limiting)
+python3 -m processors.uniprot_processor uniprot_ids.txt --organism human
+
+# KEGG pathway processor
+python3 -m processors.kegg_processor --organism human --limit 50
+
+# ClinicalTrials.gov API v2 (with study limits)
+python3 -m processors.clinicaltrials_processor --mode query_by_disease --query-term "cancer"
+
+# FDA Drugs@FDA processor
+python3 -m processors.drugsatfda_processor --mode all --max-applications 100
+
+# Run all data collection pipelines
+python3 scripts/run_full_pipeline.py
+```
+
 ### Project Validation
 ```bash
 # Automated validation
@@ -170,6 +191,29 @@ api/                          # FastAPI REST API service
       ├── advanced_queries.py # Multi-hop queries
       └── aggregate_queries.py # Statistical queries
 
+processors/                   # NEW: Data collection processors (Phase 1-5)
+  ├── base.py                # Base processor class
+  ├── chembl_processor.py    # ChEMBL 36 SQLite processor
+  ├── uniprot_processor.py    # UniProt API processor
+  ├── kegg_processor.py      # KEGG pathway processor
+  ├── clinicaltrials_processor.py # ClinicalTrials.gov processor
+  ├── drugsatfda_processor.py # FDA Drugs@FDA processor
+  ├── faers_processor.py     # FAERS adverse events processor
+  ├── shortage_processor.py   # Drug shortage processor
+  ├── pda_pdf_processor.py   # PDA technical report processor
+  ├── drugbank_processor.py  # DrugBank XML processor
+  ├── dailymed_processor.py  # DailyMed SPL processor
+  ├── rd_processor.py         # R&D domain processor
+  ├── clinical_processor.py   # Clinical domain processor
+  ├── regulatory_processor.py # Regulatory domain processor
+  └── ...
+
+tools/                        # NEW: Integration and inference tools
+  ├── build_master_entity_map.py # Identifier mapping system
+  ├── infer_cross_domain_relationships.py # Cross-domain inference
+  ├── comprehensive_import.py  # Data import orchestration
+  └── ...
+
 etl/                          # Extract-Transform-Load pipeline
   ├── cli.py                  # Command-line interface (414 lines)
   ├── config.py               # ETL configuration with predefined pipelines
@@ -199,12 +243,24 @@ ontologies/                   # Ontology definitions (Turtle format)
 
 scripts/                      # Utility scripts
   ├── check_project.py        # Python validation script
-  └── check_project.sh        # Bash validation script
+  ├── check_project.sh        # Bash validation script
+  ├── import_chembl_to_neo4j.py # NEW: Neo4j import for ChEMBL
+  ├── run_full_pipeline.py   # NEW: Pipeline orchestration
+  ├── extract_uniprot_from_chembl.py # NEW: UniProt ID extraction
+  └── test_*.py              # NEW: Processor test scripts
 
 docs/                         # Documentation
   ├── schema/                 # Schema design documents
   ├── interview-notes/        # Domain interview notes (3 rounds)
-  └── data-sources/           # Data source documentation
+  ├── data-sources/           # Data source documentation
+  ├── CHEMBL_PROCESSOR.md     # NEW: ChEMBL processor documentation
+  ├── UNIPROT_PROCESSOR.md    # NEW: UniProt processor documentation
+  ├── KEGG_PROCESSOR.md      # NEW: KEGG processor documentation
+  ├── CLINICALTRIALS_PROCESSOR.md # NEW: ClinicalTrials processor
+  ├── DRUGSATFDA_PROCESSOR.md # NEW: Drugs@FDA processor documentation
+  ├── COMPLETE_IMPLEMENTATION_SUMMARY.md # NEW: Overall summary
+  ├── QUICK_START_GUIDE.md    # NEW: Usage guide
+  └── ...                     # 32+ documentation files
 
 deploy/                       # Deployment configuration
   ├── deploy.sh               # Docker deployment script
@@ -250,10 +306,26 @@ tests/                        # Test suite (if implemented)
 
 ## Data Sources
 
-- **ChEMBL**: Bioactivity data for compounds and targets
-- **ClinicalTrials.gov**: Clinical trial registry
-- **FDA**: Drug products, applications, and regulatory information
-- **DrugBank**: Comprehensive drug data (file-based extraction)
+### R&D Domain
+- **ChEMBL 36**: Bioactivity data for compounds and targets (2.8M+ compounds, 28GB SQLite)
+- **UniProt**: Protein sequence and function data (enhanced target information)
+- **KEGG**: Biological pathway data (metabolic, signaling, disease pathways)
+
+### Clinical Domain
+- **ClinicalTrials.gov**: Clinical trial registry (400K+ studies, API v2)
+- **FDA Drugs@FDA**: Drug approval and submission data
+
+### Safety & Supply Chain Domain
+- **FAERS**: FDA Adverse Event Reporting System (quarterly data, 10M+ reports)
+- **Drug Shortages**: FDA drug shortage database (daily updates)
+
+### High-Value Datasets
+- **DrugBank**: Comprehensive drug data (requires academic license)
+- **DailyMed**: FDA product labels with SPL XML format
+
+### Document Sources
+- **FDA CRLs**: Complete Response Letters (regulatory decisions)
+- **PDA Technical Reports**: Pharmaceutical manufacturing standards (108 PDFs)
 
 ## Project Status
 
@@ -265,13 +337,16 @@ tests/                        # Test suite (if implemented)
 - ETL pipeline framework
 - Graph analytics and ML analytics modules
 - Ontology definitions and schema design documentation
+- **NEW**: Phase 1-5 data collection processors (17 processors implemented)
+- **NEW**: Identifier mapping and cross-domain inference tools
+- **NEW**: ChEMBL 36 integration tested and verified
+- **NEW**: Neo4j knowledge graph with 1.89M+ nodes
 
 ### In Progress (Phase 1)
 - R&D core entity modeling
 - Clinical core entity modeling
 - Supply chain & regulatory core entity modeling
-- Identifier mapping service
-- Basic query API development
+- Full-scale data collection execution (test dataset completed)
 
 ### Planned (Phase 2-3)
 - Uncertainty data representation
@@ -285,10 +360,33 @@ tests/                        # Test suite (if implemented)
 
 ## Key Files
 
+### Core Application
 - **`api/main.py`**: Main FastAPI application with all REST endpoints
 - **`api/database.py`**: Neo4j connection management
 - **`etl/cli.py`**: Command-line interface for ETL operations
-- **`graph_analytics/algorithms.py`**: Graph algorithms (centrality, community detection, path finding)
+
+### Data Collection (NEW)
+- **`processors/chembl_processor.py`**: ChEMBL 36 SQLite processor (56KB, 1,200+ lines)
+- **`processors/uniprot_processor.py`**: UniProt REST API processor (50KB, 1,100+ lines)
+- **`processors/kegg_processor.py`**: KEGG pathway API processor (65KB, 1,400+ lines)
+- **`processors/clinicaltrials_processor.py`**: ClinicalTrials.gov API v2 processor (76KB, 2,000+ lines)
+
+### Integration Tools (NEW)
+- **`tools/build_master_entity_map.py`**: Master identifier mapping system (42KB, 1,100+ lines)
+- **`tools/infer_cross_domain_relationships.py`**: Cross-domain inference engine (32KB, 900+ lines)
+- **`scripts/import_chembl_to_neo4j.py`**: Neo4j import with optimized batching (23KB, 600+ lines)
+
+### Documentation
+- **`docs/COMPLETE_IMPLEMENTATION_SUMMARY.md`**: Overall implementation summary
+- **`docs/QUICK_START_GUIDE.md`**: Comprehensive usage guide
+- **`docs/DATA_COLLECTION_PLAN.md`**: 5-phase data collection plan
+- **`docs/CHEMBL36_TEST_REPORT.md`**: ChEMBL 36 test verification report
+
+### Schema & Architecture
 - **`docs/schema/制药行业知识图谱Schema设计文档.md`**: Schema design document
 - **`docs/schema/实施路线图.md`**: Implementation roadmap (12 months, 3 phases)
 - **`CHECKLIST.md`**: Project validation checklist (139 items)
+
+### Analytics
+- **`graph_analytics/algorithms.py`**: Graph algorithms (centrality, community detection, path finding)
+- **`ml_analytics/reasoning.py`**: ML-based reasoning engine
