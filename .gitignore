@@ -70,3 +70,42 @@ neo4j/
 # ETL cache
 etl/__pycache__/
 *.pyc
+
+# Node modules and frontend dependencies
+node_modules/
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+
+# Team collaboration (temporary working files)
+team/
+
+# Root level node files (minimal)
+node_modules/
+
+# Data directory (all contents)
+data/
+
+# Local settings
+.claude/settings.local.json
+.env.local
+
+# Test coverage
+coverage/
+.nyc_output/
+.pytest_cache/
+
+# Logs
+*.log
+logs/
+
+# OS and IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Build artifacts
+dist/
+build/
+*.tgz

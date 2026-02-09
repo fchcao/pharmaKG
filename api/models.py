@@ -273,3 +273,144 @@ class OverviewResponse(BaseModel):
     domain_counts: dict[str, int] = Field(..., description="各领域实体数")
     neo4j_version: Optional[str] = None
     api_version: str = Field(..., description="API版本")
+
+
+#===========================================================
+# 搜索相关模型
+#===========================================================
+
+class SearchRequest(BaseModel):
+    """搜索请求基础模型"""
+    query: str = Field(..., min_length=1, description="搜索查询文本")
+    limit: int = Field(20, ge=1, le=100, description="返回结果数量限制")
+    skip: int = Field(0, ge=0, description="跳过结果数量")
+
+
+class FullTextSearchRequest(SearchRequest):
+    """全文搜索请求"""
+    entity_types: Optional[List[str]] = Field(None, description="实体类型过滤列表")
+
+
+class SearchResultItem(BaseModel):
+    """搜索结果项"""
+    entity_type: str = Field(..., description="实体类型")
+    element_id: Optional[str] = Field(None, description="元素ID")
+    primary_id: Optional[str] = Field(None, description="主键ID")
+    name: Optional[str] = Field(None, description="名称")
+    score: float = Field(..., description="相关性得分")
+    index_name: Optional[str] = Field(None, description="索引名称")
+
+
+class FullTextSearchResponse(BaseModel):
+    """全文搜索响应"""
+    results: List[SearchResultItem] = Field(default_factory=list, description="搜索结果")
+    total: int = Field(..., description="总结果数")
+    returned: int = Field(..., description="返回结果数")
+    query: str = Field(..., description="搜索查询")
+    entity_types: Optional[List[str]] = Field(None, description="实体类型过滤")
+    skip: int = Field(..., description="跳过结果数")
+    limit: int = Field(..., description="结果限制")
+    message: Optional[str] = Field(None, description="额外信息")
+
+
+class FuzzySearchRequest(SearchRequest):
+    """模糊搜索请求"""
+    entity_type: str = Field(..., description="实体类型")
+    search_field: str = Field("name", description="搜索字段")
+    max_distance: int = Field(2, ge=0, le=4, description="最大编辑距离")
+
+
+class FuzzySearchResultItem(BaseModel):
+    """模糊搜索结果项"""
+    entity_type: str = Field(..., description="实体类型")
+    element_id: Optional[str] = Field(None, description="元素ID")
+    primary_id: Optional[str] = Field(None, description="主键ID")
+    name: Optional[str] = Field(None, description="名称")
+    distance: Optional[int] = Field(None, description="编辑距离")
+    similarity: float = Field(..., description="相似度 (0-1)")
+    method: str = Field(..., description="搜索方法")
+
+
+class FuzzySearchResponse(BaseModel):
+    """模糊搜索响应"""
+    results: List[FuzzySearchResultItem] = Field(default_factory=list, description="搜索结果")
+    total: int = Field(..., description="总结果数")
+    returned: int = Field(..., description="返回结果数")
+    query: str = Field(..., description="搜索查询")
+    entity_type: str = Field(..., description="实体类型")
+    search_field: str = Field(..., description="搜索字段")
+    max_distance: int = Field(..., description="最大编辑距离")
+    skip: int = Field(..., description="跳过结果数")
+    limit: int = Field(..., description="结果限制")
+    method: str = Field(..., description="使用的搜索方法")
+    message: Optional[str] = Field(None, description="额外信息")
+
+
+class SuggestionRequest(BaseModel):
+    """搜索建议请求"""
+    prefix: str = Field(..., min_length=1, description="搜索前缀")
+    entity_type: str = Field(..., description="实体类型")
+    search_field: str = Field("name", description="搜索字段")
+    limit: int = Field(10, ge=1, le=50, description="返回建议数量")
+
+
+class SuggestionItem(BaseModel):
+    """搜索建议项"""
+    text: str = Field(..., description="建议文本")
+    frequency: int = Field(..., description="出现频率")
+
+
+class SuggestionResponse(BaseModel):
+    """搜索建议响应"""
+    suggestions: List[SuggestionItem] = Field(default_factory=list, description="搜索建议")
+    total: int = Field(..., description="总建议数")
+    prefix: str = Field(..., description="搜索前缀")
+    entity_type: str = Field(..., description="实体类型")
+    search_field: str = Field(..., description="搜索字段")
+
+
+class AggregateSearchRequest(BaseModel):
+    """聚合搜索请求"""
+    query: str = Field(..., min_length=1, description="搜索查询文本")
+    group_by: str = Field("entity_type", description="分组维度: entity_type 或 domain")
+    limit: int = Field(100, ge=1, le=200, description="每组最大结果数")
+
+
+class AggregateSearchGroup(BaseModel):
+    """聚合搜索组"""
+    entity_type: Optional[str] = Field(None, description="实体类型")
+    domain: Optional[str] = Field(None, description="业务领域")
+    count: int = Field(..., description="组内结果数")
+    entity_types: Optional[List[dict]] = Field(None, description="包含的实体类型统计")
+    results: List[dict] = Field(default_factory=list, description="组内搜索结果")
+
+
+class AggregateSearchResponse(BaseModel):
+    """聚合搜索响应"""
+    groups: List[AggregateSearchGroup] = Field(default_factory=list, description="聚合分组")
+    total_groups: int = Field(..., description="总分组数")
+    total_results: int = Field(..., description="总结果数")
+    query: str = Field(..., description="搜索查询")
+    group_by: str = Field(..., description="分组维度")
+    message: Optional[str] = Field(None, description="额外信息")
+
+
+class MultiEntitySearchConfig(BaseModel):
+    """多实体搜索配置"""
+    entity_type: str = Field(..., description="实体类型")
+    search_field: str = Field("name", description="搜索字段")
+
+
+class MultiEntitySearchRequest(BaseModel):
+    """多实体搜索请求"""
+    query: str = Field(..., min_length=1, description="搜索查询文本")
+    entities: List[MultiEntitySearchConfig] = Field(..., description="实体配置列表")
+    limit_per_entity: int = Field(10, ge=1, le=50, description="每个实体类型的结果限制")
+
+
+class MultiEntitySearchResponse(BaseModel):
+    """多实体搜索响应"""
+    results: dict = Field(..., description="按实体类型分组的结果")
+    total_entities: int = Field(..., description="命中的实体类型数")
+    total_results: int = Field(..., description="总结果数")
+    query: str = Field(..., description="搜索查询")

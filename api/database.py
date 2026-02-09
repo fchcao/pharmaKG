@@ -41,6 +41,14 @@ class Neo4jConnection:
                 auth=(settings.NEO4J_USER, settings.NEO4J_PASSWORD)
             )
             logger.info(f"Connected to Neo4j at {settings.NEO4J_URI}")
+
+            # 自动创建全文搜索索引
+            try:
+                self.create_fulltext_indexes()
+                logger.info("Full-text search indexes initialized")
+            except Exception as e:
+                logger.warning(f"Failed to create full-text indexes on startup: {str(e)}")
+
         return self._driver
 
     def close(self):
@@ -137,6 +145,73 @@ class Neo4jConnection:
         except Exception as e:
             logger.error(f"Connection verification failed: {str(e)}")
             return False
+
+    def create_fulltext_indexes(self) -> dict[str, Any]:
+        """创建全文搜索索引"""
+        indexes_created = []
+        errors = []
+
+        # 定义需要索引的节点和属性
+        index_configs = [
+            {
+                "name": "entity_fulltext",
+                "label": "Compound",
+                "properties": ["name", "primary_id", "smiles"]
+            },
+            {
+                "name": "target_fulltext",
+                "label": "Target",
+                "properties": ["name", "primary_id", "gene_symbol", "gene_name", "uniprot_id"]
+            },
+            {
+                "name": "pathway_fulltext",
+                "label": "Pathway",
+                "properties": ["name", "primary_id", "kegg_id"]
+            },
+            {
+                "name": "trial_fulltext",
+                "label": "ClinicalTrial",
+                "properties": ["title", "trial_id", "condition"]
+            },
+            {
+                "name": "manufacturer_fulltext",
+                "label": "Manufacturer",
+                "properties": ["name", "manufacturer_id", "city", "country"]
+            },
+            {
+                "name": "drug_fulltext",
+                "label": "DrugProduct",
+                "properties": ["name", "primary_id", "active_ingredient"]
+            }
+        ]
+
+        for config in index_configs:
+            try:
+                # 首先删除已存在的索引（如果存在）
+                drop_query = f"CALL db.index.fulltext.drop('{config['name']}') IF EXISTS"
+                self.execute_query(drop_query)
+
+                # 创建新索引
+                create_query = f"""
+                CALL db.index.fulltext.createNodeIndex(
+                    '{config['name']}',
+                    ['{config['label']}'],
+                    {config['properties']}
+                )
+                """
+                self.execute_query(create_query)
+                indexes_created.append(config['name'])
+                logger.info(f"Created fulltext index: {config['name']}")
+            except Exception as e:
+                error_msg = f"Failed to create index {config['name']}: {str(e)}"
+                errors.append(error_msg)
+                logger.error(error_msg)
+
+        return {
+            "success": len(indexes_created) > 0,
+            "indexes_created": indexes_created,
+            "errors": errors
+        }
 
 
 # 全局连接实例

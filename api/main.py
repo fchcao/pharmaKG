@@ -18,7 +18,12 @@ from .config import settings
 from .database import get_db, close_db
 from .models import (
     HealthResponse, ErrorResponse, OverviewResponse,
-    CountResponse, StatsResponse
+    CountResponse, StatsResponse,
+    FullTextSearchRequest, FullTextSearchResponse, SearchResultItem,
+    FuzzySearchRequest, FuzzySearchResponse, FuzzySearchResultItem,
+    SuggestionRequest, SuggestionResponse, SuggestionItem,
+    AggregateSearchRequest, AggregateSearchResponse, AggregateSearchGroup,
+    MultiEntitySearchRequest, MultiEntitySearchResponse
 )
 
 # 导入服务
@@ -27,6 +32,7 @@ from .services.clinical_domain import ClinicalDomainService
 from .services.supply_regulatory import SupplyChainService, RegulatoryService
 from .services.advanced_queries import AdvancedQueryService
 from .services.aggregate_queries import AggregateQueryService
+from .services.search_service import SearchService
 from .cache import setup_cache_monitoring
 
 # 导入图分析模块
@@ -871,6 +877,222 @@ async def get_pathway_coverage_analysis():
         "pathway_coverage": coverage,
         "count": len(coverage)
     }
+
+
+#===========================================================
+# 搜索端点 (Search Endpoints)
+#===========================================================
+
+@app.post("/api/v1/search/fulltext", response_model=FullTextSearchResponse, tags=["Search"])
+async def fulltext_search(request: FullTextSearchRequest):
+    """全文搜索 - 在知识图谱中搜索实体"""
+    try:
+        service = SearchService()
+        result = service.fulltext_search(
+            query_text=request.query,
+            entity_types=request.entity_types,
+            limit=request.limit,
+            skip=request.skip
+        )
+
+        # 转换结果为响应模型
+        search_results = []
+        for item in result.get("results", []):
+            search_results.append(SearchResultItem(
+                entity_type=item.get("entity_type", "Unknown"),
+                element_id=item.get("element_id"),
+                primary_id=item.get("primary_id"),
+                name=item.get("name"),
+                score=item.get("score", 0.0),
+                index_name=item.get("index_name")
+            ))
+
+        return FullTextSearchResponse(
+            results=search_results,
+            total=result.get("total", 0),
+            returned=len(search_results),
+            query=request.query,
+            entity_types=request.entity_types,
+            skip=request.skip,
+            limit=request.limit,
+            message=result.get("message")
+        )
+    except Exception as e:
+        logger.error(f"Fulltext search error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Search failed: {str(e)}")
+
+
+@app.post("/api/v1/search/fuzzy", response_model=FuzzySearchResponse, tags=["Search"])
+async def fuzzy_search(request: FuzzySearchRequest):
+    """模糊搜索 - 使用编辑距离进行模糊匹配"""
+    try:
+        service = SearchService()
+        result = service.fuzzy_search(
+            query_text=request.query,
+            entity_type=request.entity_type,
+            search_field=request.search_field,
+            max_distance=request.max_distance,
+            limit=request.limit,
+            skip=request.skip
+        )
+
+        # 转换结果为响应模型
+        search_results = []
+        for item in result.get("results", []):
+            search_results.append(FuzzySearchResultItem(
+                entity_type=item.get("entity_type", request.entity_type),
+                element_id=item.get("element_id"),
+                primary_id=item.get("primary_id"),
+                name=item.get("name"),
+                distance=item.get("distance"),
+                similarity=item.get("similarity", 0.0),
+                method=item.get("method", "UNKNOWN")
+            ))
+
+        return FuzzySearchResponse(
+            results=search_results,
+            total=result.get("total", 0),
+            returned=len(search_results),
+            query=request.query,
+            entity_type=request.entity_type,
+            search_field=request.search_field,
+            max_distance=request.max_distance,
+            skip=request.skip,
+            limit=request.limit,
+            method=result.get("method", "UNKNOWN"),
+            message=result.get("message")
+        )
+    except Exception as e:
+        logger.error(f"Fuzzy search error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Fuzzy search failed: {str(e)}")
+
+
+@app.get("/api/v1/search/suggestions", response_model=SuggestionResponse, tags=["Search"])
+async def get_search_suggestions(
+    prefix: str = Query(..., min_length=1, description="搜索前缀"),
+    entity_type: str = Query(..., description="实体类型"),
+    search_field: str = Query("name", description="搜索字段"),
+    limit: int = Query(10, ge=1, le=50, description="返回建议数量")
+):
+    """获取搜索建议 - 自动完成功能"""
+    try:
+        service = SearchService()
+        result = service.get_suggestions(
+            prefix=prefix,
+            entity_type=entity_type,
+            search_field=search_field,
+            limit=limit
+        )
+
+        # 转换结果为响应模型
+        suggestions = []
+        for item in result.get("suggestions", []):
+            suggestions.append(SuggestionItem(
+                text=item.get("text"),
+                frequency=item.get("frequency", 0)
+            ))
+
+        return SuggestionResponse(
+            suggestions=suggestions,
+            total=len(suggestions),
+            prefix=prefix,
+            entity_type=entity_type,
+            search_field=search_field
+        )
+    except Exception as e:
+        logger.error(f"Suggestions error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get suggestions: {str(e)}")
+
+
+@app.post("/api/v1/search/aggregate", response_model=AggregateSearchResponse, tags=["Search"])
+async def aggregate_search(request: AggregateSearchRequest):
+    """聚合搜索 - 按维度分组统计搜索结果"""
+    try:
+        service = SearchService()
+        result = service.aggregate_search(
+            query_text=request.query,
+            group_by=request.group_by,
+            limit=request.limit
+        )
+
+        # 转换结果为响应模型
+        groups = []
+        for item in result.get("groups", []):
+            groups.append(AggregateSearchGroup(
+                entity_type=item.get("entity_type"),
+                domain=item.get("domain"),
+                count=item.get("count", 0),
+                entity_types=item.get("entity_types"),
+                results=item.get("results", [])
+            ))
+
+        return AggregateSearchResponse(
+            groups=groups,
+            total_groups=result.get("total_groups", 0),
+            total_results=result.get("total_results", 0),
+            query=request.query,
+            group_by=request.group_by,
+            message=result.get("message")
+        )
+    except Exception as e:
+        logger.error(f"Aggregate search error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Aggregate search failed: {str(e)}")
+
+
+@app.post("/api/v1/search/multi-entity", response_model=MultiEntitySearchResponse, tags=["Search"])
+async def multi_entity_search(request: MultiEntitySearchRequest):
+    """多实体搜索 - 在多个实体类型中同时搜索"""
+    try:
+        service = SearchService()
+
+        # 转换请求配置为服务层格式
+        entity_config = [
+            {"entity_type": e.entity_type, "search_field": e.search_field}
+            for e in request.entities
+        ]
+
+        result = service.multi_entity_search(
+            query_text=request.query,
+            entity_config=entity_config,
+            limit_per_entity=request.limit_per_entity
+        )
+
+        return MultiEntitySearchResponse(
+            results=result.get("results", {}),
+            total_entities=result.get("total_entities", 0),
+            total_results=result.get("total_results", 0),
+            query=request.query
+        )
+    except Exception as e:
+        logger.error(f"Multi-entity search error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Multi-entity search failed: {str(e)}")
+
+
+@app.post("/api/v1/search/indexes/create", tags=["Search Admin"])
+async def create_search_indexes():
+    """创建全文搜索索引 - 管理员端点"""
+    try:
+        db = get_db()
+        result = db.create_fulltext_indexes()
+        return result
+    except Exception as e:
+        logger.error(f"Failed to create search indexes: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to create indexes: {str(e)}")
+
+
+@app.get("/api/v1/search/indexes", tags=["Search Admin"])
+async def list_search_indexes():
+    """列出所有全文搜索索引"""
+    try:
+        service = SearchService()
+        indexes = service.list_fulltext_indexes()
+        return {
+            "indexes": indexes,
+            "total": len(indexes)
+        }
+    except Exception as e:
+        logger.error(f"Failed to list indexes: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to list indexes: {str(e)}")
 
 
 #===========================================================
