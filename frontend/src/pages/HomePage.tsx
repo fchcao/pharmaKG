@@ -1,13 +1,49 @@
 import React from 'react';
-import { Card, Row, Col, Statistic } from 'antd';
+import { Card, Row, Col, Statistic, Spin } from 'antd';
 import {
   ExperimentOutlined,
   MedicineBoxOutlined,
   ShoppingCartOutlined,
   FileProtectOutlined,
 } from '@ant-design/icons';
+import { useQuery } from '@tanstack/react-query';
+import { apiClient } from '@/shared/api/client';
+
+interface DomainBreakdown {
+  rd_domain: {
+    total: number;
+    entities: { compounds: number; targets: number; assays: number; pathways: number };
+  };
+  clinical_domain: {
+    total: number;
+    entities: { trials: number; subjects: number; adverse_events: number };
+  };
+  supply_chain_domain: {
+    total: number;
+    entities: { manufacturers: number; shortages: number };
+  };
+  regulatory_domain: {
+    total: number;
+    entities: { submissions: number; approvals: number };
+  };
+}
 
 const HomePage: React.FC = () => {
+  // Fetch real domain statistics
+  const { data: domainData, isLoading } = useQuery({
+    queryKey: ['home-domain-stats'],
+    queryFn: async () => {
+      const response = await apiClient.get<DomainBreakdown>('/statistics/domain-breakdown');
+      return response;
+    },
+    refetchInterval: 60000, // Refresh every minute
+  });
+
+  const rdTotal = domainData?.rd_domain?.total || 0;
+  const clinicalTotal = domainData?.clinical_domain?.total || 0;
+  const supplyTotal = domainData?.supply_chain_domain?.total || 0;
+  const regulatoryTotal = domainData?.regulatory_domain?.total || 0;
+
   return (
     <div>
       <div style={{ marginBottom: 24 }}>
@@ -19,64 +55,66 @@ const HomePage: React.FC = () => {
         </p>
       </div>
 
-      <Row gutter={[16, 16]}>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="R&D Domain"
-              value={0}
-              suffix="entities"
-              prefix={<ExperimentOutlined style={{ color: '#4CAF50' }} />}
-              valueStyle={{ color: '#4CAF50' }}
-            />
-            <p style={{ marginTop: 12, color: '#666' }}>
-              Compounds, targets, pathways, and assays
-            </p>
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="Clinical Domain"
-              value={0}
-              suffix="trials"
-              prefix={<MedicineBoxOutlined style={{ color: '#2196F3' }} />}
-              valueStyle={{ color: '#2196F3' }}
-            />
-            <p style={{ marginTop: 12, color: '#666' }}>
-              Clinical trials, subjects, and outcomes
-            </p>
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="Supply Chain"
-              value={0}
-              suffix="facilities"
-              prefix={<ShoppingCartOutlined style={{ color: '#FF9800' }} />}
-              valueStyle={{ color: '#FF9800' }}
-            />
-            <p style={{ marginTop: 12, color: '#666' }}>
-              Manufacturers, suppliers, and facilities
-            </p>
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="Regulatory"
-              value={0}
-              suffix="submissions"
-              prefix={<FileProtectOutlined style={{ color: '#9C27B0' }} />}
-              valueStyle={{ color: '#9C27B0' }}
-            />
-            <p style={{ marginTop: 12, color: '#666' }}>
-              Submissions, approvals, and compliance
-            </p>
-          </Card>
-        </Col>
-      </Row>
+      <Spin spinning={isLoading}>
+        <Row gutter={[16, 16]}>
+          <Col xs={24} sm={12} lg={6}>
+            <Card>
+              <Statistic
+                title="R&D Domain"
+                value={rdTotal}
+                suffix="entities"
+                prefix={<ExperimentOutlined style={{ color: '#4CAF50' }} />}
+                valueStyle={{ color: '#4CAF50' }}
+              />
+              <p style={{ marginTop: 12, color: '#666' }}>
+                Compounds, targets, pathways, and assays
+              </p>
+            </Card>
+          </Col>
+          <Col xs={24} sm={12} lg={6}>
+            <Card>
+              <Statistic
+                title="Clinical Domain"
+                value={clinicalTotal}
+                suffix="trials"
+                prefix={<MedicineBoxOutlined style={{ color: '#2196F3' }} />}
+                valueStyle={{ color: '#2196F3' }}
+              />
+              <p style={{ marginTop: 12, color: '#666' }}>
+                Clinical trials, subjects, and outcomes
+              </p>
+            </Card>
+          </Col>
+          <Col xs={24} sm={12} lg={6}>
+            <Card>
+              <Statistic
+                title="Supply Chain"
+                value={supplyTotal}
+                suffix="entities"
+                prefix={<ShoppingCartOutlined style={{ color: '#FF9800' }} />}
+                valueStyle={{ color: '#FF9800' }}
+              />
+              <p style={{ marginTop: 12, color: '#666' }}>
+                Manufacturers, suppliers, and facilities
+              </p>
+            </Card>
+          </Col>
+          <Col xs={24} sm={12} lg={6}>
+            <Card>
+              <Statistic
+                title="Regulatory"
+                value={regulatoryTotal}
+                suffix="documents"
+                prefix={<FileProtectOutlined style={{ color: '#9C27B0' }} />}
+                valueStyle={{ color: '#9C27B0' }}
+              />
+              <p style={{ marginTop: 12, color: '#666' }}>
+                Submissions, approvals, and compliance
+              </p>
+            </Card>
+          </Col>
+        </Row>
+      </Spin>
 
       <Card style={{ marginTop: 24 }} title="Quick Start">
         <p>

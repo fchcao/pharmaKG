@@ -1017,19 +1017,29 @@ async def get_domain_breakdown():
         ae_result = db.execute_query("MATCH (ae:AdverseEvent) RETURN count(ae) as count")
         ae_count = ae_result.records[0]["count"] if ae_result.records else 0
 
-        # 获取供应链领域统计
+        # 获取供应链领域统计 - 先查 Manufacturer，如果没有则查 Company
         mfg_result = db.execute_query("MATCH (m:Manufacturer) RETURN count(m) as count")
         mfg_count = mfg_result.records[0]["count"] if mfg_result.records else 0
+
+        # 如果没有 Manufacturer 节点，使用 Company 节点
+        if mfg_count == 0:
+            company_result = db.execute_query("MATCH (c:Company) RETURN count(c) as count")
+            mfg_count = company_result.records[0]["count"] if company_result.records else 0
 
         shortage_result = db.execute_query("MATCH (ds:DrugShortage) RETURN count(ds) as count")
         shortage_count = shortage_result.records[0]["count"] if shortage_result.records else 0
 
-        # 获取监管领域统计
+        # 获取监管领域统计 - 先查 Submission/Approval，如果没有则查 CRL
         sub_result = db.execute_query("MATCH (s:Submission) RETURN count(s) as count")
         sub_count = sub_result.records[0]["count"] if sub_result.records else 0
 
         approval_result = db.execute_query("MATCH (a:Approval) RETURN count(a) as count")
         approval_count = approval_result.records[0]["count"] if approval_result.records else 0
+
+        # 如果没有 Submission 节点，使用 CompleteResponseLetter 节点
+        if sub_count == 0:
+            crl_result = db.execute_query("MATCH (c:CompleteResponseLetter) RETURN count(c) as count")
+            sub_count = crl_result.records[0]["count"] if crl_result.records else 0
 
         return {
             "rd_domain": {

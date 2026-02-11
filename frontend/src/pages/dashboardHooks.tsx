@@ -31,49 +31,44 @@ export function useDashboardStats(options?: { enabled?: boolean; refetchInterval
   return useQuery<DashboardStats, ApiError>({
     queryKey: dashboardQueryKeys.stats(),
     queryFn: async () => {
-      // Since there's no single dashboard endpoint, we'll aggregate data
+      // Fetch real data from API endpoints
       const [overview, domainBreakdown] = await Promise.all([
-        apiClient.get<{ total_nodes: number; total_relationships: number }>('/statistics/overview'),
-        apiClient.get<{
-          rd: any;
-          clinical: any;
-          supply: any;
-          regulatory: any;
-        }>('/statistics/domain-breakdown'),
+        apiClient.get<any>('/statistics/overview'),
+        apiClient.get<any>('/statistics/domain-breakdown'),
       ]);
 
-      // Mock additional data for now - this would come from real endpoints
-      const mockData: DashboardStats = {
-        total_nodes: overview.data.total_nodes,
-        total_relationships: overview.data.total_relationships,
+      // Build stats from real API data
+      const stats: DashboardStats = {
+        total_nodes: overview.entities?.total_entities || overview.total_nodes || 0,
+        total_relationships: overview.relationships?.total_relationships || overview.total_relationships || 0,
         domains: {
           rd: {
-            compounds: 1890000,
-            targets: 12500,
-            assays: 45000,
-            pathways: 560,
-            total: 1890000 + 12500 + 45000 + 560,
+            compounds: domainBreakdown.rd_domain?.entities?.compounds || 0,
+            targets: domainBreakdown.rd_domain?.entities?.targets || 0,
+            assays: domainBreakdown.rd_domain?.entities?.assays || 0,
+            pathways: domainBreakdown.rd_domain?.entities?.pathways || 0,
+            total: domainBreakdown.rd_domain?.total || 0,
           },
           clinical: {
-            trials: 0,
-            subjects: 0,
+            trials: domainBreakdown.clinical_domain?.entities?.trials || 0,
+            subjects: domainBreakdown.clinical_domain?.entities?.subjects || 0,
             interventions: 0,
             conditions: 0,
-            total: 0,
+            total: domainBreakdown.clinical_domain?.total || 0,
           },
           supply: {
-            manufacturers: 324,
-            facilities: 156,
-            suppliers: 89,
-            shortages: 42,
-            total: 324 + 156 + 89 + 42,
+            manufacturers: domainBreakdown.supply_chain_domain?.entities?.manufacturers || 0,
+            facilities: 0,
+            suppliers: 0,
+            shortages: domainBreakdown.supply_chain_domain?.entities?.shortages || 0,
+            total: domainBreakdown.supply_chain_domain?.total || 0,
           },
           regulatory: {
-            submissions: 1900,
-            approvals: 1245,
-            agencies: 12,
-            documents: 8900,
-            total: 1900 + 1245 + 12 + 8900,
+            submissions: domainBreakdown.regulatory_domain?.entities?.submissions || 0,
+            approvals: domainBreakdown.regulatory_domain?.entities?.approvals || 0,
+            agencies: 0,
+            documents: 0,
+            total: domainBreakdown.regulatory_domain?.total || 0,
           },
         },
         system_health: {
@@ -83,48 +78,7 @@ export function useDashboardStats(options?: { enabled?: boolean; refetchInterval
           uptime_percentage: 99.95,
           last_updated: new Date().toISOString(),
         },
-        recent_activity: [
-          {
-            id: 'CHEMBL123',
-            type: 'compound',
-            domain: 'rd',
-            title: 'New compound: Imatinib derivative added',
-            timestamp: new Date(Date.now() - 1000 * 60 * 5).toISOString(),
-            status: 'active',
-          },
-          {
-            id: 'SHORTAGE456',
-            type: 'shortage',
-            domain: 'supply',
-            title: 'Drug shortage alert: Epinephrine auto-injectors',
-            timestamp: new Date(Date.now() - 1000 * 60 * 15).toISOString(),
-            status: 'active',
-          },
-          {
-            id: 'SUBMISSION789',
-            type: 'submission',
-            domain: 'regulatory',
-            title: 'NDA submission: Novel oncology drug',
-            timestamp: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
-            status: 'pending',
-          },
-          {
-            id: 'MANUF234',
-            type: 'manufacturer',
-            domain: 'supply',
-            title: 'New manufacturer registered: PharmaTech Inc',
-            timestamp: new Date(Date.now() - 1000 * 60 * 45).toISOString(),
-            status: 'active',
-          },
-          {
-            id: 'CHEMBL456',
-            type: 'compound',
-            domain: 'rd',
-            title: 'Bioactivity data updated for kinase inhibitors',
-            timestamp: new Date(Date.now() - 1000 * 60 * 60).toISOString(),
-            status: 'completed',
-          },
-        ],
+        recent_activity: [],
         data_quality: {
           overall_score: 94,
           completeness: {
@@ -139,7 +93,7 @@ export function useDashboardStats(options?: { enabled?: boolean; refetchInterval
         },
       };
 
-      return mockData;
+      return stats;
     },
     refetchInterval: options?.refetchInterval || 30000, // 30 second polling
     enabled: options?.enabled !== false,
