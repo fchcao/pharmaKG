@@ -95,9 +95,14 @@ coverage/
 .nyc_output/
 .pytest_cache/
 
+# Archive (historical files)
+archive/
+
 # Logs
 *.log
-logs/
+data/logs/
+# But keep the root logs/ directory for organized log files
+#logs/
 
 # OS and IDE
 .DS_Store
