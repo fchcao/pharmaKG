@@ -1822,6 +1822,158 @@ async def get_supply_manufacturer_detail(manufacturer_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.get("/supply/manufacturers/{manufacturer_id}/products", tags=["Supply Chain"])
+async def get_manufacturer_products(manufacturer_id: str):
+    """获取制造商产品列表"""
+    try:
+        from urllib.parse import unquote
+        manufacturer_id = unquote(manufacturer_id)
+
+        # Query products related to this company through CRLs
+        db = get_db()
+        query = """
+            MATCH (c:Company {name: $manufacturer_id})<-[:SENT_TO]-(crl:CompleteResponseLetter)
+            RETURN crl.application_number as product_id,
+                   crl.letter_type as category,
+                   'Unknown' as dosage_form,
+                   'Unknown' as strength,
+                   crl.approval_status as status
+            LIMIT 20
+        """
+        result = db.execute_query(query, {"manufacturer_id": manufacturer_id})
+
+        products = [dict(record) for record in result.records]
+        return {"data": products}
+    except Exception as e:
+        logger.error(f"Error getting manufacturer products: {e}")
+        return {"data": []}
+
+
+@app.get("/supply/manufacturers/{manufacturer_id}/facilities", tags=["Supply Chain"])
+async def get_manufacturer_facilities(manufacturer_id: str):
+    """获取制造商设施数据"""
+    try:
+        from urllib.parse import unquote
+        manufacturer_id = unquote(manufacturer_id)
+
+        # For now, return mock data since facilities aren't in the database
+        return {"data": []}
+    except Exception as e:
+        logger.error(f"Error getting manufacturer facilities: {e}")
+        return {"data": []}
+
+
+@app.get("/supply/manufacturers/{manufacturer_id}/inspections", tags=["Supply Chain"])
+async def get_manufacturer_inspections(manufacturer_id: str):
+    """获取制造商检查历史"""
+    try:
+        from urllib.parse import unquote
+        manufacturer_id = unquote(manufacturer_id)
+
+        # For now, return mock data
+        return {"data": []}
+    except Exception as e:
+        logger.error(f"Error getting manufacturer inspections: {e}")
+        return {"data": []}
+
+
+@app.get("/supply/manufacturers/{manufacturer_id}/compliance", tags=["Supply Chain"])
+async def get_manufacturer_compliance(manufacturer_id: str):
+    """获取制造商合规记录"""
+    try:
+        from urllib.parse import unquote
+        manufacturer_id = unquote(manufacturer_id)
+
+        # For now, return mock data
+        return {"data": []}
+    except Exception as e:
+        logger.error(f"Error getting manufacturer compliance: {e}")
+        return {"data": []}
+
+
+@app.get("/supply/manufacturers/{manufacturer_id}/network", tags=["Supply Chain"])
+async def get_manufacturer_network(manufacturer_id: str):
+    """获取制造商供应链网络图谱数据"""
+    try:
+        from urllib.parse import unquote
+        manufacturer_id = unquote(manufacturer_id)
+
+        db = get_db()
+
+        # Build network graph: Company -> related entities
+        # Find CRLs sent to this company
+        query = """
+            MATCH (c:Company {name: $manufacturer_id})
+            OPTIONAL MATCH (c)<-[:SENT_TO]-(crl:CompleteResponseLetter)
+            RETURN c.name as name,
+                   'Company' as type,
+                   'manufacturer' as group
+            LIMIT 100
+        """
+        result = db.execute_query(query, {"manufacturer_id": manufacturer_id})
+
+        nodes = []
+        edges = []
+        node_ids = set()
+
+        # Add the main company node
+        if result.records:
+            main_company = dict(result.records[0])
+            company_id = "company_" + str(hash(main_company.get('name', '')))
+            if company_id not in node_ids:
+                nodes.append({
+                    "id": company_id,
+                    "label": main_company.get('name', 'Unknown'),
+                    "type": main_company.get('type', 'Company'),
+                    "group": main_company.get('group', 'manufacturer')
+                })
+                node_ids.add(company_id)
+
+        # Find connected CRLs
+        crl_query = """
+            MATCH (c:Company {name: $manufacturer_id})<-[:SENT_TO]-(crl:CompleteResponseLetter)
+            RETURN crl.crl_id as id,
+                   crl.letter_type as label,
+                   'CRL' as type,
+                   'document' as group
+            LIMIT 50
+        """
+        crl_result = db.execute_query(crl_query, {"manufacturer_id": manufacturer_id})
+
+        for record in crl_result.records:
+            crl_data = dict(record)
+            crl_id = crl_data.get('id', '') or f"crl_{len(nodes)}"
+            if crl_id not in node_ids:
+                nodes.append({
+                    "id": crl_id,
+                    "label": crl_data.get('label', 'CRL'),
+                    "type": crl_data.get('type', 'CRL'),
+                    "group": crl_data.get('group', 'document')
+                })
+                node_ids.add(crl_id)
+                # Add edge from company to CRL
+                edges.append({
+                    "source": company_id,
+                    "target": crl_id,
+                    "label": "SENT_TO",
+                    "type": "SENT_TO"
+                })
+
+        return {
+            "data": {
+                "nodes": nodes,
+                "edges": edges
+            }
+        }
+    except Exception as e:
+        logger.error(f"Error getting manufacturer network: {e}")
+        return {
+            "data": {
+                "nodes": [],
+                "edges": []
+            }
+        }
+
 
 @app.get("/supply/facilities", tags=["Supply Chain"])
 async def list_supply_facilities(
