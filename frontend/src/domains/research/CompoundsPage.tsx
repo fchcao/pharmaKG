@@ -80,7 +80,15 @@ const CompoundsPage: React.FC = () => {
   };
 
   const { data, isLoading, error, refetch } = useCompounds(apiParams);
-  const { data: stats } = useRDStatistics();
+  const { data: statsData } = useRDStatistics();
+
+  // Map backend response to frontend format
+  const stats = statsData ? {
+    compoundCount: statsData.compounds_count || 0,
+    approvedDrugs: statsData.approved_drugs || 0,
+    clinicalCandidates: statsData.clinical_candidates || 0,
+    avgMolecularWeight: statsData.avg_molecular_weight || 0,
+  } : null;
 
   const handleRowClick = (record: Compound) => {
     navigate(`/rd/compounds/${record.id}`);

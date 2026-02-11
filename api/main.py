@@ -416,9 +416,38 @@ async def get_rd_statistics():
     db = get_db()
     service = ResearchDomainService()
 
+    compounds_count = service.count_compounds()
+
+    # Count approved drugs (max_phase = 4)
+    approved_result = db.execute_query("""
+        MATCH (c:Compound)
+        WHERE c.max_phase = 4
+        RETURN count(c) as approved_count
+    """)
+    approved_drugs = approved_result.records[0]["approved_count"] if approved_result.records else 0
+
+    # Count clinical candidates (max_phase between 1 and 3)
+    clinical_result = db.execute_query("""
+        MATCH (c:Compound)
+        WHERE c.max_phase >= 1 AND c.max_phase <= 3
+        RETURN count(c) as clinical_count
+    """)
+    clinical_candidates = clinical_result.records[0]["clinical_count"] if clinical_result.records else 0
+
+    # Calculate average molecular weight
+    avg_mw_result = db.execute_query("""
+        MATCH (c:Compound)
+        WHERE c.molecular_weight IS NOT NULL
+        RETURN avg(c.molecular_weight) as avg_mw
+    """)
+    avg_molecular_weight = avg_mw_result.records[0]["avg_mw"] if avg_mw_result.records and avg_mw_result.records[0]["avg_mw"] else 0
+
     return {
-        "compounds_count": service.count_compounds(),
+        "compounds_count": compounds_count,
         "targets_count": service.count_targets(),
+        "approved_drugs": approved_drugs,
+        "clinical_candidates": clinical_candidates,
+        "avg_molecular_weight": round(avg_molecular_weight, 1) if avg_molecular_weight else 0,
         "assays_count": 0,  # 待实现
         "pathways_count": 0,  # 待实现
         "bioactivities_count": 0  # 待实现
