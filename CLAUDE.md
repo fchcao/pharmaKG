@@ -111,6 +111,29 @@ pytest --cov=api --cov=etl --cov-report=html
 # Note: Test files may need to be created - check CHECKLIST.md for test coverage status
 ```
 
+### Browser Testing (Playwright)
+```bash
+# Activate Playwright testing environment
+source /root/miniconda3/etc/profile.d/conda.sh
+conda activate playwright-env
+
+# Run browser automation test
+python your_playwright_test.py
+
+# Example test script:
+from playwright.sync_api import sync_playwright
+
+with sync_playwright() as p:
+    browser = p.chromium.launch(headless=True)
+    page = browser.new_page()
+    page.goto('http://localhost:3000')
+    page.wait_for_load_state('networkidle')
+    page.screenshot(path='screenshot.png')
+    browser.close()
+```
+
+**Note**: Playwright is installed in a dedicated `playwright-env` conda environment to avoid conflicts with the main `pharmakg-api` environment.
+
 ### Data Collection Processors (NEW)
 ```bash
 # ChEMBL 36 SQLite processor (tested with 28GB database)

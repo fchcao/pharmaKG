@@ -1,0 +1,17 @@
+# Playwright Browser Testing Environment
+# Dedicated conda environment for browser automation testing
+#
+# Usage:
+#   conda env create -f environment-testing.yml
+#   conda activate playwright-env
+#   playwright install chromium
+
+name: playwright-env
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - python=3.12
+  - pip
+  - pip:
+    - playwright>=1.58.0
