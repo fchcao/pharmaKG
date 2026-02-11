@@ -4,22 +4,52 @@ import type { SpinProps } from 'antd';
 
 const { Text } = Typography;
 
-interface LoadingSpinnerProps extends SpinProps {
+interface LoadingSpinnerProps {
   message?: string;
   fullscreen?: boolean;
   size?: 'small' | 'default' | 'large';
+  spinning?: boolean;
+  loading?: boolean;  // Alias for spinning, used by some pages
+  tip?: string;
+  delay?: number;
+  indicator?: React.ReactNode;
+  children?: React.ReactNode;  // Content to wrap
 }
 
 export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
   message = 'Loading...',
   fullscreen = false,
   size = 'default',
-  ...spinProps
+  spinning,
+  loading,
+  tip,
+  delay,
+  indicator,
+  children,
 }) => {
+  // Support both 'spinning' and 'loading' props
+  const isLoading = spinning !== undefined ? spinning : (loading !== undefined ? loading : true);
+
+  // If there are children, use Spin as a wrapper
+  if (children) {
+    return (
+      <Spin
+        spinning={isLoading}
+        tip={tip || message}
+        delay={delay}
+        indicator={indicator}
+        size={size}
+      >
+        {children}
+      </Spin>
+    );
+  }
+
+  // Standalone spinner without children
   const content = (
     <Space direction="vertical" size="middle">
-      <Spin size={size} {...spinProps} />
-      {message && (
+      <Spin size={size} spinning={isLoading} tip={tip} delay={delay} indicator={indicator} />
+      {message && !tip && (
         <Text type="secondary" style={{ fontSize: 14 }}>
           {message}
         </Text>

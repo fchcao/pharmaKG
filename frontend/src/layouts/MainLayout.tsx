@@ -11,6 +11,7 @@ import {
   SearchOutlined,
   SettingOutlined,
   BranchesOutlined,
+  AppstoreOutlined,
 } from '@ant-design/icons';
 import type { MenuProps } from 'antd';
 
@@ -40,7 +41,7 @@ const items: MenuItem[] = [
     getItem('Overview', '/dashboard', <DashboardOutlined />),
     getItem('Admin', '/dashboard/admin', <SettingOutlined />),
   ]),
-  getItem('Domains', 'domains', null, [
+  getItem('Domains', 'domains', <AppstoreOutlined />, [
     getItem('Research & Development', '/rd', <ExperimentOutlined />),
     getItem('Clinical Trials', '/clinical', <MedicineBoxOutlined />),
     getItem('Supply Chain', '/supply', <ShoppingCartOutlined />),

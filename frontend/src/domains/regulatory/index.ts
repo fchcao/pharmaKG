@@ -8,3 +8,4 @@ export { default as SubmissionDetailPage } from './SubmissionDetailPage';
 export { default as ApprovalsPage } from './ApprovalsPage';
 export { default as ApprovalDetailPage } from './ApprovalDetailPage';
 export { default as DocumentsPage } from './DocumentsPage';
+export { default as CRLsPage } from './CRLsPage';

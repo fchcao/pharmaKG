@@ -75,14 +75,20 @@ export function useTarget(
   });
 }
 
-// Assays hooks
+// Assays hooks - Note: Backend doesn't have this endpoint yet, returning empty data
 export function useAssays(
   filters?: Record<string, unknown>,
   options?: UseQueryOptions<PaginatedResponse<Assay>, ApiError>
 ) {
   return useQuery<PaginatedResponse<Assay>, ApiError>({
     queryKey: rdQueryKeys.assays(filters),
-    queryFn: () => apiClient.get<PaginatedResponse<Assay>>('/rd/assays', { params: filters }),
+    queryFn: async () => {
+      try {
+        return await apiClient.get<PaginatedResponse<Assay>>('/rd/assays', { params: filters });
+      } catch {
+        return { items: [], total: 0, page: 1, pageSize: 20 };
+      }
+    },
     ...options,
   });
 }
@@ -93,20 +99,32 @@ export function useAssay(
 ) {
   return useQuery<Assay, ApiError>({
     queryKey: rdQueryKeys.assay(id),
-    queryFn: () => apiClient.get<Assay>(`/rd/assays/${id}`),
+    queryFn: async () => {
+      try {
+        return await apiClient.get<Assay>(`/rd/assays/${id}`);
+      } catch {
+        return null;
+      }
+    },
     enabled: !!id,
     ...options,
   });
 }
 
-// Pathways hooks
+// Pathways hooks - Note: Backend doesn't have this endpoint yet, returning empty data
 export function usePathways(
   filters?: Record<string, unknown>,
   options?: UseQueryOptions<PaginatedResponse<Pathway>, ApiError>
 ) {
   return useQuery<PaginatedResponse<Pathway>, ApiError>({
     queryKey: rdQueryKeys.pathways(filters),
-    queryFn: () => apiClient.get<PaginatedResponse<Pathway>>('/rd/pathways', { params: filters }),
+    queryFn: async () => {
+      try {
+        return await apiClient.get<PaginatedResponse<Pathway>>('/rd/pathways', { params: filters });
+      } catch {
+        return { items: [], total: 0, page: 1, pageSize: 20 };
+      }
+    },
     ...options,
   });
 }
@@ -117,7 +135,13 @@ export function usePathway(
 ) {
   return useQuery<Pathway, ApiError>({
     queryKey: rdQueryKeys.pathway(id),
-    queryFn: () => apiClient.get<Pathway>(`/rd/pathways/${id}`),
+    queryFn: async () => {
+      try {
+        return await apiClient.get<Pathway>(`/rd/pathways/${id}`);
+      } catch {
+        return null;
+      }
+    },
     enabled: !!id,
     ...options,
   });
@@ -148,25 +172,39 @@ export function useTargetCompounds(
   });
 }
 
+// Bioactivities - Note: Backend doesn't have this endpoint yet, returning empty data
 export function useBioactivities(
   compoundId: string,
   options?: UseQueryOptions<BioactivityData[], ApiError>
 ) {
   return useQuery<BioactivityData[], ApiError>({
     queryKey: rdQueryKeys.bioactivities(compoundId),
-    queryFn: () => apiClient.get<BioactivityData[]>(`/rd/compounds/${compoundId}/bioactivities`),
+    queryFn: async () => {
+      try {
+        return await apiClient.get<BioactivityData[]>(`/rd/compounds/${compoundId}/bioactivities`);
+      } catch {
+        return [];
+      }
+    },
     enabled: !!compoundId,
     ...options,
   });
 }
 
+// Target pathways - Note: Backend doesn't have this endpoint yet, returning empty data
 export function useTargetPathways(
   targetId: string,
   options?: UseQueryOptions<Pathway[], ApiError>
 ) {
   return useQuery<Pathway[], ApiError>({
     queryKey: rdQueryKeys.targetPathways(targetId),
-    queryFn: () => apiClient.get<Pathway[]>(`/rd/targets/${targetId}/pathways`),
+    queryFn: async () => {
+      try {
+        return await apiClient.get<Pathway[]>(`/rd/targets/${targetId}/pathways`);
+      } catch {
+        return [];
+      }
+    },
     enabled: !!targetId,
     ...options,
   });

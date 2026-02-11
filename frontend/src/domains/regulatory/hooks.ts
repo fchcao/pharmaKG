@@ -7,6 +7,7 @@ import {
   Compliance,
   Document,
   SubmissionTimeline,
+  CRL,
   PaginatedResponse,
   ApiError,
 } from './types';
@@ -21,20 +22,28 @@ export const regulatoryQueryKeys = {
   approval: (id: string) => ['regulatory', 'approval', id] as const,
   documents: (filters?: Record<string, unknown>) => ['regulatory', 'documents', filters] as const,
   document: (id: string) => ['regulatory', 'document', id] as const,
+  crls: (filters?: Record<string, unknown>) => ['regulatory', 'crls', filters] as const,
+  crl: (id: string) => ['regulatory', 'crl', id] as const,
   submissionTimeline: (id: string) => ['regulatory', 'submissionTimeline', id] as const,
   compliance: (entityId: string) => ['regulatory', 'compliance', entityId] as const,
   statistics: () => ['regulatory', 'statistics'] as const,
   timeline: (filters?: Record<string, unknown>) => ['regulatory', 'timeline', filters] as const,
 };
 
-// Agencies hooks
+// Agencies hooks - Note: Backend doesn't have this endpoint yet, returning empty data
 export function useAgencies(
   filters?: Record<string, unknown>,
   options?: UseQueryOptions<PaginatedResponse<Agency>, ApiError>
 ) {
   return useQuery<PaginatedResponse<Agency>, ApiError>({
     queryKey: regulatoryQueryKeys.agencies(filters),
-    queryFn: () => apiClient.get<PaginatedResponse<Agency>>('/regulatory/agencies', { params: filters }),
+    queryFn: async () => {
+      try {
+        return await apiClient.get<PaginatedResponse<Agency>>('/regulatory/agencies', { params: filters });
+      } catch {
+        return { items: [], total: 0, page: 1, pageSize: 20 };
+      }
+    },
     ...options,
   });
 }
@@ -45,7 +54,13 @@ export function useAgency(
 ) {
   return useQuery<Agency, ApiError>({
     queryKey: regulatoryQueryKeys.agency(id),
-    queryFn: () => apiClient.get<Agency>(`/regulatory/agencies/${id}`),
+    queryFn: async () => {
+      try {
+        return await apiClient.get<Agency>(`/regulatory/agencies/${id}`);
+      } catch {
+        return null;
+      }
+    },
     enabled: !!id,
     ...options,
   });
@@ -147,14 +162,20 @@ export function useApprovalSubmission(
   });
 }
 
-// Documents hooks
+// Documents hooks - Note: Backend doesn't have this endpoint yet, returning empty data
 export function useDocuments(
   filters?: Record<string, unknown>,
   options?: UseQueryOptions<PaginatedResponse<Document>, ApiError>
 ) {
   return useQuery<PaginatedResponse<Document>, ApiError>({
     queryKey: regulatoryQueryKeys.documents(filters),
-    queryFn: () => apiClient.get<PaginatedResponse<Document>>('/regulatory/documents', { params: filters }),
+    queryFn: async () => {
+      try {
+        return await apiClient.get<PaginatedResponse<Document>>('/regulatory/documents', { params: filters });
+      } catch {
+        return { items: [], total: 0, page: 1, pageSize: 20 };
+      }
+    },
     ...options,
   });
 }
@@ -165,7 +186,13 @@ export function useDocument(
 ) {
   return useQuery<Document, ApiError>({
     queryKey: regulatoryQueryKeys.document(id),
-    queryFn: () => apiClient.get<Document>(`/regulatory/documents/${id}`),
+    queryFn: async () => {
+      try {
+        return await apiClient.get<Document>(`/regulatory/documents/${id}`);
+      } catch {
+        return null;
+      }
+    },
     enabled: !!id,
     ...options,
   });
@@ -184,14 +211,14 @@ export function useCompliance(
   });
 }
 
-// Timeline hook
+// Timeline hook - Map to existing statistics endpoint
 export function useRegulatoryTimeline(
   filters?: Record<string, unknown>,
   options?: UseQueryOptions<any, ApiError>
 ) {
   return useQuery<any, ApiError>({
     queryKey: regulatoryQueryKeys.timeline(filters),
-    queryFn: () => apiClient.get<any>('/regulatory/timeline', { params: filters }),
+    queryFn: () => apiClient.get<any>('/statistics/submissions/timeline', { params: filters }),
     ...options,
   });
 }
@@ -201,6 +228,64 @@ export function useRegulatoryStatistics(options?: UseQueryOptions<any, ApiError>
   return useQuery<any, ApiError>({
     queryKey: regulatoryQueryKeys.statistics(),
     queryFn: () => apiClient.get<any>('/regulatory/statistics'),
+    ...options,
+  });
+}
+
+// CRL (Complete Response Letters) hooks
+export function useCRLs(
+  filters?: Record<string, unknown>,
+  options?: UseQueryOptions<PaginatedResponse<CRL>, ApiError>
+) {
+  return useQuery<PaginatedResponse<CRL>, ApiError>({
+    queryKey: regulatoryQueryKeys.crls(filters),
+    queryFn: async () => {
+      try {
+        // Convert camelCase to snake_case for API
+        const params: Record<string, unknown> = {
+          page: filters?.page,
+          page_size: filters?.pageSize || filters?.page_size,
+          company_name: filters?.company_name,
+          approval_status: filters?.approval_status,
+          letter_type: filters?.letter_type,
+        };
+        // Remove undefined values
+        Object.keys(params).forEach(key => {
+          if (params[key] === undefined) delete params[key];
+        });
+
+        const response = await apiClient.get<any>('/regulatory/crls', { params });
+        // Handle both `data` and `items` response formats
+        return {
+          items: response.data || response.items || [],
+          total: response.total || 0,
+          page: response.page || 1,
+          pageSize: response.page_size || response.pageSize || 20,
+          totalPages: response.total_pages || response.totalPages || 0
+        };
+      } catch (error) {
+        console.error('Error fetching CRLs:', error);
+        return { items: [], total: 0, page: 1, pageSize: 20, totalPages: 0 };
+      }
+    },
+    ...options,
+  });
+}
+
+export function useCRL(
+  id: string,
+  options?: UseQueryOptions<CRL, ApiError>
+) {
+  return useQuery<CRL, ApiError>({
+    queryKey: regulatoryQueryKeys.crl(id),
+    queryFn: async () => {
+      try {
+        return await apiClient.get<CRL>(`/regulatory/crls/${id}`);
+      } catch {
+        return null;
+      }
+    },
+    enabled: !!id,
     ...options,
   });
 }

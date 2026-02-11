@@ -5,6 +5,7 @@ import {
   SubmissionsPage,
   ApprovalsPage,
   DocumentsPage,
+  CRLsPage,
 } from './';
 
 const RegulatoryIndexPage: React.FC = () => {
@@ -16,6 +17,7 @@ const RegulatoryIndexPage: React.FC = () => {
     const path = location.pathname;
     if (path.includes('/approvals')) return 'approvals';
     if (path.includes('/documents')) return 'documents';
+    if (path.includes('/crls')) return 'crls';
     return 'submissions';
   };
 
@@ -35,6 +37,11 @@ const RegulatoryIndexPage: React.FC = () => {
       key: 'approvals',
       label: 'Regulatory Approvals',
       children: <ApprovalsPage />,
+    },
+    {
+      key: 'crls',
+      label: 'FDA CRLs',
+      children: <CRLsPage />,
     },
     {
       key: 'documents',

@@ -31,6 +31,7 @@ interface FacilitiesResponse {
 
 interface ShortagesResponse {
   data: Shortage[];
+  shortages?: Shortage[];  // API may return shortages array
   total: number;
 }
 
@@ -128,9 +129,14 @@ export const supplyChainApi = {
 
   /**
    * Get all facilities with filtering and pagination
+   * Note: Backend doesn't have this endpoint yet, returning empty data
    */
   async getFacilities(params: FacilitiesQuery = {}): Promise<FacilitiesResponse> {
-    return apiClient.get<FacilitiesResponse>('/supply/facilities', { params });
+    try {
+      return await apiClient.get<FacilitiesResponse>('/supply/facilities', { params });
+    } catch {
+      return { data: [], total: 0 };
+    }
   },
 
   /**
@@ -144,16 +150,24 @@ export const supplyChainApi = {
    * Get active drug shortages
    */
   async getActiveShortages(params: ShortagesQuery = {}): Promise<ShortagesResponse> {
-    return apiClient.get<ShortagesResponse>('/supply/shortages', {
-      params: { ...params, status: 'active' }
-    });
+    const response = await apiClient.get<any>('/sc/shortages/active', { params });
+    // Handle API returning shortages array
+    return {
+      data: response.shortages || response.data || [],
+      total: response.total || (response.shortages?.length || 0)
+    };
   },
 
   /**
    * Get all shortages with filtering
    */
   async getShortages(params: ShortagesQuery = {}): Promise<ShortagesResponse> {
-    return apiClient.get<ShortagesResponse>('/supply/shortages', { params });
+    const response = await apiClient.get<any>('/sc/shortages/active', { params });
+    // Handle API returning shortages array
+    return {
+      data: response.shortages || response.data || [],
+      total: response.total || (response.shortages?.length || 0)
+    };
   },
 
   /**
@@ -196,7 +210,7 @@ export const supplyChainApi = {
     end_date?: string;
     drug_class?: string;
   } = {}): Promise<any> {
-    return apiClient.get<any>('/supply/shortages/trends', { params });
+    return apiClient.get<any>('/statistics/shortages/timeline', { params });
   },
 
   /**

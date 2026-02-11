@@ -49,6 +49,7 @@ import {
   ApprovalsPage,
   ApprovalDetailPage,
   DocumentsPage,
+  CRLsPage,
 } from '@/domains/regulatory';
 
 const SearchPage = () => <div><h1>Search</h1><p>Coming soon...</p></div>;
@@ -97,6 +98,7 @@ const App: React.FC = () => {
             <Route path="regulatory/submissions/:id" element={<SubmissionDetailPage />} />
             <Route path="regulatory/approvals" element={<RegulatoryIndexPage />} />
             <Route path="regulatory/approvals/:id" element={<ApprovalDetailPage />} />
+            <Route path="regulatory/crls" element={<RegulatoryIndexPage />} />
             <Route path="regulatory/documents" element={<RegulatoryIndexPage />} />
 
             {/* Cross-Domain Query Routes */}

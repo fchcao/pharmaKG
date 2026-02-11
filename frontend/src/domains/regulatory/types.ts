@@ -174,3 +174,29 @@ export interface RegulatoryStatistics {
   averageReviewTime: number;
   complianceRate: number;
 }
+
+// CRL (Complete Response Letter) types
+export interface CRL {
+  id: string;
+  letter_type: string;
+  company_name: string;
+  approval_status: string;
+  letter_date?: string;
+  approver_center?: string;
+  application_number?: string;
+  text_preview?: string;
+  company_address?: string;
+  company_rep?: string;
+  approver_name?: string;
+  approver_title?: string;
+  letter_year?: number;
+  source?: string;
+}
+
+export interface CRLFilters {
+  company_name?: string;
+  approval_status?: string;
+  letter_type?: string;
+  page?: number;
+  pageSize?: number;
+}

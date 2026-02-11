@@ -440,7 +440,7 @@ export const ShortageMonitorPage: React.FC = () => {
         {/* Historical Trends */}
         <Card title={<><CalendarOutlined /> <strong>Historical Shortage Trends</strong></>}>
           <TimelineChart
-            apiBaseUrl="/api/v1"
+            apiBaseUrl="/api"
             height={300}
             onDataPointClick={(dataPoint) => {
               console.log('Timeline data point clicked:', dataPoint);

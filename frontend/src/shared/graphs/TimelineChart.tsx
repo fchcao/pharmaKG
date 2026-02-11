@@ -8,7 +8,6 @@ import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
-  TimeScale,
   PointElement,
   LineElement,
   BarElement,
@@ -33,11 +32,10 @@ import axios from 'axios';
 
 import type { TimelineDataPoint } from './types';
 
-// Register Chart.js components
+// Register Chart.js components (without TimeScale for now)
 ChartJS.register(
   CategoryScale,
   LinearScale,
-  TimeScale,
   PointElement,
   LineElement,
   BarElement,
@@ -72,30 +70,30 @@ const DATA_TYPE_CONFIGS: Record<DataType, TimelineChartConfig> = {
     label: 'Regulatory Submissions',
     color: 'rgb(255, 99, 132)',
     backgroundColor: 'rgba(255, 99, 132, 0.5)',
-    apiEndpoint: '/regulatory/timeline'
+    apiEndpoint: '/statistics/submissions/timeline'
   },
   trials: {
     label: 'Clinical Trials',
     color: 'rgb(54, 162, 235)',
     backgroundColor: 'rgba(54, 162, 235, 0.5)',
-    apiEndpoint: '/clinical/timeline'
+    apiEndpoint: '/statistics/trials/timeline'
   },
   approvals: {
     label: 'Drug Approvals',
     color: 'rgb(75, 192, 192)',
     backgroundColor: 'rgba(75, 192, 192, 0.5)',
-    apiEndpoint: '/regulatory/approvals-timeline'
+    apiEndpoint: '/statistics/approvals/rate-timeline'
   },
   all: {
     label: 'All Events',
     color: 'rgb(153, 102, 255)',
     backgroundColor: 'rgba(153, 102, 255, 0.5)',
-    apiEndpoint: '/cross/timeline'
+    apiEndpoint: '/statistics/timeline'
   }
 };
 
 export const TimelineChart: React.FC<TimelineChartProps> = ({
-  apiBaseUrl = '/api/v1',
+  apiBaseUrl = '/api',
   height = 400,
   onDataPointClick,
   onExport
@@ -236,10 +234,6 @@ export const TimelineChart: React.FC<TimelineChartProps> = ({
     },
     scales: {
       x: {
-        type: 'time' as const,
-        time: {
-          unit: aggregation === 'day' ? 'day' : aggregation === 'week' ? 'week' : 'month'
-        },
         title: {
           display: true,
           text: 'Date'
@@ -297,6 +291,16 @@ export const TimelineChart: React.FC<TimelineChartProps> = ({
   useEffect(() => {
     fetchTimelineData();
   }, [dataType, aggregation]); // Only refetch on type/agg change, not date range
+
+  // Cleanup chart on unmount to prevent canvas reuse error
+  useEffect(() => {
+    return () => {
+      if (chartRef.current) {
+        chartRef.current.destroy();
+        chartRef.current = null;
+      }
+    };
+  }, []);
 
   // Render chart based on type
   const renderChart = () => {
