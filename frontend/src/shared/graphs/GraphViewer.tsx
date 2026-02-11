@@ -103,7 +103,8 @@ export const GraphViewer = forwardRef<GraphViewerRef, GraphViewerProps>(({
           'text-outline-color': style.borderColor,
           'text-outline-width': 2,
           'text-wrap': 'wrap',
-          'text-max-width': '80px'
+          'text-max-width': `${style.width * 0.8}px`,
+          'text-justification': 'center'
         }
       });
     });

@@ -19,7 +19,9 @@ export type EntityType =
   | 'Approval'
   | 'RegulatoryAgency'
   | 'Document'
-  | 'Patent';
+  | 'Patent'
+  | 'Company'
+  | 'CRL';
 
 export type RelationType =
   | 'TARGETS'
@@ -33,7 +35,8 @@ export type RelationType =
   | 'SUBMITTED_TO'
   | 'APPROVED_BY'
   | 'CONDUCTS_AT'
-  | 'REFERENCES';
+  | 'REFERENCES'
+  | 'SENT_TO';
 
 export interface GraphNode {
   id: string;
@@ -243,6 +246,24 @@ export const ENTITY_STYLES: Record<EntityType, EntityStyleConfig> = {
     height: 45,
     fontSize: 10,
     labelColor: '#FFFFFF'
+  },
+  Company: {
+    backgroundColor: '#1890FF',
+    borderColor: '#0050B3',
+    shape: 'rectangle',
+    width: 180,
+    height: 60,
+    fontSize: 14,
+    labelColor: '#FFFFFF'
+  },
+  CRL: {
+    backgroundColor: '#52C41A',
+    borderColor: '#237804',
+    shape: 'roundrectangle',
+    width: 140,
+    height: 80,
+    fontSize: 12,
+    labelColor: '#FFFFFF'
   }
 };
 
@@ -258,7 +279,8 @@ export const RELATION_STYLES: Record<RelationType, { color: string; width: numbe
   SUBMITTED_TO: { color: '#C2185B', width: 2, style: 'solid' },
   APPROVED_BY: { color: '#2E7D32', width: 3, style: 'solid' },
   CONDUCTS_AT: { color: '#00838F', width: 2, style: 'dashed' },
-  REFERENCES: { color: '#757575', width: 1, style: 'dotted' }
+  REFERENCES: { color: '#757575', width: 1, style: 'dotted' },
+  SENT_TO: { color: '#1890FF', width: 2, style: 'solid' }
 };
 
 export interface GraphViewerProps {

@@ -1979,7 +1979,9 @@ async def get_manufacturer_network(manufacturer_id: str):
                 })
                 node_ids.add(crl_id)
                 # Add edge from company to CRL
+                edge_id = f"edge_{company_id}_{crl_id}"
                 edges.append({
+                    "id": edge_id,
                     "source": company_id,
                     "target": crl_id,
                     "label": "CRL",
