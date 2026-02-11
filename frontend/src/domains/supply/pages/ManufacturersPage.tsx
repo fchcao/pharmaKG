@@ -5,7 +5,7 @@
  * Features:
  * - Searchable/filterable table of manufacturers
  * - Filters: location, certifications, quality score
- * - Geographic distribution view
+ * - Geographic distribution view (bar chart)
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -36,9 +36,28 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { ColumnsType } from 'antd/es/table';
-import { GraphViewer } from '@/shared/graphs';
+import { Bar } from 'react-chartjs-2';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip as ChartTooltip,
+  Legend
+} from 'chart.js';
 import { supplyChainApi } from '../api';
 import type { Manufacturer } from '../types';
+
+// Register ChartJS components
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  ChartTooltip,
+  Legend
+);
 
 const { Search } = Input;
 const { Option } = Select;
@@ -217,17 +236,32 @@ export const ManufacturersPage: React.FC = () => {
     return colors[type?.toLowerCase()] || 'default';
   };
 
-  // Prepare graph data for geographic distribution
-  const graphData = React.useMemo(() => {
-    if (!geoData?.data) return { nodes: [], edges: [] };
+  // Prepare chart data for geographic distribution
+  const chartData = React.useMemo(() => {
+    if (!geoData?.data) return null;
 
-    const nodes = geoData.data.map((item: any, index: number) => ({
-      id: `country-${index}`,
-      label: item.country,
-      data: { count: item.count, manufacturers: item.manufacturers }
-    }));
+    // Take top 20 locations by count
+    const topLocations = geoData.data.slice(0, 20);
 
-    return { nodes, edges: [] };
+    return {
+      labels: topLocations.map((item: any) => {
+        // Extract state from location like "Princeton, NJ 08540" -> "NJ"
+        const parts = item.country.split(', ');
+        if (parts.length >= 2) {
+          // Get state code (e.g., "NJ 08540" -> "NJ")
+          const statePart = parts[parts.length - 1].split(' ')[0];
+          return `${parts[parts.length - 2]}, ${statePart}`;
+        }
+        return item.country;
+      }),
+      datasets: [{
+        label: 'Manufacturers',
+        data: topLocations.map((item: any) => item.count),
+        backgroundColor: 'rgba(24, 144, 255, 0.6)',
+        borderColor: 'rgba(24, 144, 255, 1)',
+        borderWidth: 1
+      }]
+    };
   }, [geoData]);
 
   return (
@@ -320,18 +354,49 @@ export const ManufacturersPage: React.FC = () => {
               </Button>
             }
           >
-            <GraphViewer
-              data={graphData}
-              layoutType="force"
-              height={400}
-              nodeLabelProperty="label"
-              onNodeClick={(nodeId: string) => {
-                const country = graphData.nodes.find((n: any) => n.id === nodeId)?.data?.country;
-                if (country) {
-                  handleFilterChange('country', country);
-                }
-              }}
-            />
+            {chartData && (
+              <div style={{ height: 400 }}>
+                <Bar
+                  data={chartData}
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                      legend: {
+                        display: false
+                      },
+                      title: {
+                        display: true,
+                        text: 'Top 20 Locations by Manufacturer Count',
+                        font: { size: 16 }
+                      },
+                      tooltip: {
+                        callbacks: {
+                          label: (context) => {
+                            return `${context.parsed.y} manufacturers`;
+                          }
+                        }
+                      }
+                    },
+                    scales: {
+                      y: {
+                        beginAtZero: true,
+                        title: {
+                          display: true,
+                          text: 'Number of Manufacturers'
+                        }
+                      },
+                      x: {
+                        ticks: {
+                          maxRotation: 45,
+                          minRotation: 45
+                        }
+                      }
+                    }
+                  }}
+                />
+              </div>
+            )}
           </Card>
         )}
 

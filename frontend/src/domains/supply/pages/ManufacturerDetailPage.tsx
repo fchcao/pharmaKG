@@ -493,12 +493,49 @@ export const ManufacturerDetailPage: React.FC = () => {
             <TabPane tab="Supply Network" key="network">
               <Card title="Supply Chain Network Visualization">
                 {networkData ? (
-                  <GraphViewer
-                    data={networkData.data || { nodes: [], edges: [] }}
-                    layoutType="force"
-                    height={600}
-                    nodeLabelProperty="label"
-                  />
+                  <>
+                    {networkData.data?.nodes && networkData.data.nodes.length > 0 ? (
+                      <>
+                        <Row gutter={16} style={{ marginBottom: 16 }}>
+                          <Col span={8}>
+                            <Statistic
+                              title="Connected Entities"
+                              value={networkData.data.nodes.length}
+                              suffix="nodes"
+                            />
+                          </Col>
+                          <Col span={8}>
+                            <Statistic
+                              title="Relationships"
+                              value={networkData.data.edges?.length || 0}
+                              suffix="links"
+                            />
+                          </Col>
+                          <Col span={8}>
+                            <Statistic
+                              title="CRL Documents"
+                              value={networkData.data.nodes.filter(n => n.type === 'CRL').length}
+                              suffix="letters"
+                            />
+                          </Col>
+                        </Row>
+                        <GraphViewer
+                          data={networkData.data}
+                          layoutType="force"
+                          height={500}
+                          nodeLabelProperty="label"
+                        />
+                      </>
+                    ) : (
+                      <div style={{ textAlign: 'center', padding: '60px 0' }}>
+                        <FileTextOutlined style={{ fontSize: 48, color: '#d9d9d9' }} />
+                        <p style={{ color: '#8c8c8c', marginTop: 16 }}>
+                          No network data available for this manufacturer.
+                          The company may not have any associated CRL documents.
+                        </p>
+                      </div>
+                    )}
+                  </>
                 ) : (
                   <Spin size="large" />
                 )}

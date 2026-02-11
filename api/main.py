@@ -1924,38 +1924,65 @@ async def get_manufacturer_network(manufacturer_id: str):
                 nodes.append({
                     "id": company_id,
                     "label": main_company.get('name', 'Unknown'),
-                    "type": main_company.get('type', 'Company'),
-                    "group": main_company.get('group', 'manufacturer')
+                    "type": "Company",
+                    "group": "manufacturer",
+                    "size": 30
                 })
                 node_ids.add(company_id)
 
-        # Find connected CRLs
+        # Find connected CRLs with more details
         crl_query = """
             MATCH (c:Company {name: $manufacturer_id})<-[:SENT_TO]-(crl:CompleteResponseLetter)
             RETURN crl.crl_id as id,
-                   crl.letter_type as label,
-                   'CRL' as type,
-                   'document' as group
-            LIMIT 50
+                   crl.application_number as app_num,
+                   crl.letter_type as letter_type,
+                   crl.approval_status as status,
+                   crl.letter_date as date
+            ORDER BY crl.letter_date DESC
+            LIMIT 30
         """
         crl_result = db.execute_query(crl_query, {"manufacturer_id": manufacturer_id})
 
+        # Group CRLs by approval status for better visualization
+        status_groups = {}
         for record in crl_result.records:
             crl_data = dict(record)
             crl_id = crl_data.get('id', '') or f"crl_{len(nodes)}"
+            status = crl_data.get('status', 'Unknown')
+            app_num = crl_data.get('app_num', 'N/A')
+            letter_type = crl_data.get('letter_type', 'CRL')
+            date = crl_data.get('date', '')
+
+            # Create informative label
+            label = f"{app_num}\n{status}"
+            if date:
+                label += f"\n{date}"
+
+            # Group by status
+            if status not in status_groups:
+                status_groups[status] = []
+            status_groups[status].append(crl_id)
+
             if crl_id not in node_ids:
                 nodes.append({
                     "id": crl_id,
-                    "label": crl_data.get('label', 'CRL'),
-                    "type": crl_data.get('type', 'CRL'),
-                    "group": crl_data.get('group', 'document')
+                    "label": label,
+                    "type": "CRL",
+                    "group": status,
+                    "size": 20,
+                    "data": {
+                        "application_number": app_num,
+                        "letter_type": letter_type,
+                        "approval_status": status,
+                        "letter_date": date
+                    }
                 })
                 node_ids.add(crl_id)
                 # Add edge from company to CRL
                 edges.append({
                     "source": company_id,
                     "target": crl_id,
-                    "label": "SENT_TO",
+                    "label": "CRL",
                     "type": "SENT_TO"
                 })
 
