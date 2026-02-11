@@ -1781,9 +1781,9 @@ async def get_supply_manufacturer_detail(manufacturer_id: str):
             OPTIONAL MATCH (m)-[:HAS_CERTIFICATION]->(cert:Certification)
             RETURN m.manufacturer_id as id,
                    m.name as name,
-                   m.type as manufacturer_type,
+                   m.type as type,
                    mt.name as manufacturer_type_name,
-                   m.country as country,
+                   m.country as location,
                    m.city as city,
                    m.state as state,
                    m.fei_code as fei_code,
@@ -1798,9 +1798,9 @@ async def get_supply_manufacturer_detail(manufacturer_id: str):
                 MATCH (c:Company {name: $manufacturer_id})
                 RETURN c.name as id,
                        c.name as name,
-                       'Pharmaceutical' as manufacturer_type,
+                       'Pharmaceutical' as type,
                        'Pharmaceutical Company' as manufacturer_type_name,
-                       c.address as country,
+                       c.address as location,
                        null as city,
                        null as state,
                        null as fei_code,
@@ -1810,7 +1810,9 @@ async def get_supply_manufacturer_detail(manufacturer_id: str):
             result = db.execute_query(query, {"manufacturer_id": manufacturer_id})
 
         if result.records:
-            return dict(result.records[0])
+            record = dict(result.records[0])
+            # Wrap in data property to match frontend expectation
+            return {"data": record}
         else:
             raise HTTPException(status_code=404, detail="Manufacturer not found")
     except HTTPException:
