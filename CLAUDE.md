@@ -366,6 +366,52 @@ tests/                        # Test suite (if implemented)
   - Always use relative imports from parent package: `from ..database import get_db`
   - `api/services/__init__.py` must exist for proper module resolution
 
+## Documentation Maintenance Rules
+
+### When to Update Documentation
+
+| 文档 | 更新时机 | 负责判断 |
+|------|----------|----------|
+| **README.md** | 功能性变更、新特性、架构变化 | ✅ 自动判断 |
+| **CHANGELOG.md** | 功能性变更 (新增/修复/优化) | ❌ 不更新日常清理 |
+| **CLAUDE.md** | 架构变更、新命令、重要配置变化 | ✅ 自动判断 |
+| **CHECKLIST.md** | 项目进度、完成项变更 | ✅ 自动判断 |
+
+### 更新规则细节
+
+#### README.md - 必须更新
+- ✅ 最后更新日期 (每次提交时)
+- ✅ 项目状态变更 (如: 前后端集成完成)
+- ✅ 新增核心功能 (如: 前端应用、新API端点)
+- ✅ 架构变化 (如: 技术栈调整)
+- ❌ 不更新: 临时文件清理、内部重构
+
+#### CHANGELOG.md - 选择性更新
+- ✅ 更新: 新功能 (feat)、问题修复 (fix)、重要优化 (perf)
+- ✅ 更新: 文档变更、测试变更
+- ❌ 不更新: 项目清理、临时文件删除
+- ❌ 不更新: 代码格式化、注释调整
+
+#### CLAUDE.md - 及时更新
+- ✅ 更新: 新的开发命令
+- ✅ 更新: 新的配置说明
+- ✅ 更新: 重要的技术决策
+- ✅ 更新: 已知问题和解决方案
+- ✅ 更新: 项目里程碑完成
+
+### 自动化检查清单
+
+每次提交代码前，检查以下文档是否需要更新：
+
+```
+□ README.md - 最后更新日期是否当前？
+□ README.md - 是否有新功能需要记录？
+□ CLAUDE.md - 是否有新命令或配置？
+□ CHANGELOG.md - 是否是功能性变更？
+```
+
+**原则**: 功能性变更更新文档，维护性清理不记录。
+
 ## Data Sources
 
 ### R&D Domain

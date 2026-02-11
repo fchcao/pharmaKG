@@ -1,8 +1,8 @@
 # 制药行业知识图谱 (PharmaKG)
 
 **项目版本**: v1.1
-**最后更新**: 2026-02-07
-**项目状态**: 技术实施阶段 (Phase 1 - 基础设施完成)
+**最后更新**: 2026-02-11
+**项目状态**: 技术实施阶段 (Phase 1 - 前后端集成完成)
 
 ---
 
@@ -122,6 +122,20 @@ python3 scripts/run_etl_test.py --all -l 10 -v
 
 ```
 pj-pharmaKG/
+├── frontend/                      # React前端应用 ✅ 新增
+│   ├── src/                       # TypeScript源码
+│   │   ├── pages/                 # 页面组件
+│   │   ├── domains/               # 领域页面(R&D, Clinical, Supply, Regulatory)
+│   │   ├── shared/                # 共享组件和API客户端
+│   │   └── layouts/               # 布局组件
+│   ├── vite.config.ts             # Vite配置(含API代理)
+│   └── package.json              # NPM依赖
+│
+├── api/                          # FastAPI后端服务
+│   ├── main.py                   # API主应用
+│   ├── services/                 # 领域服务
+│   └── models.py                 # 数据模型
+│
 ├── docs/                          # 文档目录
 │   ├── research-plan/            # 研究计划
 │   ├── literature/               # 文献资料（已保存6篇）
@@ -262,6 +276,11 @@ pj-pharmaKG/
 - ✅ SHACL约束规则
 - ✅ 图分析算法 (graph_analytics/)
 - ✅ ML分析模块 (ml_analytics/)
+- ✅ React前端应用 (frontend/) ✅ 新增
+  - ✅ 四领域页面 (R&D, Clinical, Supply, Regulatory)
+  - ✅ Dashboard统计页面
+  - ✅ API集成完成 (使用/api前缀)
+  - ✅ SPA路由配置
 
 ### Phase 2: 增强功能 (Month 4-6) ⏳ 下一阶段
 
