@@ -97,6 +97,7 @@ coverage/
 
 # Archive (historical files)
 archive/
+docs/archive/
 
 # Logs
 *.log
