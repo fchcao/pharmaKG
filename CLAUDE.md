@@ -346,6 +346,14 @@ tests/                        # Test suite (if implemented)
 - **Database queries**: Cypher language for Neo4j
 - **Bilingual documentation**: Documentation in Chinese and English
 
+### Documentation Title Conventions
+
+- **Markdown files**: Title Case (首字母大写，如 `Quick Start Guide`)
+- **避免全大写标题**: ❌ `QUICK_START_GUIDE.md`
+- **正确示例**: ✅ `Quick_Start_Guide.md` 或 `quick_start_guide.md`
+- **文档标题**: 使用 Title Case，如 `# Quick Start Guide` 而非 `# QUICK START GUIDE`
+- **文件名建议**: 使用 kebab-case (短横线连接) 或 snake_case
+
 ## Important Notes
 
 - **Ontology Standards**: Uses W3C standards (Turtle, OWL, SHACL) for ontology definitions
