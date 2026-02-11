@@ -353,6 +353,14 @@ tests/                        # Test suite (if implemented)
 - **正确示例**: ✅ `Quick_Start_Guide.md` 或 `quick_start_guide.md`
 - **文档标题**: 使用 Title Case，如 `# Quick Start Guide` 而非 `# QUICK START GUIDE`
 - **文件名建议**: 使用 kebab-case (短横线连接) 或 snake_case
+- **缩写词灵活处理**: 专有名词缩写保持大写
+  - ✅ `KEGG_Processor.md` (KEGG 是缩写)
+  - ✅ `PDA_PDF_Processor.md` (PDA 是缩写)
+  - ✅ `FDA_Drugs.md` (FDA 是缩写)
+  - ✅ `Neo4j_Guide.md` (Neo4j 是产品名)
+  - ✅ `AutoDL_Setup.md` (AutoDL 是产品名)
+  - ❌ `Kegg_Processor.md` (Kegg 应写为 KEGG)
+  - ❌ `Pda_Pdf_Processor.md` (Pda 应写为 PDA)
 
 ## Important Notes
 
