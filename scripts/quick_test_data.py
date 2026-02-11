@@ -57,7 +57,8 @@ def import_test_data():
                 try:
                     chembl_id = row['chembl_id']
                     molregno = row['molregno']
-                    pref_name = row['pref_name'] or 'Unknown'
+                    # Use chembl_id as fallback instead of "Unknown"
+                    pref_name = row['pref_name'] or chembl_id
 
                     # 创建化合物节点
                     session.run("""
@@ -95,7 +96,8 @@ def import_test_data():
                 try:
                     tid = row['tid']
                     target_chembl_id = row['target_chembl_id']
-                    pref_name = row['pref_name'] or 'Unknown Target'
+                    # Use target_chembl_id as fallback instead of "Unknown Target"
+                    pref_name = row['pref_name'] or target_chembl_id
                     organism = row['organism'] or 'Unknown'
 
                     # 使用 chembl_id 作为主要 ID

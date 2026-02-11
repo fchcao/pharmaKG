@@ -1719,6 +1719,108 @@ async def list_supply_manufacturers(
         }
 
 
+@app.get("/supply/manufacturers/geographic-distribution", tags=["Supply Chain"])
+async def get_manufacturer_geographic_distribution():
+    """获取制造商地理分布"""
+    try:
+        db = get_db()
+
+        # Query Company nodes - extract location from address
+        # Company addresses contain location info (state/country in the last line)
+        query = """
+            MATCH (c:Company)
+            WHERE c.address IS NOT NULL AND c.address <> ''
+            WITH c, split(c.address, '\n') as parts
+            WITH c, parts,
+                 case
+                   when size(parts) > 1 then parts[-1]
+                   else parts[0]
+                 end as location
+            RETURN location as country, count(c) as count
+            ORDER BY count DESC
+            LIMIT 50
+        """
+        result = db.execute_query(query)
+        records = result.records
+
+        distribution = []
+        for record in records:
+            country = record.get("country")
+            if country:
+                distribution.append({
+                    "country": country,
+                    "count": record.get("count", 0)
+                })
+
+        return {
+            "geographic_distribution": distribution,
+            "count": len(distribution)
+        }
+    except Exception as e:
+        logger.error(f"Error getting geographic distribution: {e}")
+        return {
+            "geographic_distribution": [],
+            "count": 0
+        }
+
+
+@app.get("/supply/manufacturers/{manufacturer_id}", tags=["Supply Chain"])
+async def get_supply_manufacturer_detail(manufacturer_id: str):
+    """获取制造商/公司详情"""
+    try:
+        from urllib.parse import unquote
+        # URL decode the manufacturer_id in case it contains spaces
+        manufacturer_id = unquote(manufacturer_id)
+
+        db = get_db()
+
+        # 先查询 Manufacturer 节点，如果没有则查询 Company 节点
+        query = """
+            MATCH (m:Manufacturer {manufacturer_id: $manufacturer_id})
+            OPTIONAL MATCH (m)-[:HAS_MANUFACTURER_TYPE]->(mt:ManufacturerType)
+            OPTIONAL MATCH (m)-[:HAS_CERTIFICATION]->(cert:Certification)
+            RETURN m.manufacturer_id as id,
+                   m.name as name,
+                   m.type as manufacturer_type,
+                   mt.name as manufacturer_type_name,
+                   m.country as country,
+                   m.city as city,
+                   m.state as state,
+                   m.fei_code as fei_code,
+                   m.website as website,
+                   m.status as status
+        """
+        result = db.execute_query(query, {"manufacturer_id": manufacturer_id})
+
+        if not result.records:
+            # Fallback to Company nodes
+            query = """
+                MATCH (c:Company {name: $manufacturer_id})
+                RETURN c.name as id,
+                       c.name as name,
+                       'Pharmaceutical' as manufacturer_type,
+                       'Pharmaceutical Company' as manufacturer_type_name,
+                       c.address as country,
+                       null as city,
+                       null as state,
+                       null as fei_code,
+                       null as website,
+                       'active' as status
+            """
+            result = db.execute_query(query, {"manufacturer_id": manufacturer_id})
+
+        if result.records:
+            return dict(result.records[0])
+        else:
+            raise HTTPException(status_code=404, detail="Manufacturer not found")
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting manufacturer detail: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+
 @app.get("/supply/facilities", tags=["Supply Chain"])
 async def list_supply_facilities(
     page: int = Query(1, ge=1),
