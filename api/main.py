@@ -1753,13 +1753,13 @@ async def get_manufacturer_geographic_distribution():
                 })
 
         return {
-            "geographic_distribution": distribution,
+            "data": distribution,
             "count": len(distribution)
         }
     except Exception as e:
         logger.error(f"Error getting geographic distribution: {e}")
         return {
-            "geographic_distribution": [],
+            "data": [],
             "count": 0
         }
 
