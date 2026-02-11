@@ -31,6 +31,17 @@ docker-compose up -d neo4j
 
 **Note**: This project has a dedicated conda environment `pharmakg-api` pre-configured on AutoDL servers. Always activate this environment before running any commands.
 
+### Network Acceleration (AutoDL)
+
+When encountering network issues (git push timeout, pip install failures, etc.) on AutoDL:
+
+```bash
+# Enable network acceleration for GitHub/HuggingFace access
+source /etc/network_turbo
+```
+
+**Important**: Use only for academic purposes and accelerating access to github/huggingface. No stability guarantees.
+
 ### API Service
 ```bash
 # Start FastAPI server (from project root)
