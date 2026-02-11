@@ -288,7 +288,7 @@ async def list_compounds(
         compounds.append({
             "id": row["c.chembl_id"],
             "chemblId": row["c.chembl_id"],
-            "name": row["c.name"],
+            "name": row["c.name"] if row["c.name"] else "Unknown",
             "moleculeType": row.get("c.molecule_type"),
             "maxPhase": row.get("c.max_phase")
         })
@@ -336,9 +336,9 @@ async def get_compound(compound_id: str):
         "id": row["id"],
         "chemblId": row["chemblId"],
         "name": row["name"] if row["name"] else "Unknown",
-        "moleculeType": row.get("c.molecule_type", "Unknown"),
-        "maxPhase": row.get("c.max_phase"),
-        "molregno": row.get("c.molregno")
+        "moleculeType": row.get("moleculeType", "Unknown"),
+        "maxPhase": row.get("maxPhase"),
+        "molregno": row.get("molregno")
     }
 
 
@@ -356,8 +356,29 @@ async def get_compound_targets(compound_id: str):
     if not check_result.records:
         raise HTTPException(status_code=404, detail=f"Compound {compound_id} not found")
 
-    # 暂时返回空数组（后续可以实现关系查询）
-    return {"compound_id": compound_id, "targets": []}
+    # 查询化合物-靶点关系（支持 BINDS_TO 和 ACTS_ON 关系类型）
+    targets_query = """
+        MATCH (c:Compound {chembl_id: $compound_id})-[r:BINDS_TO|ACTS_ON]->(t:Target)
+        RETURN t.target_id, t.chembl_id, t.name, t.organism, t.target_type,
+               r.pchembl_value, r.standard_type
+        ORDER BY r.pchembl_value DESC
+        LIMIT 50
+    """
+    result = db.execute_query(targets_query, {"compound_id": compound_id})
+
+    targets = []
+    for row in result.records:
+        targets.append({
+            "targetId": row["t.target_id"],
+            "chemblId": row["t.chembl_id"],
+            "name": row["t.name"],
+            "organism": row["t.organism"],
+            "targetType": row["t.target_type"],
+            "pchemblValue": row["r.pchembl_value"],
+            "standardType": row["r.standard_type"]
+        })
+
+    return {"compound_id": compound_id, "targets": targets}
 
 
 @app.get("/rd/targets", tags=["Research Domain"])
@@ -452,6 +473,65 @@ async def get_rd_statistics():
         "pathways_count": 0,  # 待实现
         "bioactivities_count": 0  # 待实现
     }
+
+
+# Missing RD endpoints (placeholder implementations)
+@app.get("/rd/assays", tags=["Research Domain"])
+async def list_assays(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
+    search: str = Query(None),
+    assay_type: str = Query(None),
+    assay_format: str = Query(None)
+):
+    """获取生物分析列表（暂时返回空数据）"""
+    return {
+        "items": [],
+        "total": 0,
+        "page": page,
+        "pageSize": page_size,
+        "totalPages": 0
+    }
+
+
+@app.get("/rd/assays/{assay_id}", tags=["Research Domain"])
+async def get_assay(assay_id: str):
+    """获取单个生物分析（暂时返回空数据）"""
+    return None
+
+
+@app.get("/rd/pathways", tags=["Research Domain"])
+async def list_pathways(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
+    search: str = Query(None)
+):
+    """获取通路列表（暂时返回空数据）"""
+    return {
+        "items": [],
+        "total": 0,
+        "page": page,
+        "pageSize": page_size,
+        "totalPages": 0
+    }
+
+
+@app.get("/rd/pathways/{pathway_id}", tags=["Research Domain"])
+async def get_pathway(pathway_id: str):
+    """获取单个通路（暂时返回空数据）"""
+    return None
+
+
+@app.get("/rd/compounds/{compound_id}/bioactivities", tags=["Research Domain"])
+async def get_compound_bioactivities(compound_id: str):
+    """获取化合物生物活性数据（暂时返回空数据）"""
+    return []
+
+
+@app.get("/rd/targets/{target_id}/pathways", tags=["Research Domain"])
+async def get_target_pathways(target_id: str):
+    """获取靶点相关通路（暂时返回空数据）"""
+    return []
 
 
 #===========================================================
@@ -1566,60 +1646,85 @@ async def list_supply_manufacturers(
     page_size: int = Query(20, ge=1, le=100),
     country: str = Query(None, description="Filter by country")
 ):
-    """获取制造商列表（使用 /supply 路径）"""
+    """获取制造商/公司列表（使用 /supply 路径）"""
     try:
         db = get_db()
         skip = (page - 1) * page_size
 
-        # 构建查询条件
-        where_clause = f"m.country = '{country}'" if country else ""
-
-        # 获取总数
-        count_query = f"MATCH (m:Manufacturer) WHERE {where_clause} RETURN count(m) as count" if where_clause else "MATCH (m:Manufacturer) RETURN count(m) as count"
+        # 先查询 Manufacturer 节点，如果没有则查询 Company 节点
+        count_query = "MATCH (m:Manufacturer) RETURN count(m) as count"
         count_result = db.execute_query(count_query)
-        total = count_result.records[0]["count"] if count_result else 0
+        mfg_count = count_result.records[0]["count"] if count_result and count_result.records else 0
 
-        # 获取列表
-        list_query = f"""
-            MATCH (m:Manufacturer)
-            WHERE {where_clause}
-            RETURN m.manufacturer_id as manufacturer_id, m.name as name, m.country as country, m.status as status
-            SKIP {skip}
-            LIMIT {page_size}
-        """ if where_clause else f"""
-            MATCH (m:Manufacturer)
-            RETURN m.manufacturer_id as manufacturer_id, m.name as name, m.country as country, m.status as status
-            SKIP {skip}
-            LIMIT {page_size}
-        """
+        if mfg_count > 0:
+            # 有 Manufacturer 节点
+            list_query = f"""
+                MATCH (m:Manufacturer)
+                RETURN m.manufacturer_id as id, m.name as name, m.country as location, m.type as type, m.status as status
+                ORDER BY m.name
+                SKIP {skip}
+                LIMIT {page_size}
+            """
+            total = mfg_count
+        else:
+            # 使用 Company 节点作为制造商
+            list_query = f"""
+                MATCH (c:Company)
+                RETURN c.name as id, c.name as name, c.address as location, 'Pharmaceutical' as type, 'active' as status
+                ORDER BY c.name
+                SKIP {skip}
+                LIMIT {page_size}
+            """
+            count_query = "MATCH (c:Company) RETURN count(c) as count"
+            count_result = db.execute_query(count_query)
+            total = count_result.records[0]["count"] if count_result and count_result.records else 0
 
         result = db.execute_query(list_query)
 
-        items = []
+        data = []
         for record in result.records:
-            items.append({
-                "manufacturer_id": record.get("manufacturer_id"),
+            data.append({
+                "id": record.get("id"),
                 "name": record.get("name"),
-                "country": record.get("country"),
+                "location": record.get("location"),
+                "type": record.get("type"),
                 "status": record.get("status")
             })
 
         return {
-            "items": items,
+            "data": data,
             "total": total,
             "page": page,
             "page_size": page_size,
-            "total_pages": (total + page_size - 1) // page_size
+            "total_pages": (total + page_size - 1) // page_size if total > 0 else 0
         }
     except Exception as e:
         logger.error(f"Error listing manufacturers: {e}")
         return {
-            "items": [],
+            "data": [],
             "total": 0,
             "page": page,
             "page_size": page_size,
             "total_pages": 0
         }
+
+
+@app.get("/supply/facilities", tags=["Supply Chain"])
+async def list_supply_facilities(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
+    country: str = Query(None, description="Filter by country"),
+    facility_type: str = Query(None, description="Filter by facility type")
+):
+    """获取生产设施列表（暂时返回空数据）"""
+    # TODO: 实现完整的生产设施数据查询
+    return {
+        "data": [],
+        "total": 0,
+        "page": page,
+        "page_size": page_size,
+        "total_pages": 0
+    }
 
 
 @app.get("/supply/statistics", tags=["Supply Chain"])
@@ -1628,17 +1733,24 @@ async def get_supply_statistics():
     try:
         db = get_db()
 
-        # 获取制造商数量
+        # 获取制造商数量 (优先 Manufacturer，fallback 到 Company)
         mfg_count_result = db.execute_query(
             "MATCH (m:Manufacturer) RETURN count(m) as count"
         )
-        mfg_count = mfg_count_result.records[0]["count"] if mfg_count_result else 0
+        mfg_count = mfg_count_result.records[0]["count"] if mfg_count_result and mfg_count_result.records else 0
+
+        if mfg_count == 0:
+            # Fallback to Company nodes
+            company_count_result = db.execute_query(
+                "MATCH (c:Company) RETURN count(c) as count"
+            )
+            mfg_count = company_count_result.records[0]["count"] if company_count_result and company_count_result.records else 0
 
         # 获取短缺数量
         shortage_count_result = db.execute_query(
             "MATCH (s:DrugShortage) RETURN count(s) as count"
         )
-        shortage_count = shortage_count_result.records[0]["count"] if shortage_count_result else 0
+        shortage_count = shortage_count_result.records[0]["count"] if shortage_count_result and shortage_count_result.records else 0
 
         return {
             "total_manufacturers": mfg_count,
@@ -1812,6 +1924,185 @@ async def list_regulatory_approvals(
             "page_size": page_size,
             "total_pages": 0
         }
+
+
+# Missing regulatory endpoints (placeholder implementations)
+@app.get("/regulatory/agencies", tags=["Regulatory"])
+async def list_agencies(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
+    country: str = Query(None)
+):
+    """获取监管机构列表（暂时返回空数据）"""
+    return {
+        "items": [],
+        "total": 0,
+        "page": page,
+        "pageSize": page_size,
+        "totalPages": 0
+    }
+
+
+@app.get("/regulatory/agencies/{agency_id}", tags=["Regulatory"])
+async def get_agency(agency_id: str):
+    """获取单个监管机构（暂时返回空数据）"""
+    return None
+
+
+@app.get("/regulatory/agencies/{agency_id}/statistics", tags=["Regulatory"])
+async def get_agency_statistics(agency_id: str):
+    """获取监管机构统计数据（暂时返回空数据）"""
+    return {}
+
+
+@app.get("/regulatory/documents", tags=["Regulatory"])
+async def list_documents(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
+    document_type: str = Query(None)
+):
+    """获取监管文档列表（暂时返回空数据）"""
+    return {
+        "items": [],
+        "total": 0,
+        "page": page,
+        "pageSize": page_size,
+        "totalPages": 0
+    }
+
+
+@app.get("/regulatory/documents/{document_id}", tags=["Regulatory"])
+async def get_document(document_id: str):
+    """获取单个监管文档（暂时返回空数据）"""
+    return None
+
+
+@app.get("/regulatory/submissions/{submission_id}/timeline", tags=["Regulatory"])
+async def get_submission_timeline(submission_id: str):
+    """获取申报时间线（暂时返回空数据）"""
+    return []
+
+
+@app.get("/regulatory/submissions/{submission_id}/approvals", tags=["Regulatory"])
+async def get_submission_approvals(submission_id: str):
+    """获取申报相关的批准（暂时返回空数据）"""
+    return []
+
+
+@app.get("/regulatory/submissions/{submission_id}/documents", tags=["Regulatory"])
+async def get_submission_documents(submission_id: str):
+    """获取申报相关文档（暂时返回空数据）"""
+    return []
+
+
+@app.get("/regulatory/approvals/{approval_id}/submission", tags=["Regulatory"])
+async def get_approval_submission(approval_id: str):
+    """获取批准相关的申报（暂时返回空数据）"""
+    return None
+
+
+@app.get("/regulatory/compliance/{entity_id}", tags=["Regulatory"])
+async def get_compliance(entity_id: str):
+    """获取合规记录（暂时返回空数据）"""
+    return []
+
+
+@app.get("/regulatory/crls", tags=["Regulatory"])
+async def list_crls(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
+    company_name: str = Query(None),
+    approval_status: str = Query(None),
+    letter_type: str = Query(None)
+):
+    """获取 FDA Complete Response Letters 列表"""
+    db = get_db()
+
+    conditions = ["1=1"]
+    parameters = {}
+
+    if company_name:
+        conditions.append("c.company_name CONTAINS $company_name")
+        parameters["company_name"] = company_name
+
+    if approval_status:
+        conditions.append("c.approval_status = $approval_status")
+        parameters["approval_status"] = approval_status
+
+    if letter_type:
+        conditions.append("c.letter_type = $letter_type")
+        parameters["letter_type"] = letter_type
+
+    where_clause = " AND ".join(conditions)
+
+    # Count query
+    count_query = f"""
+        MATCH (c:CompleteResponseLetter)
+        WHERE {where_clause}
+        RETURN count(c) as total
+    """
+    count_result = db.execute_query(count_query, parameters)
+    total = count_result.records[0]["total"] if count_result.records else 0
+
+    # Data query
+    data_query = f"""
+        MATCH (c:CompleteResponseLetter)
+        WHERE {where_clause}
+        RETURN c.file_name as id,
+               c.letter_type as letter_type,
+               c.company_name as company_name,
+               c.approval_status as approval_status,
+               c.letter_date as letter_date,
+               c.approver_center as approver_center,
+               c.application_number as application_number,
+               c.text_preview as text_preview
+        ORDER BY c.letter_date DESC
+        SKIP $skip
+        LIMIT $limit
+    """
+    parameters["skip"] = (page - 1) * page_size
+    parameters["limit"] = page_size
+
+    result = db.execute_query(data_query, parameters)
+    data = [dict(record) for record in result.records]
+
+    return {
+        "data": data,
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+        "total_pages": (total + page_size - 1) // page_size if total > 0 else 0
+    }
+
+
+@app.get("/regulatory/crls/{file_name}", tags=["Regulatory"])
+async def get_crl(file_name: str):
+    """获取单个 FDA Complete Response Letter 详情"""
+    db = get_db()
+
+    query = """
+        MATCH (c:CompleteResponseLetter {file_name: $file_name})
+        RETURN c.file_name as id,
+               c.letter_type as letter_type,
+               c.company_name as company_name,
+               c.company_address as company_address,
+               c.company_rep as company_rep,
+               c.approval_status as approval_status,
+               c.letter_date as letter_date,
+               c.letter_year as letter_year,
+               c.approver_name as approver_name,
+               c.approver_title as approver_title,
+               c.approver_center as approver_center,
+               c.application_number as application_number,
+               c.text_preview as text_preview,
+               c.source as source
+    """
+    result = db.execute_query(query, {"file_name": file_name})
+
+    if not result.records:
+        raise HTTPException(status_code=404, detail="CRL not found")
+
+    return dict(result.records[0])
 
 
 #===========================================================

@@ -7,27 +7,43 @@
 #===========================================================
 
 from .base import BaseProcessor, ProcessingResult, ProcessingStatus
-from .regulatory_processor import RegulatoryDocumentProcessor
-from .clinical_processor import ClinicalDataProcessor
-from .rd_processor import RDDataProcessor
-from .sc_processor import SupplyChainProcessor
-from .document_processor import GenericDocumentProcessor
-from .chembl_processor import ChEMBLProcessor
-from .uniprot_processor import UniProtProcessor
-from .kegg_processor import KEGGProcessor
-from .clinicaltrials_processor import ClinicalTrialsProcessor
+
+# Only import processors that don't have missing dependencies
+try:
+    from .chembl_processor import ChEMBLProcessor
+    _chembl_available = True
+except ImportError:
+    _chembl_available = False
+
+try:
+    from .uniprot_processor import UniProtProcessor
+    _uniprot_available = True
+except ImportError:
+    _uniprot_available = False
+
+try:
+    from .kegg_processor import KEGGProcessor
+    _kegg_available = True
+except ImportError:
+    _kegg_available = False
+
+try:
+    from .clinicaltrials_processor import ClinicalTrialsProcessor
+    _clinicaltrials_available = True
+except ImportError:
+    _clinicaltrials_available = False
 
 __all__ = [
     "BaseProcessor",
     "ProcessingResult",
     "ProcessingStatus",
-    "RegulatoryDocumentProcessor",
-    "ClinicalDataProcessor",
-    "RDDataProcessor",
-    "SupplyChainProcessor",
-    "GenericDocumentProcessor",
-    "ChEMBLProcessor",
-    "UniProtProcessor",
-    "KEGGProcessor",
-    "ClinicalTrialsProcessor",
 ]
+
+if _chembl_available:
+    __all__.append("ChEMBLProcessor")
+if _uniprot_available:
+    __all__.append("UniProtProcessor")
+if _kegg_available:
+    __all__.append("KEGGProcessor")
+if _clinicaltrials_available:
+    __all__.append("ClinicalTrialsProcessor")

@@ -112,24 +112,24 @@ class SupplyChainService:
 
     def get_active_shortages(self) -> List[dict]:
         """获取活跃的药品短缺"""
+        # 简化查询，适配我们导入的 DrugShortage 节点
         query = """
-        MATCH (ds:DrugShortage)-[:HAS_SHORTAGE_STATUS]->(ss:ShortageStatus)
-        WHERE ss.id = 'active'
-        MATCH (ds)-[:HAS_SHORTAGE_TYPE]->(st:ShortageType)
-        MATCH (ds)-[:HAS_IMPACT_LEVEL]->(il:ImpactLevel)
-        MATCH (ds)-[:HAS_AFFECTED_MANUFACTURER]->(m:Manufacturer)
-        RETURN ds.shortage_id AS shortage_id,
-               ds.drug_name AS drug_name,
-               st.name AS shortage_type,
-               ds.reason AS reason,
-               ds.start_date AS start_date,
-               ds.affected_region AS affected_region,
-               il.name AS impact_level,
-               m.name AS manufacturer
-        ORDER BY ds.start_date DESC
+        MATCH (ds:DrugShortage)
+        RETURN ds.id AS shortage_id,
+               ds.generic_name AS drug_name,
+               ds.brand_name AS brand_name,
+               ds.shortage_status AS status,
+               ds.reason_for_shortage AS reason,
+               ds.initial_posting_date AS start_date,
+               ds.update_date AS update_date,
+               ds.manufacturer AS manufacturer,
+               ds.therapeutic_categories AS therapeutic_categories,
+               ds.route AS route,
+               ds.dosage_form AS dosage_form
+        ORDER BY ds.initial_posting_date DESC
         """
         result = self.db.execute_query(query)
-        return result.records
+        return [dict(record) for record in result.records]
 
     def get_shortages_by_manufacturer(self, manufacturer_id: str) -> List[dict]:
         """获取制造商的短缺"""
