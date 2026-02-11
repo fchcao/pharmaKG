@@ -2,14 +2,15 @@ import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse } f
 import { ApiError } from '../types';
 
 // API base URL - can be configured via environment variable
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+// Use /api prefix for all API calls to separate from page routes
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 
 class ApiClient {
   private client: AxiosInstance;
 
   constructor() {
     this.client = axios.create({
-      baseURL: `${API_BASE_URL}/api/v1`,
+      baseURL: API_BASE_URL,  // Use empty base URL to rely on Vite proxy
       timeout: 30000,
       headers: {
         'Content-Type': 'application/json',

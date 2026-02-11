@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import {
-  Container,
   Row,
   Col,
   Card,
@@ -140,7 +139,7 @@ const AssaysPage: React.FC = () => {
   ];
 
   return (
-    <Container style={{ padding: '24px', maxWidth: '1400px' }}>
+    <div style={{ padding: '24px', maxWidth: '1400px' }}>
       {/* Header */}
       <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
         <Col span={24}>
@@ -369,7 +368,7 @@ const AssaysPage: React.FC = () => {
           </Col>
         )}
       </Row>
-    </Container>
+    </div>
   );
 };
 

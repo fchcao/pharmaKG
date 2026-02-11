@@ -19,7 +19,7 @@ import {
 } from 'antd';
 import {
   ReloadOutlined,
-  ServerOutlined,
+  CloudServerOutlined,
   DatabaseOutlined,
   ApiOutlined,
   ClusterOutlined,
@@ -186,7 +186,7 @@ const AdminDashboardPage: React.FC = () => {
       value: 45,
       suffix: '%',
       status: 'normal' as const,
-      icon: <ServerOutlined />,
+      icon: <CloudServerOutlined />,
     },
     {
       title: 'Memory Usage',

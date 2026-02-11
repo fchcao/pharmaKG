@@ -88,7 +88,16 @@ class Neo4jConnection:
                     records.append(record.data())
 
                 # 获取查询摘要
-                summary = result.consume().counters
+                counters = result.consume().counters
+                summary = {
+                    "nodes_created": counters.nodes_created,
+                    "nodes_deleted": counters.nodes_deleted,
+                    "relationships_created": counters.relationships_created,
+                    "relationships_deleted": counters.relationships_deleted,
+                    "properties_set": counters.properties_set,
+                    "labels_added": counters.labels_added,
+                    "labels_removed": counters.labels_removed
+                }
 
             logger.info(f"Query executed successfully. Records: {len(records)}")
 

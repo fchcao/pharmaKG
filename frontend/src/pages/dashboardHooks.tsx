@@ -349,7 +349,8 @@ export function useTimelineData(domain?: string, options?: { enabled?: boolean }
         ? `/statistics/${domain}/timeline`
         : '/statistics/timeline';
       const response = await apiClient.get(endpoint);
-      return response.data;
+      // 后端返回 { years_analyzed, timeline }，我们只需要 timeline 数组
+      return response.data.timeline || [];
     },
     enabled: options?.enabled !== false,
   });
@@ -363,7 +364,8 @@ export function useGeographicDistribution(domain: string, options?: { enabled?: 
       const response = await apiClient.get(
         `/statistics/${domain}/geographic-distribution`
       );
-      return response.data;
+      // 后端返回 { geographic_distribution, count }，我们只需要数组
+      return response.data.geographic_distribution || response.data || [];
     },
     enabled: options?.enabled !== false,
   });

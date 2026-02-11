@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
-  Container,
   Row,
   Col,
   Card,
@@ -59,22 +58,22 @@ const CompoundDetailPage: React.FC = () => {
 
   if (loadingCompound) {
     return (
-      <Container style={{ padding: '24px', textAlign: 'center' }}>
+      <div style={{ padding: '24px', textAlign: 'center' }}>
         <Spin size="large" tip="Loading compound details..." />
-      </Container>
+      </div>
     );
   }
 
   if (compoundError || !compound) {
     return (
-      <Container style={{ padding: '24px' }}>
+      <div style={{ padding: '24px' }}>
         <Alert
           message="Error"
           description={compoundError?.message || 'Compound not found'}
           type="error"
           showIcon
         />
-      </Container>
+      </div>
     );
   }
 
@@ -133,7 +132,7 @@ const CompoundDetailPage: React.FC = () => {
   ];
 
   return (
-    <Container style={{ padding: '24px', maxWidth: '1400px' }}>
+    <div style={{ padding: '24px', maxWidth: '1400px' }}>
       {/* Header */}
       <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
         <Col span={24}>
@@ -374,7 +373,7 @@ const CompoundDetailPage: React.FC = () => {
           </Card>
         </TabPane>
       </Tabs>
-    </Container>
+    </div>
   );
 };
 

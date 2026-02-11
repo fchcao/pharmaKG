@@ -30,7 +30,7 @@ import {
 import {
   SearchOutlined,
   EnvironmentOutlined,
-  BuildingOutlined,
+  BuildOutlined,
   SafetyOutlined,
   CheckCircleOutlined,
   WarningOutlined,
@@ -146,7 +146,7 @@ export const FacilitiesPage: React.FC = () => {
       key: 'name',
       render: (text: string, record: Facility) => (
         <Space>
-          <BuildingOutlined />
+          <BuildOutlined />
           <a onClick={() => handleRowClick(record)}>{text}</a>
         </Space>
       )
@@ -264,7 +264,7 @@ export const FacilitiesPage: React.FC = () => {
           <Row gutter={16} align="middle">
             <Col span={18}>
               <Space>
-                <BuildingOutlined style={{ fontSize: '24px', color: '#1890ff' }} />
+                <BuildOutlined style={{ fontSize: '24px', color: '#1890ff' }} />
                 <div>
                   <h2 style={{ margin: 0 }}>Facilities Browser</h2>
                   <p style={{ margin: 0, color: '#8c8c8c' }}>
@@ -291,7 +291,7 @@ export const FacilitiesPage: React.FC = () => {
               <Statistic
                 title="Total Facilities"
                 value={total}
-                prefix={<BuildingOutlined />}
+                prefix={<BuildOutlined />}
               />
             </Card>
           </Col>

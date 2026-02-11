@@ -12,7 +12,17 @@ export default defineConfig({
   server: {
     port: 3000,
     proxy: {
+      // All API calls go through /api prefix, which gets stripped when proxying to backend
       '/api': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, ''),
+      },
+      '/health': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+      },
+      '/overview': {
         target: 'http://localhost:8000',
         changeOrigin: true,
       },

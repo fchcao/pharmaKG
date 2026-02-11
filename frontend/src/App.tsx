@@ -9,6 +9,7 @@ import {
   AdminDashboardPage,
 } from '@/pages';
 import CrossDomainPage from '@/pages/CrossDomainPage';
+import TestApi from '@/TestApi';
 
 // R&D Domain Pages
 import {
@@ -99,6 +100,7 @@ const App: React.FC = () => {
 
             <Route path="search" element={<SearchPage />} />
             <Route path="settings" element={<SettingsPage />} />
+            <Route path="test-api" element={<TestApi />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
         </Routes>

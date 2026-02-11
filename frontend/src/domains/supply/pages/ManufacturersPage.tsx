@@ -34,7 +34,7 @@ import {
   ReloadOutlined
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
-import { useQuery, keepAliveManager } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { ColumnsType } from 'antd/es/table';
 import { GraphViewer } from '@/shared/graphs';
 import { supplyChainApi } from '../api';
@@ -56,6 +56,7 @@ interface FilterState {
  */
 export const ManufacturersPage: React.FC = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [filters, setFilters] = useState<FilterState>({
     search: '',
     country: undefined,
@@ -313,7 +314,7 @@ export const ManufacturersPage: React.FC = () => {
               <Button
                 size="small"
                 icon={<ReloadOutlined />}
-                onClick={() => keepAliveManager.invalidateQueries(['manufacturers-geo'])}
+                onClick={() => queryClient.invalidateQueries(['manufacturers-geo'])}
               >
                 Refresh
               </Button>

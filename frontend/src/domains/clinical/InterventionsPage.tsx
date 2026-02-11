@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import {
-  Container,
   Row,
   Col,
   Card,
@@ -24,8 +23,6 @@ import {
   AppstoreOutlined,
   MedicineBoxOutlined,
   ExperimentOutlined,
-  PillOutlined,
-  SyringeOutlined,
   FunctionOutlined,
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
@@ -91,9 +88,9 @@ const InterventionsPage: React.FC = () => {
 
   const getInterventionIcon = (type: string) => {
     const iconMap: Record<string, React.ReactNode> = {
-      'Drug': <PillOutlined />,
+      'Drug': <MedicineBoxOutlined />,
       'Biological': <MedicineBoxOutlined />,
-      'Procedure': <SyringeOutlined />,
+      'Procedure': <ExperimentOutlined />,
       'Genetic': <FunctionOutlined />,
       'Behavioral': <ExperimentOutlined />,
       'Device': <MedicineBoxOutlined />,
@@ -200,7 +197,7 @@ const InterventionsPage: React.FC = () => {
   ];
 
   return (
-    <Container style={{ padding: '24px', maxWidth: '1400px' }}>
+    <div style={{ padding: '24px', maxWidth: '1400px' }}>
       {/* Header */}
       <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
         <Col span={24}>
@@ -245,7 +242,7 @@ const InterventionsPage: React.FC = () => {
               value={Math.round((statistics?.totalInterventions || 0) * 0.45)}
               suffix="drugs"
               valueStyle={{ color: '#1890ff' }}
-              prefix={<PillOutlined />}
+              prefix={<MedicineBoxOutlined />}
             />
           </Card>
         </Col>
@@ -383,7 +380,7 @@ const InterventionsPage: React.FC = () => {
           onInterventionClick={(intervention) => navigate(`/clinical/interventions/${intervention.id}`)}
         />
       )}
-    </Container>
+    </div>
   );
 };
 
@@ -395,9 +392,9 @@ const GridInterventionsView: React.FC<{
 }> = ({ interventions, loading, onInterventionClick }) => {
   const getInterventionIcon = (type: string) => {
     const iconMap: Record<string, React.ReactNode> = {
-      'Drug': <PillOutlined />,
+      'Drug': <MedicineBoxOutlined />,
       'Biological': <MedicineBoxOutlined />,
-      'Procedure': <SyringeOutlined />,
+      'Procedure': <ExperimentOutlined />,
       'Genetic': <FunctionOutlined />,
       'Behavioral': <ExperimentOutlined />,
       'Device': <MedicineBoxOutlined />,

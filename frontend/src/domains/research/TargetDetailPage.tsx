@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
-  Container,
   Row,
   Col,
   Card,
@@ -59,22 +58,22 @@ const TargetDetailPage: React.FC = () => {
 
   if (loadingTarget) {
     return (
-      <Container style={{ padding: '24px', textAlign: 'center' }}>
+      <div style={{ padding: '24px', textAlign: 'center' }}>
         <Spin size="large" tip="Loading target details..." />
-      </Container>
+      </div>
     );
   }
 
   if (targetError || !target) {
     return (
-      <Container style={{ padding: '24px' }}>
+      <div style={{ padding: '24px' }}>
         <Alert
           message="Error"
           description={targetError?.message || 'Target not found'}
           type="error"
           showIcon
         />
-      </Container>
+      </div>
     );
   }
 
@@ -136,7 +135,7 @@ const TargetDetailPage: React.FC = () => {
   ];
 
   return (
-    <Container style={{ padding: '24px', maxWidth: '1400px' }}>
+    <div style={{ padding: '24px', maxWidth: '1400px' }}>
       {/* Header */}
       <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
         <Col span={24}>
@@ -426,7 +425,7 @@ const TargetDetailPage: React.FC = () => {
           </Row>
         </TabPane>
       </Tabs>
-    </Container>
+    </div>
   );
 };
 

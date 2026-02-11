@@ -1,7 +1,7 @@
 #===========================================================
 # 制药行业知识图谱 - 供应链+监管领域查询服务
 # Pharmaceutical Knowledge Graph - Supply Chain & Regulatory Query Service
-//===========================================================
+#===========================================================
 # 版本: v1.0
 # 创建日期: 2025-02-06
 #===========================================================
@@ -9,7 +9,7 @@
 from typing import List, Optional, Any
 import logging
 
-from .database import get_db
+from ..database import get_db
 
 logger = logging.getLogger(__name__)
 

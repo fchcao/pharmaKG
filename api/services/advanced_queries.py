@@ -9,7 +9,7 @@
 
 from typing import List, Dict, Optional, Any
 from datetime import datetime
-from .database import Neo4jConnection
+from ..database import Neo4jConnection
 
 
 class AdvancedQueryService:

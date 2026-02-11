@@ -9,7 +9,7 @@
 from typing import List, Optional, Any
 import logging
 
-from .database import get_db
+from ..database import get_db
 
 logger = logging.getLogger(__name__)
 

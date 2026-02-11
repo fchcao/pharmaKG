@@ -9,7 +9,7 @@
 
 from typing import List, Dict, Optional, Any
 from datetime import datetime, timedelta
-from .database import Neo4jConnection
+from ..database import Neo4jConnection
 
 
 class AggregateQueryService:
@@ -43,7 +43,7 @@ class AggregateQueryService:
         """
 
         result = self.db.execute_query(query)
-        entity_stats = result.records[0] if result.success and result.records else {}
+        entity_stats = result.records[0] if result.records else {}
 
         # 关系统计
         rel_query = """
@@ -59,7 +59,7 @@ class AggregateQueryService:
         """
 
         rel_result = self.db.execute_query(rel_query)
-        rel_stats = rel_result.records[0] if rel_result.success and rel_result.records else {}
+        rel_stats = rel_result.records[0] if rel_result.records else {}
 
         return {
             "entities": entity_stats.get("entity_stats", {}),
@@ -145,7 +145,7 @@ class AggregateQueryService:
         """
 
         result = self.db.execute_query(query)
-        if result.success and result.records:
+        if result.records:
             return result.records[0]
         return {}
 
@@ -187,7 +187,7 @@ class AggregateQueryService:
         """
 
         result = self.db.execute_query(query, params)
-        return result.records if result.success else []
+        return result.records if True else []
 
     def get_approval_rate_timeline(
         self,
@@ -221,7 +221,7 @@ class AggregateQueryService:
         """
 
         result = self.db.execute_query(query, {"years": f"P{years}Y"})
-        return result.records if result.success else []
+        return result.records if True else []
 
     def get_clinical_trial_timeline(
         self,
@@ -257,7 +257,7 @@ class AggregateQueryService:
         """
 
         result = self.db.execute_query(query, params)
-        return result.records if result.success else []
+        return result.records if True else []
 
     def get_shortage_timeline(
         self,
@@ -293,7 +293,7 @@ class AggregateQueryService:
         """
 
         result = self.db.execute_query(query, params)
-        return result.records if result.success else []
+        return result.records if True else []
 
     #===========================================================
     # 三、地理分布分析 (Geographic Distribution Analysis)
@@ -322,7 +322,7 @@ class AggregateQueryService:
         """
 
         result = self.db.execute_query(query, {"top_n": top_n})
-        return result.records if result.success else []
+        return result.records if True else []
 
     def get_manufacturer_geographic_distribution(
         self,
@@ -347,7 +347,7 @@ class AggregateQueryService:
         """
 
         result = self.db.execute_query(query, {"top_n": top_n})
-        return result.records if result.success else []
+        return result.records if True else []
 
     def get_regional_trial_statistics(
         self,
@@ -378,7 +378,7 @@ class AggregateQueryService:
         """
 
         result = self.db.execute_query(query, params)
-        return result.records if result.success else []
+        return result.records if True else []
 
     #===========================================================
     # 四、成功率分析 (Success Rate Analysis)
@@ -424,7 +424,7 @@ class AggregateQueryService:
         """
 
         result = self.db.execute_query(query, {"min_count": min_trial_count})
-        return result.records if result.success else []
+        return result.records if True else []
 
     def get_approval_rate_by_therapeutic_area(
         self,
@@ -458,7 +458,7 @@ class AggregateQueryService:
         """
 
         result = self.db.execute_query(query, {"min_count": min_submissions})
-        return result.records if result.success else []
+        return result.records if True else []
 
     def get_target_based_success_rate(
         self,
@@ -496,7 +496,7 @@ class AggregateQueryService:
         """
 
         result = self.db.execute_query(query, {"min_count": min_compounds})
-        return result.records if result.success else []
+        return result.records if True else []
 
     #===========================================================
     # 五、热点分析 (Hotspot Analysis)
@@ -541,7 +541,7 @@ class AggregateQueryService:
         """
 
         result = self.db.execute_query(query, {"top_n": top_n})
-        if result.success and result.records:
+        if result.records:
             return result.records[0]
         return {}
 
@@ -587,7 +587,7 @@ class AggregateQueryService:
             "years": f"P{years}Y",
             "min_growth": min_growth
         })
-        return result.records if result.success else []
+        return result.records if True else []
 
     #===========================================================
     # 六、质量评估分析 (Quality Assessment Analysis)
@@ -628,7 +628,7 @@ class AggregateQueryService:
         """
 
         result = self.db.execute_query(query)
-        return result.records if result.success else []
+        return result.records if True else []
 
     def get_drug_shortage_analysis(self) -> Dict[str, Any]:
         """
@@ -657,7 +657,7 @@ class AggregateQueryService:
         """
 
         result = self.db.execute_query(query)
-        if result.success and result.records:
+        if result.records:
             return result.records[0]
         return {}
 
@@ -702,7 +702,7 @@ class AggregateQueryService:
         """
 
         result = self.db.execute_query(query, params)
-        return result.records if result.success else []
+        return result.records if True else []
 
     def get_pathway_coverage_analysis(self) -> List[dict]:
         """
@@ -722,7 +722,7 @@ class AggregateQueryService:
         """
 
         result = self.db.execute_query(query)
-        return result.records if result.success else []
+        return result.records if True else []
 
     #===========================================================
     # 八、辅助方法
