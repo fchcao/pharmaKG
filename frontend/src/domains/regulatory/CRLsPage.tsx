@@ -37,6 +37,8 @@ import {
 } from '@ant-design/icons';
 import type { ColumnsType, TablePaginationConfig } from 'antd/es/table';
 import dayjs from 'dayjs';
+import { useQuery } from '@tanstack/react-query';
+import { apiClient } from '@/shared/api/client';
 import { useCRLs, useCRL } from './hooks';
 import { CRL, CRLFilters, ApiError, PaginatedResponse } from './types';
 import { LoadingSpinner, EmptyState } from '@/shared/components';
@@ -66,6 +68,15 @@ const CRLsPage: React.FC = () => {
     enabled: true,
   });
 
+  // Fetch CRL statistics separately for accurate counts
+  const { data: crlStats } = useQuery({
+    queryKey: ['crls-statistics'],
+    queryFn: async () => {
+      return await apiClient.get('/regulatory/crls/statistics');
+    },
+    enabled: true,
+  });
+
   const {
     data: selectedCRL,
     isLoading: crlLoading
@@ -75,6 +86,10 @@ const CRLsPage: React.FC = () => {
 
   const crls = crlsData?.items || [];
   const total = crlsData?.total || 0;
+
+  // Use API statistics for accurate counts
+  const approvedCount = crlStats?.approved || 0;
+  const unapprovedCount = crlStats?.unapproved || 0;
 
   // Handle filter changes
   const handleFilterChange = useCallback((key: string, value: unknown) => {
@@ -225,10 +240,6 @@ const CRLsPage: React.FC = () => {
       ),
     },
   ];
-
-  // Calculate statistics
-  const approvedCount = crls.filter(c => c.approval_status === 'Approved').length;
-  const unapprovedCount = crls.filter(c => c.approval_status === 'Unapproved').length;
 
   if (crlsError) {
     return (

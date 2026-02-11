@@ -2017,6 +2017,31 @@ async def get_compliance(entity_id: str):
     return []
 
 
+@app.get("/regulatory/crls/statistics", tags=["Regulatory"])
+async def get_crls_statistics():
+    """获取 FDA Complete Response Letters 统计数据"""
+    db = get_db()
+
+    # 总数统计
+    query = """
+        MATCH (c:CompleteResponseLetter)
+        WITH count(c) as total
+        OPTIONAL MATCH (c:CompleteResponseLetter {approval_status: 'Approved'})
+        WITH total, count(c) as approved
+        OPTIONAL MATCH (c:CompleteResponseLetter {approval_status: 'Unapproved'})
+        WITH total, approved, count(c) as unapproved
+        RETURN total, approved, unapproved
+    """
+    result = db.execute_query(query)
+    record = result.records[0] if result.records else {}
+
+    return {
+        "total": record.get("total", 0),
+        "approved": record.get("approved", 0),
+        "unapproved": record.get("unapproved", 0)
+    }
+
+
 @app.get("/regulatory/crls", tags=["Regulatory"])
 async def list_crls(
     page: int = Query(1, ge=1),
@@ -2058,14 +2083,15 @@ async def list_crls(
     data_query = f"""
         MATCH (c:CompleteResponseLetter)
         WHERE {where_clause}
-        RETURN c.file_name as id,
+        RETURN c.crl_id as id,
                c.letter_type as letter_type,
                c.company_name as company_name,
                c.approval_status as approval_status,
                c.letter_date as letter_date,
                c.approver_center as approver_center,
                c.application_number as application_number,
-               c.text_preview as text_preview
+               c.text_preview as text_preview,
+               c.file_name as file_name
         ORDER BY c.letter_date DESC
         SKIP $skip
         LIMIT $limit
@@ -2085,14 +2111,14 @@ async def list_crls(
     }
 
 
-@app.get("/regulatory/crls/{file_name}", tags=["Regulatory"])
-async def get_crl(file_name: str):
+@app.get("/regulatory/crls/{crl_id}", tags=["Regulatory"])
+async def get_crl(crl_id: str):
     """获取单个 FDA Complete Response Letter 详情"""
     db = get_db()
 
     query = """
-        MATCH (c:CompleteResponseLetter {file_name: $file_name})
-        RETURN c.file_name as id,
+        MATCH (c:CompleteResponseLetter {crl_id: $crl_id})
+        RETURN c.crl_id as id,
                c.letter_type as letter_type,
                c.company_name as company_name,
                c.company_address as company_address,
@@ -2105,9 +2131,10 @@ async def get_crl(file_name: str):
                c.approver_center as approver_center,
                c.application_number as application_number,
                c.text_preview as text_preview,
+               c.file_name as file_name,
                c.source as source
     """
-    result = db.execute_query(query, {"file_name": file_name})
+    result = db.execute_query(query, {"crl_id": crl_id})
 
     if not result.records:
         raise HTTPException(status_code=404, detail="CRL not found")
