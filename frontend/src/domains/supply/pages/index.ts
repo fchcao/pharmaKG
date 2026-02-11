@@ -3,6 +3,7 @@
  * Export all supply chain domain pages
  */
 
+export { default as SupplyIndexPage } from './SupplyIndexPage';
 export { ManufacturersPage } from './ManufacturersPage';
 export { ManufacturerDetailPage } from './ManufacturerDetailPage';
 export { ShortageMonitorPage } from './ShortageMonitorPage';

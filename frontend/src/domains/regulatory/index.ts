@@ -1,6 +1,7 @@
 // Regulatory Domain Exports
 export * from './types';
 export * from './hooks';
+export { default as RegulatoryIndexPage } from './RegulatoryIndexPage';
 export { default as RegulatoryDashboardPage } from './RegulatoryDashboardPage';
 export { default as SubmissionsPage } from './SubmissionsPage';
 export { default as SubmissionDetailPage } from './SubmissionDetailPage';

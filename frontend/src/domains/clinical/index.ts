@@ -1,4 +1,5 @@
 // Clinical Domain Pages
+export { default as ClinicalIndexPage } from './ClinicalIndexPage';
 export { default as TrialsPage } from './TrialsPage';
 export { default as TrialDetailPage } from './TrialDetailPage';
 export { default as ConditionsPage } from './ConditionsPage';

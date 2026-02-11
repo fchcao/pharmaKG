@@ -13,6 +13,7 @@ import TestApi from '@/TestApi';
 
 // R&D Domain Pages
 import {
+  ResearchIndexPage,
   CompoundsPage,
   CompoundDetailPage,
   TargetsPage,
@@ -23,6 +24,7 @@ import {
 
 // Clinical Domain Pages
 import {
+  ClinicalIndexPage,
   TrialsPage,
   TrialDetailPage,
   ConditionsPage,
@@ -31,6 +33,7 @@ import {
 
 // Supply Chain Domain Pages
 import {
+  SupplyIndexPage,
   ManufacturersPage,
   ManufacturerDetailPage,
   ShortageMonitorPage,
@@ -39,6 +42,7 @@ import {
 
 // Regulatory Domain Pages
 import {
+  RegulatoryIndexPage,
   RegulatoryDashboardPage,
   SubmissionsPage,
   SubmissionDetailPage,
@@ -63,37 +67,37 @@ const App: React.FC = () => {
             <Route path="dashboard/admin" element={<AdminDashboardPage />} />
 
             {/* R&D Domain Routes */}
-            <Route path="rd" element={<CompoundsPage />} />
-            <Route path="rd/compounds" element={<CompoundsPage />} />
+            <Route path="rd" element={<ResearchIndexPage />} />
+            <Route path="rd/compounds" element={<ResearchIndexPage />} />
             <Route path="rd/compounds/:id" element={<CompoundDetailPage />} />
-            <Route path="rd/targets" element={<TargetsPage />} />
+            <Route path="rd/targets" element={<ResearchIndexPage />} />
             <Route path="rd/targets/:id" element={<TargetDetailPage />} />
-            <Route path="rd/assays" element={<AssaysPage />} />
-            <Route path="rd/pathways" element={<PathwaysPage />} />
+            <Route path="rd/assays" element={<ResearchIndexPage />} />
+            <Route path="rd/pathways" element={<ResearchIndexPage />} />
 
             {/* Clinical Domain Routes */}
-            <Route path="clinical" element={<TrialsPage />} />
-            <Route path="clinical/trials" element={<TrialsPage />} />
+            <Route path="clinical" element={<ClinicalIndexPage />} />
+            <Route path="clinical/trials" element={<ClinicalIndexPage />} />
             <Route path="clinical/trials/:id" element={<TrialDetailPage />} />
-            <Route path="clinical/conditions" element={<ConditionsPage />} />
+            <Route path="clinical/conditions" element={<ClinicalIndexPage />} />
             <Route path="clinical/conditions/:id" element={<div>Condition Detail Page - Coming Soon</div>} />
-            <Route path="clinical/interventions" element={<InterventionsPage />} />
+            <Route path="clinical/interventions" element={<ClinicalIndexPage />} />
             <Route path="clinical/interventions/:id" element={<div>Intervention Detail Page - Coming Soon</div>} />
 
             {/* Supply Chain Domain Routes */}
-            <Route path="supply" element={<ManufacturersPage />} />
-            <Route path="supply/manufacturers" element={<ManufacturersPage />} />
+            <Route path="supply" element={<SupplyIndexPage />} />
+            <Route path="supply/manufacturers" element={<SupplyIndexPage />} />
             <Route path="supply/manufacturers/:id" element={<ManufacturerDetailPage />} />
-            <Route path="supply/shortages" element={<ShortageMonitorPage />} />
-            <Route path="supply/facilities" element={<FacilitiesPage />} />
+            <Route path="supply/shortages" element={<SupplyIndexPage />} />
+            <Route path="supply/facilities" element={<SupplyIndexPage />} />
 
             {/* Regulatory Domain Routes */}
-            <Route path="regulatory" element={<RegulatoryDashboardPage />} />
-            <Route path="regulatory/submissions" element={<SubmissionsPage />} />
+            <Route path="regulatory" element={<RegulatoryIndexPage />} />
+            <Route path="regulatory/submissions" element={<RegulatoryIndexPage />} />
             <Route path="regulatory/submissions/:id" element={<SubmissionDetailPage />} />
-            <Route path="regulatory/approvals" element={<ApprovalsPage />} />
+            <Route path="regulatory/approvals" element={<RegulatoryIndexPage />} />
             <Route path="regulatory/approvals/:id" element={<ApprovalDetailPage />} />
-            <Route path="regulatory/documents" element={<DocumentsPage />} />
+            <Route path="regulatory/documents" element={<RegulatoryIndexPage />} />
 
             {/* Cross-Domain Query Routes */}
             <Route path="cross-domain" element={<CrossDomainPage />} />
