@@ -7,9 +7,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **PharmaKG** is a Pharmaceutical Knowledge Graph covering the entire pharmaceutical industry workflow, integrating four core business domains: Research & Development (R&D), Clinical Trials, Supply Chain Management, and Regulatory Compliance.
 
 - **Version**: v1.0
-- **Status**: Technical Implementation Phase (Phase 1)
-- **Language**: Python 3.8+
-- **Primary Technologies**: Neo4j 5.x, FastAPI, Turtle/OWL/SHACL ontologies
+- **Status**: Technical Implementation Phase (Phase 1) - Frontend & Backend Integration Complete
+- **Backend Language**: Python 3.8+
+- **Frontend Language**: TypeScript + React
+- **Primary Technologies**: Neo4j 5.x, FastAPI, React, Vite, Ant Design, Turtle/OWL/SHACL ontologies
 
 ## Development Commands
 
@@ -32,9 +33,9 @@ docker-compose up -d neo4j
 
 ### API Service
 ```bash
-# Start FastAPI server
-cd api
-python3 -m uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+# Start FastAPI server (from project root)
+conda activate pharmakg-api
+python3 -m uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload
 
 # Access API documentation
 # http://localhost:8000/docs (Swagger UI)
@@ -42,6 +43,29 @@ python3 -m uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 
 # Health check
 curl http://localhost:8000/health
+```
+
+### Frontend Service
+```bash
+# Start Vite dev server
+cd frontend
+npm install  # First time only
+npm run dev
+
+# Frontend runs on http://localhost:3000
+# API calls are proxied to backend via /api prefix
+
+# Build for production
+npm run build
+
+# Preview production build
+npm run preview
+```
+
+### Quick Test Data Import
+```bash
+# Import small test dataset (100 compounds, 50 targets)
+python3 scripts/quick_test_data.py
 ```
 
 ### ETL Pipelines
@@ -157,14 +181,19 @@ Code is organized by business domains, each with dedicated services:
 4. **Context-dependent Relations**: Relationships carry rich properties (activity values, confidence scores, temporal validity)
 
 ### API Endpoint Structure
-The API is organized under `/api/v1/` with domain-specific prefixes:
-- `/api/v1/rd/*` - Research & Development endpoints (compounds, targets, pathways)
-- `/api/v1/clinical/*` - Clinical trial endpoints (trials, subjects, outcomes)
-- `/api/v1/supply/*` - Supply chain endpoints (manufacturers, shortages)
-- `/api/v1/regulatory/*` - Regulatory endpoints (submissions, approvals)
-- `/api/v1/cross/*` - Cross-domain query endpoints
-- `/api/v1/advanced/*` - Advanced multi-hop and aggregation queries
+The API uses flat path structure without `/api/v1/` prefix in backend routes:
+- `/rd/*` - Research & Development endpoints (compounds, targets, pathways, assays)
+- `/clinical/*` - Clinical trial endpoints (trials, subjects, outcomes)
+- `/supply/*` - Supply chain endpoints (manufacturers, shortages, facilities)
+- `/sc/*` - Supply chain alternate path
+- `/regulatory/*` - Regulatory endpoints (submissions, approvals, inspections)
+- `/cross/*` - Cross-domain query endpoints
+- `/advanced/*` - Advanced multi-hop and aggregation queries
+- `/statistics/*` - Statistical aggregation endpoints
 - `/health` - Health check endpoint
+- `/overview` - Overview statistics
+
+**Frontend Integration**: Frontend uses `/api` prefix for all API calls (e.g., `/api/rd/compounds`), which is proxied to backend via Vite dev server configuration.
 
 ### Error Handling
 The API uses a global exception handler that returns structured error responses:
@@ -180,16 +209,38 @@ The API uses a global exception handler that returns structured error responses:
 
 ```
 api/                          # FastAPI REST API service
-  ├── main.py                 # Main application (888 lines)
+  ├── main.py                 # Main application (1500+ lines)
   ├── config.py               # API configuration (Pydantic Settings)
   ├── database.py             # Neo4j connection management
   ├── models.py               # Pydantic data models
   └── services/               # Domain services
+      ├── __init__.py         # Service module initialization
       ├── research_domain.py  # R&D domain service
       ├── clinical_domain.py  # Clinical domain service
       ├── supply_regulatory.py # Supply chain & regulatory
       ├── advanced_queries.py # Multi-hop queries
-      └── aggregate_queries.py # Statistical queries
+      ├── aggregate_queries.py # Statistical queries
+      └── search_service.py   # Full-text search service
+
+frontend/                     # React + Vite + TypeScript frontend
+  ├── src/
+  │   ├── App.tsx             # Main application with routes
+  │   ├── main.tsx            # Application entry point
+  │   ├── pages/              # Page components (Dashboard, Admin, etc.)
+  │   ├── domains/            # Domain-specific pages
+  │   │   ├── research/       # R&D domain pages (Compounds, Targets, etc.)
+  │   │   ├── clinical/       # Clinical domain pages (Trials, etc.)
+  │   │   ├── supply/         # Supply chain pages (Manufacturers, etc.)
+  │   │   └── regulatory/     # Regulatory pages (Submissions, etc.)
+  │   ├── layouts/            # Layout components (MainLayout, etc.)
+  │   ├── shared/             # Shared components and utilities
+  │   │   ├── api/            # API client (uses /api prefix)
+  │   │   ├── components/     # Reusable components
+  │   │   └── types/          # TypeScript type definitions
+  │   └── TestApi.tsx         # API connection test component
+  ├── vite.config.ts          # Vite configuration with proxy setup
+  ├── package.json            # NPM dependencies
+  └── .env.development        # Development environment variables
 
 processors/                   # NEW: Data collection processors (Phase 1-5)
   ├── base.py                # Base processor class
@@ -244,10 +295,11 @@ ontologies/                   # Ontology definitions (Turtle format)
 scripts/                      # Utility scripts
   ├── check_project.py        # Python validation script
   ├── check_project.sh        # Bash validation script
-  ├── import_chembl_to_neo4j.py # NEW: Neo4j import for ChEMBL
-  ├── run_full_pipeline.py   # NEW: Pipeline orchestration
-  ├── extract_uniprot_from_chembl.py # NEW: UniProt ID extraction
-  └── test_*.py              # NEW: Processor test scripts
+  ├── quick_test_data.py      # Quick test data import (100 compounds, 50 targets)
+  ├── import_chembl_to_neo4j.py # Neo4j import for ChEMBL
+  ├── run_full_pipeline.py   # Pipeline orchestration
+  ├── extract_uniprot_from_chembl.py # UniProt ID extraction
+  └── test_*.py              # Processor test scripts
 
 docs/                         # Documentation
   ├── schema/                 # Schema design documents
@@ -298,11 +350,21 @@ tests/                        # Test suite (if implemented)
 
 - **Ontology Standards**: Uses W3C standards (Turtle, OWL, SHACL) for ontology definitions
 - **Connection Management**: Neo4j connections managed centrally via `Neo4jConnection` class in `api/database.py`
+  - Use `db.execute_query()` for queries, NOT `run_query()`
+  - Access results via `result.records` array
 - **Quality Validation**: ETL includes built-in data quality validation in `etl/quality/`
 - **AutoDL Deployment**: Special deployment script for AutoDL cloud service (direct installation, no Docker required)
 - **Validation**: Automated validation scripts check project completeness (139 items in CHECKLIST.md)
 - **Global Error Handling**: FastAPI includes a global exception handler in `api/main.py` that standardizes error responses across all endpoints
 - **Schema Initialization**: Neo4j constraints and indexes should be initialized after first deployment (see deployment commands above)
+- **Frontend API Integration**:
+  - Frontend uses `/api` prefix for all API calls
+  - Vite proxy configuration in `frontend/vite.config.ts` routes `/api/*` to backend
+  - SPA routing is handled by React Router - page routes (`/rd`, `/clinical`, etc.) are NOT proxied
+  - Environment variable `VITE_API_BASE_URL=/api` must be set in `.env.development`
+- **Service Module Imports**:
+  - Always use relative imports from parent package: `from ..database import get_db`
+  - `api/services/__init__.py` must exist for proper module resolution
 
 ## Data Sources
 
@@ -331,22 +393,26 @@ tests/                        # Test suite (if implemented)
 
 ### Completed
 - Three rounds of domain interviews (56 questions, 71 decisions)
-- Technology stack selection (Neo4j, Turtle+OWL+SHACL)
+- Technology stack selection (Neo4j, Turtle+OWL+SHACL, React+Vite)
 - Deployment configuration for Docker and AutoDL
 - Core API structure with domain services
 - ETL pipeline framework
 - Graph analytics and ML analytics modules
 - Ontology definitions and schema design documentation
-- **NEW**: Phase 1-5 data collection processors (17 processors implemented)
-- **NEW**: Identifier mapping and cross-domain inference tools
-- **NEW**: ChEMBL 36 integration tested and verified
-- **NEW**: Neo4j knowledge graph with 1.89M+ nodes
+- Phase 1-5 data collection processors (17 processors implemented)
+- Identifier mapping and cross-domain inference tools
+- ChEMBL 36 integration tested and verified
+- Neo4j knowledge graph with 1.89M+ nodes
+- **NEW**: React frontend with domain-specific pages (R&D, Clinical, Supply, Regulatory)
+- **NEW**: Frontend-backend API integration complete
+- **NEW**: SPA routing configured (no 404 on page refresh)
+- **NEW**: Dashboard pages with statistics and visualizations
 
 ### In Progress (Phase 1)
 - R&D core entity modeling
 - Clinical core entity modeling
 - Supply chain & regulatory core entity modeling
-- Full-scale data collection execution (test dataset completed)
+- Full-scale data collection execution (test dataset: 100 compounds, 50 targets imported)
 
 ### Planned (Phase 2-3)
 - Uncertainty data representation
@@ -360,10 +426,18 @@ tests/                        # Test suite (if implemented)
 
 ## Key Files
 
-### Core Application
-- **`api/main.py`**: Main FastAPI application with all REST endpoints
-- **`api/database.py`**: Neo4j connection management
+### Backend Core Application
+- **`api/main.py`**: Main FastAPI application (1500+ lines) with all REST endpoints
+- **`api/database.py`**: Neo4j connection management via `Neo4jConnection` class
+- **`api/services/__init__.py`**: Service module initialization (required for imports)
 - **`etl/cli.py`**: Command-line interface for ETL operations
+
+### Frontend Core Application
+- **`frontend/src/App.tsx`**: Main React application with route definitions
+- **`frontend/vite.config.ts`**: Vite configuration with API proxy setup
+- **`frontend/src/shared/api/client.ts`**: Axios-based API client (uses `/api` prefix)
+- **`frontend/src/pages/dashboardHooks.tsx`**: React Query hooks for dashboard data
+- **`frontend/.env.development`**: Frontend environment variables (`VITE_API_BASE_URL=/api`)
 
 ### Data Collection (NEW)
 - **`processors/chembl_processor.py`**: ChEMBL 36 SQLite processor (56KB, 1,200+ lines)
@@ -390,3 +464,40 @@ tests/                        # Test suite (if implemented)
 ### Analytics
 - **`graph_analytics/algorithms.py`**: Graph algorithms (centrality, community detection, path finding)
 - **`ml_analytics/reasoning.py`**: ML-based reasoning engine
+
+---
+
+## Recent Fixes & Improvements (2025-02)
+
+### Backend API Fixes
+- **Fixed relative imports**: Changed `from .database import` to `from ..database import` in all service modules
+- **Fixed QueryResult access**: Removed references to non-existent `result.success` attribute, use `result.records` directly
+- **Fixed method calls**: Changed `db.run_query()` to `db.execute_query()` throughout codebase
+- **Added missing endpoints**:
+  - `/statistics/timeline` - General timeline statistics
+  - `/statistics/domain-breakdown` - Domain breakdown with real data
+  - `/clinical/statistics` - Clinical domain statistics
+  - `/clinical/trials` - Clinical trials list with pagination
+  - `/supply/manufacturers` - Supply chain manufacturers list
+  - `/supply/statistics` - Supply chain statistics
+  - `/regulatory/statistics` - Regulatory domain statistics
+  - `/regulatory/submissions` - Regulatory submissions list
+  - `/regulatory/approvals` - Regulatory approvals list
+
+### Frontend Integration Fixes
+- **API prefix configuration**: Set `VITE_API_BASE_URL=/api` in `.env.development`
+- **Vite proxy setup**: Configure proxy to route `/api/*` to backend port 8000
+- **SPA routing**: Page routes (`/rd`, `/clinical`, etc.) handled by React Router, not proxied
+- **Fixed component imports**: Replaced invalid Ant Design icons with valid alternatives
+- **Fixed hooks**: Updated `useTimelineData` to return `response.data.timeline` instead of full response object
+- **Removed invalid components**: Removed `Container` component (not available in Ant Design v5)
+
+### Known Issues (Non-Critical)
+- Ant Design deprecation warnings: `Tabs.TabPane`, `Card.bordered`, `Modal.visible`
+- React Router future flag warnings (v7 compatibility)
+- These warnings do not affect functionality and will be addressed in future updates
+
+### Test Data
+- Quick test data import: `scripts/quick_test_data.py`
+- Imports 100 compounds and 50 targets from ChEMBL
+- Uses `chembl_id` as primary identifier for consistent frontend-backend mapping
