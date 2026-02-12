@@ -191,6 +191,27 @@ cypher-shell -a bolt://localhost:7687 -u neo4j -p pharmaKG2024! < deploy/scripts
 curl -X POST http://localhost:8000/api/v1/admin/init-schema
 ```
 
+### Git Push Troubleshooting
+```bash
+# Problem: "Your branch is ahead of 'origin/main' by N commits" after push
+# Cause: Using URL directly for push bypasses remote tracking branch update
+# Solution: Update local tracking branch manually
+
+# Enable network acceleration on AutoDL (if needed)
+source /etc/network_turbo
+
+# Push with token (when HTTPS auth fails)
+TOKEN="your_github_token"
+git push https://${TOKEN}@github.com/fchcao/pharmaKG.git main
+
+# If local shows "ahead" but remote is actually updated:
+git update-ref refs/remotes/origin/main <commit-sha>
+# Example: git update-ref refs/remotes/origin/main 4c3f293
+
+# Verify sync status
+git status
+```
+
 ## Architecture Overview
 
 ### Layered Architecture
