@@ -115,3 +115,14 @@ Thumbs.db
 dist/
 build/
 *.tgz
+
+# Security: Never commit credentials
+*.token
+*.credentials
+*.secret
+.env
+.env.*
+*.pem
+*.key
+credentials/
+secrets/
