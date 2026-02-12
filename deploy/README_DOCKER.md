@@ -99,10 +99,10 @@ cd pj-pharmaKG
 
 ```bash
 # 复制生产环境配置
-cp deployment/.env.production deployment/.env
+cp deploy/docker/.env.production deploy/docker/.env
 
 # 编辑配置文件，修改必要参数
-nano deployment/.env
+nano deploy/docker/.env
 ```
 
 **重要配置项：**
@@ -124,12 +124,12 @@ FDA_API_KEY=your_key_here
 
 ```bash
 # 创建 SSL 目录
-mkdir -p deployment/ssl
+mkdir -p deploy/docker/ssl
 
 # 方式1: 使用自签名证书（仅用于测试）
 openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
-  -keyout deployment/ssl/key.pem \
-  -out deployment/ssl/cert.pem
+  -keyout deploy/docker/ssl/key.pem \
+  -out deploy/docker/ssl/cert.pem
 
 # 方式2: 使用 Let's Encrypt（推荐用于生产）
 # certbot certonly --standalone -d api.pharmakg.com
@@ -162,7 +162,7 @@ curl http://localhost:8000/docs
 
 ### 环境变量配置
 
-主配置文件：`deployment/.env.production`
+主配置文件：`deploy/docker/.env.production`
 
 | 配置项 | 说明 | 默认值 |
 |--------|------|--------|
@@ -179,7 +179,7 @@ curl http://localhost:8000/docs
 
 ### Nginx 配置
 
-配置文件：`deployment/nginx.conf`
+配置文件：`deploy/docker/nginx.conf`
 
 **主要功能：**
 - 反向代理到 FastAPI 服务
@@ -200,7 +200,7 @@ limit_req_zone $binary_remote_addr zone=api_limit:10m rate=100r/s;
 
 ### Docker Compose 配置
 
-配置文件：`deployment/docker-compose.yml`
+配置文件：`deploy/docker/docker-compose.yml`
 
 **资源配置：**
 
@@ -280,7 +280,7 @@ docker-compose up -d --scale api=3
 - 系统资源使用
 - 自定义业务指标
 
-配置文件：`deployment/prometheus.yml`
+配置文件：`deploy/docker/prometheus.yml`
 
 ### Grafana 可视化
 
@@ -325,7 +325,7 @@ docker-compose logs > logs_$(date +%Y%m%d).log
 0 2 * * * /path/to/deploy.sh backup
 ```
 
-备份位置：`deployment/backups/`
+备份位置：`deploy/docker/backups/`
 
 ### 数据恢复
 
@@ -389,7 +389,7 @@ docker-compose exec redis redis-cli INFO
 
 ```bash
 # 检查证书有效期
-openssl x509 -in deployment/ssl/cert.pem -text -noout
+openssl x509 -in deploy/docker/ssl/cert.pem -text -noout
 
 # 测试 SSL 配置
 docker-compose exec nginx nginx -t
@@ -416,7 +416,7 @@ docker-compose exec neo4j cat logs/debug.log
 
 ```bash
 # 修改所有默认密码
-nano deployment/.env.production
+nano deploy/docker/.env.production
 
 # 配置防火墙
 ufw allow 80/tcp
@@ -499,7 +499,7 @@ groups:
 ## 目录结构
 
 ```
-deployment/
+deploy/docker/
 ├── docker-compose.yml      # Docker Compose 配置
 ├── Dockerfile              # API 服务 Docker 镜像
 ├── nginx.conf              # Nginx 配置文件

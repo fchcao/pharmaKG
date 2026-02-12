@@ -154,7 +154,7 @@ deploy/docker/docker-compose.yml # Docker配置
 
 ### 文档
 ```
-FRONTEND_STARTUP_GUIDE.md       # 前端启动指南
+docs/FRONTEND_STARTUP_GUIDE.md    # 前端启动指南
 CLAUDE.md                       # 项目说明
 docs/SEARCH_API_DOCUMENTATION.md # 搜索API文档
 ```

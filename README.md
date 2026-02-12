@@ -1,7 +1,7 @@
 # 制药行业知识图谱 (PharmaKG)
 
 **项目版本**: v1.1
-**最后更新**: 2026-02-11
+**最后更新**: 2026-02-12
 **项目状态**: 技术实施阶段 (Phase 1 - 前后端集成完成)
 
 ---
@@ -151,15 +151,22 @@ pj-pharmaKG/
 │       ├── 制药行业知识图谱Schema设计文档.md v2.0 ✅ 更新
 │       └── 实施路线图.md v2.0 ✅ 更新
 │
-├── deploy/                        # 部署相关 ✅ 新增
+├── deploy/                        # 部署配置 ✅ 合并
 │   ├── docker/                    # Docker配置
-│   │   └── docker-compose.yml
+│   │   ├── docker-compose.yml
+│   │   ├── Dockerfile
+│   │   ├── nginx.conf
+│   │   └── prometheus.yml
 │   ├── config/                   # 配置文件
 │   │   └── neo4j/neo4j.conf
 │   ├── scripts/                  # 脚本文件
 │   │   └── init_constraints.cypher
 │   ├── data/                     # 数据目录
-│   └── deploy.sh                 # 部署脚本
+│   ├── deploy.sh                 # 部署脚本
+│   └── README_DOCKER.md          # Docker部署说明
+│
+├── environments/                 # 环境配置 ✅ 新增
+│   └── environment-testing.yml    # Playwright测试环境
 │
 ├── ontologies/                   # 本体文件
 │   └── mappings/                 # 标识符映射

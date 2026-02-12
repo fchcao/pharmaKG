@@ -81,7 +81,7 @@ frontend:
 api:
   build:
     context: ../../
-    dockerfile: deployment/Dockerfile
+    dockerfile: deploy/docker/Dockerfile
   ports:
     - "8000:8000"
   environment:

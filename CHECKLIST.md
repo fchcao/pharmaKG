@@ -279,7 +279,7 @@
 - [ ] `docs/` 目录结构完整
   - [ ] `docs/ontology/` - 本体文档
   - [ ] `docs/api/` - API 文档
-  - [ ] `docs/deployment/` - 部署文档
+  - [ ] `docs/deployment/` - 部署文档 (迁移到 deploy/README*.md)
 
 ### 7.2 API 文档
 
@@ -289,7 +289,7 @@
 
 ### 7.3 部署文档
 
-- [ ] `deployment/README.md` - 部署文档
+- [ ] `deploy/README*.md` - 部署文档 (README_DOCKER.md, QUICKSTART_AUTODL.md)
   - [ ] 架构说明
   - [ ] 配置说明
   - [ ] 部署步骤
