@@ -89,7 +89,7 @@ class AdvancedQueryService:
             }
         )
 
-        return result.records if result.success else []
+        return result.records if result.records else []
 
     def get_disease_potential_compounds(
         self,
@@ -146,7 +146,7 @@ class AdvancedQueryService:
         """
 
         result = self.db.execute_query(query, params)
-        return result.records if result.success else []
+        return result.records if result.records else []
 
     def get_compound_combination_therapy_opportunities(
         self,
@@ -192,7 +192,7 @@ class AdvancedQueryService:
         """
 
         result = self.db.execute_query(query, {"compound_id": compound_id, "limit": limit})
-        return result.records if result.success else []
+        return result.records if result.records else []
 
     #===========================================================
     # 二、竞争分析查询 (Competitive Landscape Queries)
@@ -259,7 +259,7 @@ class AdvancedQueryService:
             }
         )
 
-        if result.success and result.records:
+        if result.records:
             return result.records[0]
         return {}
 
@@ -309,7 +309,7 @@ class AdvancedQueryService:
         """
 
         result = self.db.execute_query(query, {"disease_id": disease_id, "limit": limit})
-        return result.records if result.success else []
+        return result.records if result.records else []
 
     def get_company_pipeline_analysis(
         self,
@@ -358,7 +358,7 @@ class AdvancedQueryService:
         """
 
         result = self.db.execute_query(query, params)
-        return result.records if result.success else []
+        return result.records if result.records else []
 
     #===========================================================
     # 三、安全性信号传播查询 (Safety Signal Propagation)
@@ -432,7 +432,7 @@ class AdvancedQueryService:
             {"compound_id": compound_id, "include_preclinical": include_preclinical}
         )
 
-        if result.success and result.records:
+        if result.records:
             return result.records[0]
         return {}
 
@@ -474,7 +474,7 @@ class AdvancedQueryService:
         """
 
         result = self.db.execute_query(query, {"compound_id": compound_id})
-        return result.records if result.success else []
+        return result.records if result.records else []
 
     def get_target_safety_association(
         self,
@@ -516,7 +516,7 @@ class AdvancedQueryService:
         """
 
         result = self.db.execute_query(query, {"target_id": target_id, "limit": limit})
-        return result.records if result.success else []
+        return result.records if result.records else []
 
     #===========================================================
     # 四、供应链影响分析查询 (Supply Chain Impact Analysis)
@@ -582,7 +582,7 @@ class AdvancedQueryService:
 
         result = self.db.execute_query(query, {"manufacturer_id": manufacturer_id})
 
-        if result.success and result.records:
+        if result.records:
             return result.records[0]
         return {}
 
@@ -635,7 +635,7 @@ class AdvancedQueryService:
         """
 
         result = self.db.execute_query(query, {"drug_product_id": drug_product_id})
-        return result.records if result.success else []
+        return result.records if result.records else []
 
     def get_api_supply_vulnerability(
         self,
@@ -689,7 +689,7 @@ class AdvancedQueryService:
         """
 
         result = self.db.execute_query(query, params)
-        return result.records if result.success else []
+        return result.records if result.records else []
 
     #===========================================================
     # 五、知识图谱路径查询 (Knowledge Graph Path Queries)
@@ -714,22 +714,22 @@ class AdvancedQueryService:
         Returns:
             路径列表
         """
-        rel_filter = ""
+        # Build relationship pattern for MATCH
+        if relationship_types:
+            rel_pattern = "|".join(relationship_types)
+        else:
+            rel_pattern = "RELATED_TO"
+
         params = {
             "start_id": start_entity_id,
-            "end_id": end_entity_id,
-            "max_length": max_path_length
+            "end_id": end_entity_id
         }
 
-        if relationship_types:
-            rel_filter = "WHERE type(r) IN $rel_types"
-            params["rel_types"] = relationship_types
-
+        # Note: max_length must be a literal in Neo4j, cannot use parameter
         query = f"""
-        MATCH path = (start)-[:RELATED_TO*1..$max_length]]->(end)
+        MATCH path = (start)-[:{rel_pattern}*1..{max_path_length}]->(end)
         WHERE start.primary_id = $start_id
           AND end.primary_id = $end_id
-        {rel_filter}
         RETURN
             [node IN nodes(path) | {{
                 id: node.primary_id,
@@ -743,7 +743,7 @@ class AdvancedQueryService:
         """
 
         result = self.db.execute_query(query, params)
-        return result.records if result.success else []
+        return result.records if result.records else []
 
     def get_entity_neighborhood(
         self,
@@ -800,7 +800,7 @@ class AdvancedQueryService:
             {"entity_id": entity_id, "depth": depth, "min_degree": min_degree}
         )
 
-        if result.success and result.records:
+        if result.records:
             return result.records[0]
         return {}
 

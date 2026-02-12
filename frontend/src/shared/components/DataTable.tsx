@@ -121,6 +121,7 @@ export function DataTable<T extends Record<string, unknown>>({
             value={selectedKeys[0] as string}
             onChange={(e) => setSelectedKeys(e.target.value ? [e.target.value] : [])}
             onPressEnter={() => confirm()}
+            disabled
             style={{ width: 188, marginBottom: 8, display: 'block' }}
           />
           <Space>

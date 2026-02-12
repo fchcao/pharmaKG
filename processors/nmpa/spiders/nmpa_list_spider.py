@@ -28,15 +28,13 @@ from urllib.parse import urljoin
 import hashlib
 import logging
 from typing import Generator, Optional, Dict, Any, List, Set
-import datetime
+from datetime import datetime
 from abc import ABC, abstractmethod
 
-from .base_nmpa_spider import (
+from ..base_nmpa_spider import (
     NMPADocument,
     NMPABaseSpider,
-    get_request_headers,
-    is_valid_url,
-    create_spider_settings
+    get_request_headers
 )
 
 logger = logging.getLogger(__name__)
@@ -71,6 +69,10 @@ class NMPAListSpider(NMPABaseSpider):
         'LOG_LEVEL': 'INFO',  # 日志级别
     }
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.start_time = datetime.now()
+
     def parse(self, response: HtmlResponse, **kwargs):
         """
         解析NMPA法规列表页面
@@ -80,7 +82,7 @@ class NMPAListSpider(NMPABaseSpider):
             **kwargs: 额外的参数
 
         Yields:
-            NMPADocument对象，包含文档信息
+            包含文档信息的字典
 
         返回格式:
             {
@@ -94,12 +96,11 @@ class NMPAListSpider(NMPABaseSpider):
             }
         """
 
-        # 初始化计数器
+        # 初始化计数器和结果列表
         doc_count = 0
         seen_urls = set()
+        results = []
 
-        # 记录开始时间
-        start_time = datetime.now()
         logger.info(f"开始解析NMPA列表页面: {response.url}")
 
         try:
@@ -148,17 +149,17 @@ class NMPAListSpider(NMPABaseSpider):
                             link_cell = cells[3] if len(cells) > 3 else None
                             if link_cell:
                                 doc_link = link_cell.xpath('.//a[@href]')
-                                doc_url = doc_link.xpath('./@href)').get() if doc_link else ''
+                                doc_url = doc_link.xpath('./@href').get() if doc_link else ''
 
                                 # 提取发布日期（第4列）
                                 date_cell = cells[6] if len(cells) > 6 else None
                                 publish_date = date_cell.xpath('./text()').get().strip() if date_cell else None
 
                                 # 提取文档类型（通过表格内容判断）
-                                doc_type = self._classify_document_type(title_cell.get() if title_cell else '', row, table_idx)
+                                doc_type = self._classify_document_type(doc_title)
 
                                 # 生成文档ID
-                                if doc_link and doc_title:
+                                if doc_url and doc_title:
                                     doc_id = self._generate_doc_id(doc_url.get(), doc_type, publish_date)
 
                                     # 创建文档对象
@@ -170,7 +171,7 @@ class NMPAListSpider(NMPABaseSpider):
                                         content=f"点击下载查看完整内容"
                                     )
 
-                                    if doc_id and doc_id not in seen_urls:
+                                    if doc_id and doc_url not in seen_urls:
                                         valid_docs.append(document)
                                         seen_urls.add(doc_url)
                                         doc_count += 1
@@ -210,43 +211,43 @@ class NMPAListSpider(NMPABaseSpider):
 
         # 检查表头
         expected_columns = ['药品名称', '注册类别', '企业名称', '批准文号', '承办日期', '承办地', '状态', '正文链接']
-        actual_columns = [th.get().strip() for th in headers] if th.get() else ''
+        actual_columns = [th.get().strip() for th in headers if th.get()]
 
         # 检查是否包含"药品名称"列
         has_drug_name = any('药品' in col for col in actual_columns)
 
-        return has_drug_name and '状态' in actual_columns[-1]
+        return has_drug_name and actual_columns and '状态' in actual_columns[-1]
 
     def _classify_document_type(self, title: str) -> str:
         """根据标题判断文档类型"""
         if not title:
-            return '未知'
+            return '其他'
 
         title_lower = title.lower()
 
         # GMP相关文档类型
-        gmp_keywords = ['GMP', '药品生产质量管理规范', 'GMP认证', '药品GMP认证', '药品GMP指引', '药品GMP附录']
+        gmp_keywords = ['gmp', '药品生产质量管理规范', 'gmp认证', '药品gmp认证', '药品gmp指引', '药品gmp附录']
         if any(keyword in title_lower for keyword in gmp_keywords):
             return 'GMP认证'
 
         # 药品审评相关
         review_keywords = ['药品审评', '技术审评', '审评报告', '质量标准']
-        if any(keyword in title_lower for keyword in review_keywords):
+        if any(keyword in title for keyword in review_keywords):
             return '药品审评'
 
         # 检查相关
         inspection_keywords = ['检查', '通告', '飞行检查', '质量通告']
-        if any(keyword in title_lower for keyword in inspection_keywords):
+        if any(keyword in title for keyword in inspection_keywords):
             return 'GMP检查'
 
         # 通告相关
         notice_keywords = ['通告', '通知', '公告', '重要通知', '紧急通知']
-        if any(keyword in title_lower for keyword in notice_keywords):
+        if any(keyword in title for keyword in notice_keywords):
             return 'GMP通告'
 
         # 药典相关
         pharmacopoeia_keywords = ['药典', '标准', '规范', '中国药典']
-        if any(keyword in title_lower for keyword in pharmacopoeia_keywords):
+        if any(keyword in title for keyword in pharmacopoeia_keywords):
             return '中国药典'
 
         # 默认为其他
@@ -271,51 +272,13 @@ class NMPAListSpider(NMPABaseSpider):
         """爬虫关闭时的清理"""
         end_time = datetime.now()
         duration = (end_time - self.start_time).total_seconds()
-        logger.info(f"{self.name}关闭: {reason}，运行时长: {duration:.2f}秒，处理文档: {self.doc_count if hasattr(self, 'doc_count') else 0}")
-
-
-def create_spider_settings():
-    """创建Scrapy配置文件"""
-    import os
-
-    config_content = f"""
-# NMPA Spider Settings
-# Bot名称
-BOT_NAME = nmpa_list_spider
-USER_AGENT = Mozilla/5.0 (compatible; NMPA-Spider/1.0; +scrapy@nmpa.gov.cn)
-
-# 请求设置
-DOWNLOAD_DELAY = 2
-TELNETCONV_TIMEOUT = 30
-CONCURRENT_REQUESTS = 16
-RETRY_TIMES = 3
-
-# 机器人设置
-COOKIES_ENABLED = False
-ROBOTSTXT_OBEY = True
-LOG_LEVEL = INFO
-
-# 数据存储
-DATA_DIR = ./data/sources/regulations/nmpa
-LOG_FILE = ./data/sources/regulations/nmpa/crawl.log
-DUPEFILTER_ENABLED = True
-DUPEFILTER_LOG = ./data/sources/regulations/nmpa/duplicates.log
-"""
-
-    config_path = '/root/autodl-tmp/pj-pharmaKG/scrapy.cfg'
-    os.makedirs(os.path.dirname(config_path), exist_ok=True)
-
-    with open(config_path, 'w', encoding='utf-8') as f:
-        f.write(config_content)
-
-    return config_path
+        logger.info(f"{self.name}关闭: {reason}，运行时长: {duration:.2f}秒")
 
 
 if __name__ == '__main__':
     print("=== NMPA列表页爬虫实现完成 ===")
-    print(f"爬虫名称: nmpa_list_spider")
+    print(f"爬虫名称: nmpa_list")
     print(f"起始URL: {NMPAListSpider.start_urls[0]}")
-    print(f"配置文件: {create_spider_settings()}")
     print("\n功能特性:")
     print("  - 自动识别NMPA官网HTML表格结构")
     print("  - 支持多种文档类型分类（药品注册、GMP认证、药品审评、检查、通告等）")
@@ -323,11 +286,5 @@ if __name__ == '__main__':
     print("  - 增量更新机制，避免重复爬取")
     print("  - 数据验证和质量控制")
     print("\n下一步：")
-    print("  1. 创建Scrapy项目配置")
-    print("     scrapy genspider nmpa_list")
-    print("     scrapy crawl nmpa_list -o test_output.json")
-    print("     scrapy shell nmpa_list -o test_output.json 2>&1 | head -50")
-    print("\n  2. 或在processors目录运行:")
-    print("     python -m processors.nmpa_list_spider")
-    print("\n  3. 查看测试结果:")
-    print("     cat test_output.json | python3 -m json.tool | head -30")
+    print("  1. 测试爬虫: scrapy crawl nmpa_list -o test_output.json")
+    print("  2. 查看测试结果: cat test_output.json | python3 -m json.tool | head -30")

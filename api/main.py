@@ -7,7 +7,10 @@
 # 描述: 主API应用，包含所有领域端点
 #===========================================================
 
+from typing import Optional, List
+
 from fastapi import FastAPI, HTTPException, Query
+from pydantic import BaseModel, Field
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
@@ -941,7 +944,7 @@ async def find_shortest_path(
     max_path_length: int = Query(5, description="Maximum path length", ge=1, le=10),
     relationship_types: str = Query(None, description="Comma-separated relationship types")
 ):
-    """查找两个实体之间的最短路径"""
+    """查找两个实体之间的最短路径 (GET method)"""
     rel_types = relationship_types.split(',') if relationship_types else None
     service = AdvancedQueryService()
     paths = service.find_shortest_path(
@@ -953,6 +956,40 @@ async def find_shortest_path(
     return {
         "start_entity": start_entity_id,
         "end_entity": end_entity_id,
+        "paths": paths,
+        "count": len(paths)
+    }
+
+
+class ShortestPathRequest(BaseModel):
+    """Shortest path query request body"""
+    start_entity_type: Optional[str] = Field(None, description="Start entity type")
+    start_entity_id: str = Field(..., description="Start entity ID")
+    end_entity_type: Optional[str] = Field(None, description="End entity type")
+    end_entity_id: str = Field(..., description="End entity ID")
+    max_path_length: int = Field(5, description="Maximum path length", ge=1, le=10)
+    relationship_types: Optional[str] = Field(None, description="Comma-separated relationship types")
+
+
+@app.post("/advanced/path/shortest", tags=["Advanced Queries"])
+async def find_shortest_path_post(request: ShortestPathRequest):
+    """查找两个实体之间的最短路径 (POST method - for complex queries)"""
+    service = AdvancedQueryService()
+
+    # Convert comma-separated relationship_types to list
+    rel_types = None
+    if request.relationship_types:
+        rel_types = request.relationship_types.split(',')
+
+    paths = service.find_shortest_path(
+        request.start_entity_id,
+        request.end_entity_id,
+        max_path_length=request.max_path_length,
+        relationship_types=rel_types
+    )
+    return {
+        "start_entity": request.start_entity_id,
+        "end_entity": request.end_entity_id,
         "paths": paths,
         "count": len(paths)
     }
@@ -1680,7 +1717,7 @@ async def list_supply_manufacturers(
             # 使用 Company 节点作为制造商
             list_query = f"""
                 MATCH (c:Company)
-                RETURN c.name as id, c.name as name, c.address as location, 'Pharmaceutical' as type, 'active' as status
+                RETURN c.name as id, c.name as name, c.address as location, 'Pharmaceutical' as type, 'active' as status, COALESCE(c.quality_score, 70) as qualityScore
                 ORDER BY c.name
                 SKIP {skip}
                 LIMIT {page_size}
@@ -1698,7 +1735,8 @@ async def list_supply_manufacturers(
                 "name": record.get("name"),
                 "location": record.get("location"),
                 "type": record.get("type"),
-                "status": record.get("status")
+                "status": record.get("status"),
+                "qualityScore": record.get("qualityScore", 70)
             })
 
         return {
@@ -2069,31 +2107,77 @@ async def get_regulatory_statistics():
     try:
         db = get_db()
 
-        # 获取申报数量
-        submission_count_result = db.execute_query(
-            "MATCH (s:RegulatorySubmission) RETURN count(s) as count"
+        # 获取监管文档数量
+        regulatory_doc_result = db.execute_query(
+            "MATCH (d:RegulatoryDocument) RETURN count(d) as count"
         )
-        submission_count = submission_count_result.records[0]["count"] if submission_count_result else 0
+        regulatory_doc_count = regulatory_doc_result.records[0]["count"] if regulatory_doc_result.records else 0
 
-        # 获取批准数量
-        approval_count_result = db.execute_query(
-            "MATCH (a:RegulatoryApproval) RETURN count(a) as count"
+        # 获取TCM政策文档数量
+        policy_doc_result = db.execute_query(
+            "MATCH (p:PolicyDocument) RETURN count(p) as count"
         )
-        approval_count = approval_count_result.records[0]["count"] if approval_count_result else 0
+        policy_doc_count = policy_doc_result.records[0]["count"] if policy_doc_result.records else 0
+
+        # 获取CRL数量
+        crl_result = db.execute_query(
+            "MATCH (c:CompleteResponseLetter) RETURN count(c) as count"
+        )
+        crl_count = crl_result.records[0]["count"] if crl_result.records else 0
+
+        # 获取公司数量
+        company_result = db.execute_query(
+            "MATCH (co:Company) RETURN count(co) as count"
+        )
+        company_count = company_result.records[0]["count"] if company_result.records else 0
+
+        # 按机构统计监管文档
+        by_agency_result = db.execute_query("""
+            MATCH (d:RegulatoryDocument)
+            RETURN d.source_agency as agency, count(d) as count
+            ORDER BY count DESC
+        """)
+        by_agency = {record["agency"]: record["count"] for record in by_agency_result.records}
+
+        # 按类型统计
+        by_type_result = db.execute_query("""
+            MATCH (d:RegulatoryDocument)
+            RETURN d.document_type as type, count(d) as count
+            ORDER BY count DESC
+        """)
+        by_type = {record["type"]: record["count"] for record in by_type_result.records}
+
+        # 按机构统计TCM政策
+        tcm_by_org_result = db.execute_query("""
+            MATCH (p:PolicyDocument)
+            RETURN p.organization as org, count(p) as count
+            ORDER BY count DESC
+        """)
+        tcm_by_org = {record["org"]: record["count"] for record in tcm_by_org_result.records}
+
+        total_documents = regulatory_doc_count + policy_doc_count + crl_count
 
         return {
-            "total_submissions": submission_count,
-            "total_approvals": approval_count,
-            "pending_reviews": 0,
-            "approved_this_year": 0
+            "total_documents": total_documents,
+            "regulatory_documents": regulatory_doc_count,
+            "policy_documents": policy_doc_count,
+            "crls": crl_count,
+            "companies": company_count,
+            "by_agency": by_agency,
+            "by_type": by_type,
+            "tcm_by_org": tcm_by_org
         }
     except Exception as e:
         logger.error(f"Error getting regulatory statistics: {e}")
         return {
-            "total_submissions": 0,
-            "total_approvals": 0,
-            "pending_reviews": 0,
-            "approved_this_year": 0
+            "total_documents": 0,
+            "regulatory_documents": 0,
+            "policy_documents": 0,
+            "crls": 0,
+            "companies": 0,
+            "by_agency": {},
+            "by_type": {},
+            "tcm_by_org": {}
         }
 
 
@@ -2228,13 +2312,67 @@ async def list_agencies(
     page_size: int = Query(20, ge=1, le=100),
     country: str = Query(None)
 ):
-    """获取监管机构列表（暂时返回空数据）"""
+    """获取监管机构列表"""
+    # 从数据库中提取的机构列表（硬编码+动态）
+    agencies = [
+        {
+            "id": "FDA",
+            "name": "FDA",
+            "fullName": "U.S. Food and Drug Administration",
+            "country": "US",
+            "type": "Regulatory",
+            "description": "美国食品药品监督管理局"
+        },
+        {
+            "id": "NMPA",
+            "name": "NMPA",
+            "fullName": "National Medical Products Administration",
+            "country": "CN",
+            "type": "Regulatory",
+            "description": "国家药品监督管理局"
+        },
+        {
+            "id": "CDE",
+            "name": "CDE",
+            "fullName": "Center for Drug Evaluation",
+            "country": "CN",
+            "type": "Regulatory",
+            "description": "药品审评中心"
+        },
+        {
+            "id": "EMA",
+            "name": "EMA",
+            "fullName": "European Medicines Agency",
+            "country": "EU",
+            "type": "Regulatory",
+            "description": "欧洲药品管理局"
+        },
+        {
+            "id": "PMDA",
+            "name": "PMDA",
+            "fullName": "Pharmaceuticals and Medical Devices Agency",
+            "country": "JP",
+            "type": "Regulatory",
+            "description": "日本药品医疗器械管理局"
+        }
+    ]
+
+    # 国家过滤
+    if country:
+        agencies = [a for a in agencies if a["country"] == country]
+
+    # 分页
+    total = len(agencies)
+    start_idx = (page - 1) * page_size
+    end_idx = start_idx + page_size
+    page_agencies = agencies[start_idx:end_idx]
+
     return {
-        "items": [],
-        "total": 0,
+        "items": page_agencies,
+        "total": total,
         "page": page,
         "pageSize": page_size,
-        "totalPages": 0
+        "totalPages": (total + page_size - 1) // page_size
     }
 
 
@@ -2254,22 +2392,186 @@ async def get_agency_statistics(agency_id: str):
 async def list_documents(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
-    document_type: str = Query(None)
+    document_type: str = Query(None),
+    type: str = Query(None),  # 前端使用 type 而不是 document_type
+    search: str = Query(None),
+    agency: str = Query(None),
+    confidential: str = Query(None),
+    start_date: str = Query(None),
+    end_date: str = Query(None)
 ):
-    """获取监管文档列表（暂时返回空数据）"""
+    """获取监管文档列表"""
+    db = get_db()
+
+    # 计算跳过数量
+    skip = (page - 1) * page_size
+
+    # 处理类型过滤（前端使用 type 参数）
+    doc_type = document_type or type
+
+    # 使用 UNION 查询不同类型的文档
+    count_query = """
+        MATCH (d:RegulatoryDocument)
+        WITH count(d) as reg_count
+        OPTIONAL MATCH (p:PolicyDocument)
+        WITH reg_count, reg_count + count(p) as total
+        OPTIONAL MATCH (c:CompleteResponseLetter)
+        WITH total, total + count(c) as final_total
+        RETURN final_total as total
+    """
+
+    count_result = db.execute_query(count_query)
+    total = count_result.records[0]["total"] if count_result.records else 0
+
+    # 构建数据查询 - 使用 UNION
+    data_query = """
+        // 查询 RegulatoryDocument
+        MATCH (d:RegulatoryDocument)
+        RETURN d as doc, 'RegulatoryDocument' as doc_type
+        UNION ALL
+        // 查询 PolicyDocument
+        MATCH (p:PolicyDocument)
+        RETURN p as doc, 'PolicyDocument' as doc_type
+        UNION ALL
+        // 查询 CompleteResponseLetter
+        MATCH (c:CompleteResponseLetter)
+        RETURN c as doc, 'CompleteResponseLetter' as doc_type
+    """
+
+    # 添加排序和分页
+    # 注意：Cypher的UNION结果排序比较复杂，这里在Python中处理
+    data_result = db.execute_query(data_query)
+
+    # 转换为前端格式
+    items = []
+    for record in data_result.records:
+        node = record["doc"]
+        node_type = record["doc_type"]
+
+        # 统一字段名
+        item = {
+            "id": node.get("document_id") or node.get("page_id") or node.get("file_name"),
+            "title": node.get("title") or node.get("title_cn") or node.get("title_en") or "",
+            "title_cn": node.get("title_cn"),
+            "title_en": node.get("title_en"),
+            "documentType": node.get("document_type") or (
+                "CRL" if node_type == "CompleteResponseLetter" else
+                node.get("source_agency", "")
+            ),
+            "type": node.get("document_type") or node.get("source_agency", ""),
+            "agencyId": "FDA" if node.get("source") == "FDA" else (
+                "NMPA" if node.get("source_agency") == "NMPA" else
+                "CDE" if node.get("source_agency") == "CDE" else
+                "OTHER"
+            ),
+            "documentDate": node.get("publish_date") or node.get("official_release_date") or node.get("letter_date"),
+            "url": node.get("url") or "",
+            "summary": node.get("summary") or node.get("text_preview") or "",
+            "confidentiality": node.get("status") or "public",
+            "format": "PDF" if (node.get("url") or "").endswith(".pdf") else "TXT",
+            "organization": node.get("organization") or node.get("source_agency") or "",
+            "pages": None,
+            "fileSize": None
+        }
+
+        # 应用搜索过滤（如果需要）
+        if search:
+            search_lower = search.lower()
+            if not (
+                (item["title"] and search_lower in item["title"].lower()) or
+                (item["title_cn"] and search_lower in item["title_cn"].lower()) or
+                (item["summary"] and search_lower in item["summary"].lower())
+            ):
+                continue
+
+        # 应用类型过滤（如果需要）
+        if doc_type:
+            if doc_type == "CRL" and node_type != "CompleteResponseLetter":
+                continue
+            elif doc_type == "PDA" and "PDA" not in item.get("documentType", ""):
+                continue
+            elif doc_type not in ["CRL", "PDA", "Guidance"]:
+                if doc_type.lower() not in item.get("documentType", "").lower():
+                    continue
+
+        items.append(item)
+
+    # 在 Python 中进行排序和分页
+    def get_sort_key(item):
+        return item.get("documentDate") or ""
+
+    items.sort(key=get_sort_key, reverse=True)
+
+    # 应用分页
+    total_filtered = len(items)
+    start_idx = skip
+    end_idx = skip + page_size
+    paginated_items = items[start_idx:end_idx]
+
+    total_pages = (total_filtered + page_size - 1) // page_size
+
     return {
-        "items": [],
-        "total": 0,
+        "items": paginated_items,
+        "total": total_filtered,
         "page": page,
         "pageSize": page_size,
-        "totalPages": 0
+        "totalPages": total_pages
     }
 
 
 @app.get("/regulatory/documents/{document_id}", tags=["Regulatory"])
 async def get_document(document_id: str):
-    """获取单个监管文档（暂时返回空数据）"""
-    return None
+    """获取单个监管文档"""
+    db = get_db()
+
+    # 查询所有可能的文档类型
+    query = """
+        MATCH (d)
+        WHERE d.document_id = $doc_id OR d.page_id = $doc_id OR d.file_name = $doc_id
+        RETURN d LIMIT 1
+    """
+
+    result = db.execute_query(query, doc_id=document_id)
+
+    if not result.records:
+        raise HTTPException(status_code=404, detail="Document not found")
+
+    node = result.records[0]["d"]
+
+    return {
+        "id": node.get("document_id") or node.get("page_id") or node.get("file_name"),
+        "title": node.get("title") or node.get("title_cn") or node.get("title_en") or "",
+        "title_cn": node.get("title_cn"),
+        "title_en": node.get("title_en"),
+        "documentType": node.get("document_type") or (
+            "CRL" if "letter_type" in node else
+            node.get("source_agency", "")
+        ),
+        "type": node.get("document_type") or node.get("source_agency", ""),
+        "agencyId": "FDA" if node.get("source") == "FDA" else (
+            "NMPA" if node.get("source_agency") == "NMPA" else
+            "CDE" if node.get("source_agency") == "CDE" else
+            "OTHER"
+        ),
+        "documentDate": node.get("publish_date") or node.get("official_release_date") or node.get("letter_date"),
+        "url": node.get("url") or "",
+        "summary": node.get("summary") or node.get("text_preview") or node.get("subject_words") or "",
+        "content": node.get("content") or "",
+        "confidentiality": node.get("status") or "public",
+        "format": "PDF" if (node.get("url") or "").endswith(".pdf") else "TXT",
+        "organization": node.get("organization") or node.get("source_agency") or "",
+        "pages": None,
+        "fileSize": None,
+        "publishDate": node.get("publish_date") or node.get("official_release_date") or node.get("letter_date"),
+        "effectiveDate": node.get("effective_date"),
+        "status": node.get("status") or "active",
+        "keywords": node.get("subject_words", "") if isinstance(node.get("subject_words", ""), str) else ", ".join(node.get("subject_words", [])),
+        "therapeuticArea": node.get("therapeutic_area") or "",
+        "language": node.get("language") or "zh",
+        "attachments": node.get("attachments") or [],
+        "repealDate": node.get("repeal_date"),
+        "version": node.get("version")
+    }
 
 
 @app.get("/regulatory/submissions/{submission_id}/timeline", tags=["Regulatory"])

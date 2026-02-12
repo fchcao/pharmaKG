@@ -31,6 +31,22 @@ docker-compose up -d neo4j
 
 **Note**: This project has a dedicated conda environment `pharmakg-api` pre-configured on AutoDL servers. Always activate this environment before running any commands.
 
+### Data Spider Environment (NEW)
+```bash
+# Activate the dedicated spider environment for data collection tasks
+conda activate data-spider
+
+# Create/Recreate the spider environment (if needed)
+conda create -n data-spider python=3.10 -y
+conda activate data-spider
+pip install scrapy requests lxml
+
+# Run spider with proper environment
+conda run -n data-spider scrapy crawl nmpa_list -o test_output.json
+```
+
+**Important**: Always use `data-spider` environment when running web scraping tasks to avoid dependency conflicts with the main API environment.
+
 ### Network Acceleration (AutoDL)
 
 When encountering network issues (git push timeout, pip install failures, etc.) on AutoDL:
@@ -55,6 +71,33 @@ python3 -m uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload
 # Health check
 curl http://localhost:8000/health
 ```
+
+### Service Startup Best Practices (IMPORTANT)
+
+**When starting all services, always follow this order:**
+
+1. **Clean up old processes first** - Critical to avoid port conflicts
+2. **Start Neo4j** - Wait 5-10 seconds for it to be ready
+3. **Start Backend** - MUST use `pharmakg-api` environment
+4. **Start Frontend**
+
+**Use the provided scripts:**
+```bash
+# Start all services (includes cleanup and proper sequencing)
+bash scripts/start_all.sh
+
+# Stop all services
+bash scripts/stop_all.sh
+
+# Health check
+bash scripts/health_check.sh
+```
+
+**Common pitfalls to avoid:**
+- Don't skip cleanup - old processes cause port conflicts
+- Don't forget `conda activate pharmakg-api` for backend
+- Don't use relative paths for logs when starting from subdirectories
+- Don't start backend before Neo4j is ready (wait 8+ seconds)
 
 ### Frontend Service
 ```bash
@@ -134,8 +177,14 @@ with sync_playwright() as p:
 
 **Note**: Playwright is installed in a dedicated `playwright-env` conda environment to avoid conflicts with the main `pharmakg-api` environment.
 
-### Data Collection Processors (NEW)
+### Data Collection Processors (UPDATED 2026-02-12)
+
+**IMPORTANT**: Always activate `data-spider` environment before running data collection processors.
+
 ```bash
+# Activate data collection environment
+conda activate data-spider
+
 # ChEMBL 36 SQLite processor (tested with 28GB database)
 python3 -m processors.chembl_processor /path/to/chembl_36.db --limit-compounds 1000
 
@@ -154,6 +203,12 @@ python3 -m processors.drugsatfda_processor --mode all --max-applications 100
 # Run all data collection pipelines
 python3 scripts/run_full_pipeline.py
 ```
+
+**Excluded Data Sources** (due to anti-crawler protection):
+- NMPA.gov.cn - blocked by AliYun Anti-Bot (HTTP 412)
+- CDE.org.cn - blocked by continuous navigation (HTTP 202)
+
+See `docs/data-collection-strategy.md` for current data collection priorities.
 
 ### Project Validation
 ```bash
@@ -483,7 +538,7 @@ tests/                        # Test suite (if implemented)
 
 **原则**: 功能性变更更新文档，维护性清理不记录。
 
-## Data Sources
+## Data Sources (Updated 2026-02-12)
 
 ### R&D Domain
 - **ChEMBL 36**: Bioactivity data for compounds and targets (2.8M+ compounds, 28GB SQLite)
@@ -505,6 +560,11 @@ tests/                        # Test suite (if implemented)
 ### Document Sources
 - **FDA CRLs**: Complete Response Letters (regulatory decisions)
 - **PDA Technical Reports**: Pharmaceutical manufacturing standards (108 PDFs)
+
+### Excluded Data Sources (Anti-Crawler Protection)
+- **NMPA.gov.cn**: Blocked by AliYun Anti-Bot (HTTP 412)
+- **CDE.org.cn**: HTTP 202 continuous navigation blocking
+- **Alternative**: Use FDA/EMA data for regulatory domain coverage
 
 ## Project Status
 

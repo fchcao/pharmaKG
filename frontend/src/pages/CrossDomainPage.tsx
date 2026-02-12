@@ -203,6 +203,7 @@ const CrossDomainPage: React.FC = () => {
   const [historyModalVisible, setHistoryModalVisible] = useState(false);
   const [shareModalVisible, setShareModalVisible] = useState(false);
   const [shareUrl, setShareUrl] = useState<string>('');
+  const [pathPagination, setPathPagination] = useState({ current: 1, pageSize: 10 });
   const [activeTab, setActiveTab] = useState('builder');
 
   // Load query history from localStorage
@@ -239,16 +240,14 @@ const CrossDomainPage: React.FC = () => {
     setGraphData({ nodes: [], edges: [] });
 
     try {
-      // Call the advanced query API
-      const response = await api.get('/advanced/path/shortest', {
-        params: {
-          start_entity_type: config.startEntityType,
-          start_entity_id: config.startEntityId,
-          end_entity_type: config.endEntityType,
-          end_entity_id: config.endEntityId,
-          max_path_length: config.maxHops,
-          relationship_types: config.relationshipTypes.length > 0 ? config.relationshipTypes.join(',') : undefined
-        }
+      // Call the advanced query API (使用 POST 方法支持复杂查询配置）
+      const response = await api.post('/advanced/path/shortest', {
+        start_entity_type: config.startEntityType,
+        start_entity_id: config.startEntityId,
+        end_entity_type: config.endEntityType,
+        end_entity_id: config.endEntityId,
+        max_path_length: config.maxHops,
+        relationship_types: config.relationshipTypes.length > 0 ? config.relationshipTypes.join(',') : undefined
       });
 
       if (response.data && response.data.paths) {
@@ -336,18 +335,12 @@ const CrossDomainPage: React.FC = () => {
     message.success('Loaded query from history');
   };
 
-  // Share query
+  // Share query - 修复：复制查询配置内容，而非页面 URL
   const shareQuery = () => {
-    const queryParams = new URLSearchParams();
-    Object.entries(queryConfig).forEach(([key, value]) => {
-      if (Array.isArray(value)) {
-        queryParams.append(key, value.join(','));
-      } else if (value !== undefined && value !== null) {
-        queryParams.append(key, String(value));
-      }
-    });
-
-    const url = `${window.location.origin}/cross-domain?${queryParams.toString()}`;
+    // 将查询配置转换为 JSON 字符串以便分享
+    const configJson = JSON.stringify(queryConfig, null, 2);
+    const encodedConfig = btoa(unescape(encodeURIComponent(configJson)));
+    const url = `${window.location.origin}/cross-domain?config=${encodedConfig}`;
     setShareUrl(url);
     setShareModalVisible(true);
   };
@@ -717,7 +710,16 @@ const CrossDomainPage: React.FC = () => {
                           columns={pathColumns}
                           dataSource={paths}
                           rowKey={(record, idx) => idx?.toString() || '0'}
-                          pagination={{ pageSize: 10 }}
+                          pagination={{
+                            current: pathPagination.current,
+                            pageSize: pathPagination.pageSize,
+                            total: paths.length,
+                            showSizeChanger: true,
+                            showQuickJumper: true,
+                            onChange: (page, pageSize) => {
+                              setPathPagination({ current: page, pageSize: pageSize || 10 });
+                            }
+                          }}
                           size="small"
                         />
                       </Card>
