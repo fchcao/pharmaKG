@@ -29,7 +29,8 @@
       "Bash(git -C /root/autodl-tmp/pj-pharmaKG status --short)",
       "Bash(git -C /root/autodl-tmp/pj-pharmaKG ls-files)",
       "Bash(git -C /root/autodl-tmp/pj-pharmaKG ls-files:*)",
-      "Bash(echo '=== Data 目录结构 ===' find /root/autodl-tmp/pj-pharmaKG/data -type f -name *.json -o -name *.xml -o -name *.sqlite)"
+      "Bash(echo '=== Data 目录结构 ===' find /root/autodl-tmp/pj-pharmaKG/data -type f -name *.json -o -name *.xml -o -name *.sqlite)",
+      "Bash(docs/nmpa-spider-quickstart.md << 'EOF'\n# NMPA Spider Quickstart Guide\n\n## 概述\n\nNMPA Spider 是专门用于爬取国家药品监督管理局（NMPA）官网法规文档的 Scrapy 爬虫。\n\n## 环境要求\n\n### 虚拟环境：data-spider\n\n所有数据抓取任务必须在 `data-spider` conda 虚拟环境中运行，避免与主 API 环境产生依赖冲突。\n\n```bash\n# 创建环境（首次使用）\nconda create -n data-spider python=3.10 -y\n\n# 激活环境\nconda activate data-spider\n\n# 安装依赖\npip install scrapy requests lxml\n```\n\n## 快速开始\n\n### 方法1: 使用便捷脚本（推荐）\n\n```bash\n# 使用默认配置运行 nmpa_list 爬虫\n./scripts/run_nmpa_spider.sh\n\n# 指定爬虫名称和输出文件\n./scripts/run_nmpa_spider.sh nmpa_list custom_output.json\n```\n\n### 方法2: 手动运行\n\n```bash\n# 1. 激活 data-spider 环境\nconda activate data-spider\n\n# 2. 运行爬虫\nscrapy crawl nmpa_list -o test_output.json\n\n# 3. 查看结果\ncat test_output.json | python3 -m json.tool | head -30\n```\n\n## 可用爬虫\n\n| 爬虫名称 | 说明 | 配置文件 |\n|-----------|------|----------|\n| `nmpa_list` | NMPA 列表页爬虫（基础版） | `processors/nmpa/spiders/nmpa_list_spider.py` |\n| `nmpa_full` | NMPA 完整列表页爬虫（含下载） | `processors/nmpa/spiders/nmpa_full_spider.py` |\n\n## 测试爬虫\n\n```bash\n# 运行单元测试\nconda activate data-spider\npython3 scripts/test_nmpa_spider.py\n```\n\n## 相关文档\n\n- [CLAUDE.md]\\(../CLAUDE.md\\) - 项目开发指南\nEOF)"
     ]
   }
 }
