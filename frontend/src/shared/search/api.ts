@@ -33,7 +33,24 @@ export function useFullTextSearch(
 ) {
   return useQuery<FullTextSearchResult[], Error>({
     queryKey: searchQueryKeys.fulltext(request),
-    queryFn: () => apiClient.post<FullTextSearchResult[]>('/search/fulltext', request),
+    queryFn: async () => {
+      // Backend returns a wrapped response: { results: [], total: 0, ... }
+      const response = await apiClient.post<{
+        results: FullTextSearchResult[];
+        total: number;
+        returned: number;
+        query: string;
+        message?: string;
+      }>('/v1/search/fulltext', {
+        query: request.query,
+        entity_types: request.entity_types,
+        domains: request.domains,
+        limit: request.limit,
+        skip: request.skip || 0,  // Backend uses 'skip' not 'offset'
+      });
+      // Extract results array from response
+      return response.results || [];
+    },
     enabled: !!request.query && request.query.length > 0,
     ...options,
   });
@@ -48,7 +65,25 @@ export function useFuzzySearch(
 ) {
   return useQuery<FuzzySearchResult[], Error>({
     queryKey: searchQueryKeys.fuzzy(request),
-    queryFn: () => apiClient.post<FuzzySearchResult[]>('/search/fuzzy', request),
+    queryFn: async () => {
+      // Backend returns a wrapped response
+      const response = await apiClient.post<{
+        results: FuzzySearchResult[];
+        total: number;
+        returned: number;
+        query: string;
+        message?: string;
+      }>('/v1/search/fuzzy', {
+        query: request.query,
+        entity_type: request.entity_type,
+        search_field: request.search_field || 'name',
+        max_distance: request.max_distance || 2,
+        limit: request.limit,
+        skip: request.skip || 0,
+      });
+      // Extract results array from response
+      return response.results || [];
+    },
     enabled: !!request.query && request.query.length > 0,
     ...options,
   });
@@ -64,10 +99,20 @@ export function useSearchSuggestions(
 ) {
   return useQuery<SearchSuggestion[], Error>({
     queryKey: searchQueryKeys.suggestions(query, entityType),
-    queryFn: () =>
-      apiClient.get<SearchSuggestion[]>('/search/suggestions', {
-        params: { q: query, entity_type: entityType },
-      }),
+    queryFn: async () => {
+      // Backend returns wrapped response: { suggestions: [], ... }
+      const response = await apiClient.get<{
+        suggestions: SearchSuggestion[];
+        total: number;
+        prefix: string;
+        entity_type: string;
+        search_field: string;
+      }>('/v1/search/suggestions', {
+        params: { prefix: query, entity_type: entityType || 'Compound' },
+      });
+      // Extract suggestions array from response
+      return response.suggestions || [];
+    },
     enabled: !!query && query.length > 1,
     ...options,
   });
@@ -82,7 +127,18 @@ export function useAggregateSearch(
 ) {
   return useQuery<AggregateSearchResult[], Error>({
     queryKey: searchQueryKeys.aggregate(request),
-    queryFn: () => apiClient.post<AggregateSearchResult[]>('/search/aggregate', request),
+    queryFn: async () => {
+      // Backend returns wrapped response: { groups: [], ... }
+      const response = await apiClient.post<{
+        groups: AggregateSearchResult[];
+        total_groups: number;
+        total_results: number;
+        query: string;
+        group_by: string;
+      }>('/v1/search/aggregate', request);
+      // Extract groups array from response
+      return response.groups || [];
+    },
     enabled: !!request.query && request.query.length > 0,
     ...options,
   });
@@ -97,7 +153,7 @@ export function useMultiEntitySearch(
 ) {
   return useQuery<MultiEntitySearchResult[], Error>({
     queryKey: searchQueryKeys.multiEntity(request),
-    queryFn: () => apiClient.post<MultiEntitySearchResult[]>('/search/multi-entity', request),
+    queryFn: () => apiClient.post<MultiEntitySearchResult[]>('/v1/search/multi-entity', request),
     enabled: !!request.queries && request.queries.length > 0,
     ...options,
   });

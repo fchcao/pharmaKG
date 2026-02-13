@@ -4,19 +4,20 @@ import { Domain, EntityType } from '../types';
 
 export interface FullTextSearchRequest {
   query: string;
-  entity_types?: EntityType[];
-  domains?: Domain[];
+  entity_types?: string[];  // Backend expects string[], not EntityType[]
   limit?: number;
-  offset?: number;
-  fuzzy?: boolean;
+  skip?: number;  // Backend uses 'skip' not 'offset'
 }
 
 export interface FullTextSearchResult {
-  entity_id: string;
+  entity_id?: string;  // Optional for backward compatibility
+  element_id?: string;  // Backend returns element_id from elementId(node)
+  primary_id?: string;  // Backend returns primary_id from node.primary_id
   entity_type: EntityType;
-  domain: Domain;
+  domain?: Domain;  // Optional - backend may not always return domain
   name: string;
-  relevance_score: number;
+  relevance_score?: number;  // Optional for backward compatibility
+  score?: number;  // Backend returns score from fulltext search
   snippet?: string;
   matched_fields?: string[];
   highlights?: Record<string, string>;
@@ -24,11 +25,11 @@ export interface FullTextSearchResult {
 
 export interface FuzzySearchRequest {
   query: string;
-  entity_types?: EntityType[];
-  domains?: Domain[];
-  max_edits?: number;
+  entity_type: string;  // Backend expects single entity_type as string
+  search_field?: string;
+  max_distance?: number;  // Backend uses 'max_distance' not 'max_edits'
   limit?: number;
-  offset?: number;
+  skip?: number;
 }
 
 export interface FuzzySearchResult {
@@ -42,8 +43,7 @@ export interface FuzzySearchResult {
 
 export interface SearchSuggestion {
   text: string;
-  entity_type: EntityType;
-  count?: number;
+  frequency: number;  // Backend uses 'frequency' not 'count'
 }
 
 export interface AggregateSearchRequest {

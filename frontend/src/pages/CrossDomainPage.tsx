@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Card,
   Row,
@@ -39,7 +40,8 @@ import {
   ThunderboltOutlined,
   ExperimentOutlined,
   SafetyCertificateOutlined,
-  WarningOutlined
+  WarningOutlined,
+  RightOutlined
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { GraphViewer, GraphData, GraphNode, GraphEdge } from '@/shared/graphs/GraphViewer';
@@ -186,6 +188,7 @@ interface QueryHistory {
 const CrossDomainPage: React.FC = () => {
   const [form] = Form.useForm();
   const graphViewerRef = useRef<any>(null);
+  const navigate = useNavigate();
 
   // State
   const [queryConfig, setQueryConfig] = useState<QueryConfig>({
@@ -289,10 +292,24 @@ const CrossDomainPage: React.FC = () => {
           });
         });
 
-        setGraphData({
+        const graphDataForResults: GraphData = {
           nodes: Array.from(allNodes.values()),
           edges: Array.from(allEdges.values())
-        });
+        };
+
+        setGraphData(graphDataForResults);
+
+        // Save to localStorage for results page
+        const queryResult = {
+          paths: pathResults,
+          graphData: graphDataForResults,
+          queryConfig: config,
+          timestamp: Date.now(),
+          totalPaths: pathResults.length
+        };
+
+        // Save recent query for results page access
+        localStorage.setItem('recentCrossDomainQuery', JSON.stringify(queryResult));
 
         saveQueryToHistory(config, pathResults.length);
         message.success(`Found ${pathResults.length} path(s)`);
@@ -325,6 +342,24 @@ const CrossDomainPage: React.FC = () => {
       setQueryConfig(config);
       executeQuery(config);
     });
+  };
+
+  // Navigate to results page with current results
+  const navigateToResultsPage = () => {
+    if (paths.length === 0) {
+      message.warning('Please execute a query first');
+      return;
+    }
+
+    const queryResult = {
+      paths: paths,
+      graphData: graphData,
+      queryConfig: queryConfig,
+      timestamp: Date.now(),
+      totalPaths: paths.length
+    };
+
+    navigate('/cross-domain/results', { state: { results: queryResult } });
   };
 
   // Load query from history
@@ -664,7 +699,7 @@ const CrossDomainPage: React.FC = () => {
                   </Form>
                 </TabPane>
 
-                <TabPane tab="Results" key="results" disabled={paths.length === 0}>
+                <TabPane tab="Results" key="results">
                   {loading ? (
                     <div style={{ textAlign: 'center', padding: '50px' }}>
                       <Spin size="large" />
@@ -673,8 +708,20 @@ const CrossDomainPage: React.FC = () => {
                   ) : paths.length > 0 ? (
                     <Space direction="vertical" size="large" style={{ width: '100%' }}>
                       <Alert
-                        message={`Found ${paths.length} path(s)`}
-                        description="Click 'View Path' to visualize individual paths or use the graph viewer below to see all results."
+                        message={
+                          <Space>
+                            <span>Found {paths.length} path(s)</span>
+                            <Button
+                              type="primary"
+                              size="small"
+                              icon={<RightOutlined />}
+                              onClick={navigateToResultsPage}
+                            >
+                              View Full Results Page
+                            </Button>
+                          </Space>
+                        }
+                        description="Click 'View Full Results Page' for detailed analysis, or use 'View Path' to visualize individual paths."
                         type="success"
                         showIcon
                       />

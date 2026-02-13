@@ -718,7 +718,7 @@ class AdvancedQueryService:
         if relationship_types:
             rel_pattern = "|".join(relationship_types)
         else:
-            rel_pattern = "RELATED_TO"
+            rel_pattern = "BINDS_TO"
 
         params = {
             "start_id": start_entity_id,
@@ -820,3 +820,49 @@ class AdvancedQueryService:
     def __exit__(self, exc_type, exc_val, exc_tb):
         """上下文管理器退出"""
         self.close()
+
+    def get_first_entity_by_type(self, entity_type: str) -> Optional[str]:
+        """
+        获取指定类型的第一个实体
+
+        Args:
+            entity_type: 实体类型（如 Compound, Target, ClinicalTrial）
+
+        Returns:
+            实体ID，如果找不到返回None
+        """
+        # Map entity types to their labels
+        type_to_label = {
+            "Compound": "Compound",
+            "Target": "Target",
+            "ClinicalTrial": "ClinicalTrial",
+            "Condition": "Condition",
+            "Intervention": "Intervention",
+            "Outcome": "Outcome",
+            "Manufacturer": "Manufacturer",
+            "Facility": "Facility",
+            "DrugProduct": "DrugProduct",
+            "DrugShortage": "DrugShortage",
+            "Submission": "Submission",
+            "Approval": "Approval",
+            "RegulatoryAgency": "RegulatoryAgency",
+            "ComplianceAction": "ComplianceAction",
+            "Document": "Document"
+        }
+
+        label = type_to_label.get(entity_type)
+        if not label:
+            return None
+
+        query = f"""
+            MATCH (entity:%s)
+            RETURN entity.primary_id as id
+            ORDER BY id
+            LIMIT 1
+            """
+
+        result = self.db.execute_query(query)
+        if result.records:
+            return result.records[0]["id"]
+        return None
+

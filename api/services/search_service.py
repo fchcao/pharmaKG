@@ -92,9 +92,37 @@ class SearchService:
 
     def list_fulltext_indexes(self) -> List[Dict[str, Any]]:
         """列出所有全文搜索索引"""
-        query = "CALL db.indexes() YIELD name, type, labelsOrTypes, properties WHERE type = 'FULLTEXT' RETURN name, labelsOrTypes, properties"
-        result = self.db.execute_query(query)
-        return result.records
+        # Neo4j 5.x 使用 SHOW INDEXES 命令
+        query = "SHOW INDEXES WHERE type = 'FULLTEXT' YIELD name, labelsOrTypes, properties"
+        try:
+            result = self.db.execute_query(query)
+
+            # Convert to list of dicts for compatibility
+            indexes = []
+            for record in result.records:
+                indexes.append({
+                    'name': record.get('name'),
+                    'labelsOrTypes': record.get('labelsOrTypes', []),
+                    'properties': record.get('properties', [])
+                })
+            return indexes
+        except Exception as e:
+            logger.warning(f"Failed to list fulltext indexes using SHOW INDEXES: {str(e)}")
+            # Fallback: try the old procedure
+            try:
+                query = "CALL db.index.fulltext.listAvailableIndexes() YIELD name"
+                result = self.db.execute_query(query)
+                indexes = []
+                for record in result.records:
+                    indexes.append({
+                        'name': record.get('name'),
+                        'labelsOrTypes': [],
+                        'properties': []
+                    })
+                return indexes
+            except Exception as e2:
+                logger.warning(f"Failed to list fulltext indexes using listAvailableIndexes: {str(e2)}")
+                return []
 
     def fulltext_search(
         self,
@@ -125,18 +153,17 @@ class SearchService:
             }
 
         # 获取可用的全文索引
-        available_indexes = self.list_fulltext_indexes()
-        index_names = [idx['name'] for idx in available_indexes] if available_indexes else []
+        try:
+            available_indexes = self.list_fulltext_indexes()
+            index_names = [idx['name'] for idx in available_indexes] if available_indexes else []
+        except Exception as e:
+            logger.warning(f"Failed to list fulltext indexes: {str(e)}")
+            index_names = []
 
         if not index_names:
-            logger.warning("No fulltext indexes available")
-            return {
-                "results": [],
-                "total": 0,
-                "query": query_text,
-                "entity_types": entity_types,
-                "message": "No fulltext indexes available. Please create indexes first."
-            }
+            logger.warning("No fulltext indexes available - falling back to basic search")
+            # Fallback: use simple Cypher query with CONTAINS
+            return self._fallback_search(query_text, entity_types, limit, skip)
 
         # 如果指定了实体类型，过滤索引
         if entity_types:
@@ -194,6 +221,72 @@ class SearchService:
             "entity_types": entity_types,
             "skip": skip,
             "limit": limit
+        }
+
+    def _fallback_search(
+        self,
+        query_text: str,
+        entity_types: Optional[List[str]],
+        limit: int,
+        skip: int
+    ) -> Dict[str, Any]:
+        """Fallback search using simple Cypher CONTAINS query"""
+        entity_filter = ""
+        if entity_types:
+            entity_filter = " AND " + " OR ".join([f"n:{et}" for et in entity_types])
+
+        query = f"""
+        MATCH (n)
+        WHERE n.name IS NOT NULL
+          AND n.name CONTAINS $query_text
+          {entity_filter}
+        RETURN labels(n)[0] AS entity_type,
+               elementId(n) AS element_id,
+               n.primary_id AS primary_id,
+               n.name AS name,
+               1.0 AS score
+        ORDER BY n.name
+        SKIP $skip
+        LIMIT $limit
+        """
+
+        result = self.db.execute_query(query, {
+            "query_text": query_text,
+            "skip": skip,
+            "limit": limit
+        })
+
+        results = []
+        for record in result.records:
+            results.append({
+                "entity_type": record.get("entity_type", "Unknown"),
+                "element_id": record.get("element_id"),
+                "primary_id": record.get("primary_id"),
+                "name": record.get("name"),
+                "score": record.get("score", 0.0),
+                "index_name": "fallback"
+            })
+
+        # Get total count
+        count_query = f"""
+        MATCH (n)
+        WHERE n.name IS NOT NULL
+          AND n.name CONTAINS $query_text
+          {entity_filter}
+        RETURN count(n) AS total
+        """
+        count_result = self.db.execute_query(count_query, {"query_text": query_text})
+        total = count_result.records[0]["total"] if count_result.records else 0
+
+        return {
+            "results": results,
+            "total": total,
+            "returned": len(results),
+            "query": query_text,
+            "entity_types": entity_types,
+            "skip": skip,
+            "limit": limit,
+            "method": "CONTAINS_FALLBACK"
         }
 
     def fuzzy_search(

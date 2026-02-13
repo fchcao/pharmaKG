@@ -7,6 +7,9 @@ import {
   HomePage,
   DashboardPage,
   AdminDashboardPage,
+  SearchPage,
+  CrossDomainResultsPage,
+  SettingsPage,
 } from '@/pages';
 import CrossDomainPage from '@/pages/CrossDomainPage';
 import TestApi from '@/TestApi';
@@ -51,9 +54,6 @@ import {
   DocumentsPage,
   CRLsPage,
 } from '@/domains/regulatory';
-
-const SearchPage = () => <div><h1>Search</h1><p>Coming soon...</p></div>;
-const SettingsPage = () => <div><h1>Settings</h1><p>Coming soon...</p></div>;
 
 const App: React.FC = () => {
   return (
@@ -103,6 +103,8 @@ const App: React.FC = () => {
 
             {/* Cross-Domain Query Routes */}
             <Route path="cross-domain" element={<CrossDomainPage />} />
+            <Route path="cross-domain/results" element={<CrossDomainResultsPage />} />
+            <Route path="cross-domain/results/:queryId" element={<CrossDomainResultsPage />} />
 
             <Route path="search" element={<SearchPage />} />
             <Route path="settings" element={<SettingsPage />} />

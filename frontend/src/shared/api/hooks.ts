@@ -89,8 +89,8 @@ export function useSearchSuggestions(
   return useQuery<SearchSuggestion[], ApiError>({
     queryKey: queryKeys.suggestions(query, entityType),
     queryFn: () =>
-      apiClient.get<SearchSuggestion[]>('/search/suggestions', {
-        params: { q: query, entity_type: entityType },
+      apiClient.get<SearchSuggestion[]>('/v1/search/suggestions', {
+        params: { prefix: query, entity_type: entityType || 'Compound' },
       }),
     enabled: !!query && query.length > 1,
     ...options,

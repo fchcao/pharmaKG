@@ -196,9 +196,12 @@ class Neo4jConnection:
 
         for config in index_configs:
             try:
-                # 首先删除已存在的索引（如果存在）
-                drop_query = f"CALL db.index.fulltext.drop('{config['name']}') IF EXISTS"
-                self.execute_query(drop_query)
+                # 首先删除已存在的索引（Neo4j 5.x 不支持 IF EXISTS，用 try-except 处理）
+                drop_query = f"CALL db.index.fulltext.drop('{config['name']}')"
+                try:
+                    self.execute_query(drop_query)
+                except:
+                    pass  # 索引不存在，忽略错误
 
                 # 创建新索引
                 create_query = f"""

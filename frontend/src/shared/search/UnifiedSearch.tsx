@@ -71,6 +71,29 @@ const DOMAIN_OPTIONS: { value: Domain; label: string; color: string }[] = [
 
 const RECENT_SEARCHES_KEY = 'pharmakg_recent_searches';
 
+// Helper function to map entity types to their detail page routes
+const getEntityDetailPath = (entityType: EntityType, id: string): string => {
+  const routeMap: Record<string, string> = {
+    'Compound': `/rd/compounds/${id}`,
+    'Target': `/rd/targets/${id}`,
+    'Assay': `/rd/assays/${id}`,
+    'Pathway': `/rd/pathways/${id}`,
+    'ClinicalTrial': `/clinical/trials/${id}`,
+    'Trial': `/clinical/trials/${id}`,
+    'Subject': `/clinical/subjects/${id}`,
+    'Intervention': `/clinical/interventions/${id}`,
+    'Outcome': `/clinical/outcomes/${id}`,
+    'Manufacturer': `/supply/manufacturers/${id}`,
+    'DrugProduct': `/supply/drugs/${id}`,
+    'Facility': `/supply/facilities/${id}`,
+    'Submission': `/regulatory/submissions/${id}`,
+    'Approval': `/regulatory/approvals/${id}`,
+    'Agency': `/regulatory/agencies/${id}`,
+    'Document': `/regulatory/documents/${id}`,
+  };
+  return routeMap[entityType] || `/`;
+};
+
 interface UnifiedSearchProps {
   className?: string;
   onResultClick?: (result: FullTextSearchResult) => void;
@@ -87,9 +110,7 @@ export const UnifiedSearch: React.FC<UnifiedSearchProps> = ({
 
   // State
   const [query, setQuery] = useState(defaultQuery || searchParams.get('q') || '');
-  const [selectedDomains, setSelectedDomains] = useState<Domain[]>(
-    searchParams.get('domains')?.split(',') as Domain[] || []
-  );
+  // Note: 'domains' field is NOT supported by backend fulltext search API, removed
   const [selectedEntityTypes, setSelectedEntityTypes] = useState<EntityType[]>(
     searchParams.get('entityTypes')?.split(',') as EntityType[] || []
   );
@@ -103,14 +124,14 @@ export const UnifiedSearch: React.FC<UnifiedSearchProps> = ({
   const { data: searchResults, isLoading, error, refetch } = useFullTextSearch(
     {
       query,
-      entity_types: selectedEntityTypes.length > 0 ? selectedEntityTypes : undefined,
-      domains: selectedDomains.length > 0 ? selectedDomains : undefined,
+      entity_types: selectedEntityTypes.length > 0 ? selectedEntityTypes.map(String) : undefined,  // Convert to string[]
+      // Note: 'domains' field is NOT supported by backend API, removed
       limit: pageSize,
       offset: (currentPage - 1) * pageSize,
       fuzzy: false,
     },
     {
-      enabled: false,
+      enabled: false,  // Initially disabled, enabled by useEffect when query exists
     }
   );
 
@@ -134,10 +155,9 @@ export const UnifiedSearch: React.FC<UnifiedSearchProps> = ({
   useEffect(() => {
     const params: Record<string, string> = {};
     if (query) params.q = query;
-    if (selectedDomains.length > 0) params.domains = selectedDomains.join(',');
     if (selectedEntityTypes.length > 0) params.entityTypes = selectedEntityTypes.join(',');
     setSearchParams(params);
-  }, [query, selectedDomains, selectedEntityTypes, setSearchParams]);
+  }, [query, selectedEntityTypes, setSearchParams]);
 
   // Handle search
   const handleSearch = useCallback((searchQuery: string) => {
@@ -153,7 +173,7 @@ export const UnifiedSearch: React.FC<UnifiedSearchProps> = ({
     ].slice(0, 10);
     setRecentSearches(newRecent);
     localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(newRecent));
-  }, [recentSearches]);
+  }, [recentSearches, selectedEntityTypes]);  // Also trigger on entity type change
 
   // Debounced search
   const debouncedSearch = useCallback(
@@ -169,7 +189,7 @@ export const UnifiedSearch: React.FC<UnifiedSearchProps> = ({
     if (query) {
       debouncedSearch(query);
     }
-  }, [query, selectedDomains, selectedEntityTypes, debouncedSearch]);
+  }, [query, selectedEntityTypes, debouncedSearch]);
 
   // Group results by entity type
   const entityTabs: EntityTab[] = React.useMemo(() => {
@@ -222,11 +242,15 @@ export const UnifiedSearch: React.FC<UnifiedSearchProps> = ({
         query,
         filters: {
           query,
-          domains: selectedDomains,
-          entityTypes: selectedEntityTypes,
+          entityTypes: selectedEntityTypes,  // Note: 'domains' field removed
         },
       });
     }
+  };
+
+  // Clear entity type filters
+  const handleClearEntityTypes = () => {
+    setSelectedEntityTypes([]);
   };
 
   // Export results
@@ -234,12 +258,12 @@ export const UnifiedSearch: React.FC<UnifiedSearchProps> = ({
     if (!filteredResults.length) return;
 
     const data = filteredResults.map((r) => ({
-      entity_id: r.entity_id,
+      entity_id: r.element_id || r.entity_id || r.primary_id || '',
       entity_type: r.entity_type,
-      domain: r.domain,
+      domain: r.domain || 'Unknown',  // Backend doesn't return domain, provide default
       name: r.name,
-      relevance_score: r.relevance_score,
-      snippet: r.snippet,
+      relevance_score: r.score || r.relevance_score || 0,  // Backend returns score
+      snippet: r.snippet || '',
     }));
 
     if (format === 'csv') {
@@ -272,7 +296,6 @@ export const UnifiedSearch: React.FC<UnifiedSearchProps> = ({
 
   // Clear all filters
   const handleClearFilters = () => {
-    setSelectedDomains([]);
     setSelectedEntityTypes([]);
   };
 
@@ -305,17 +328,17 @@ export const UnifiedSearch: React.FC<UnifiedSearchProps> = ({
                 onClick={() => setShowFilters(!showFilters)}
               >
                 Filters
-                {(selectedDomains.length > 0 || selectedEntityTypes.length > 0) && (
+                {selectedEntityTypes.length > 0 && (
                   <Tag color="blue" style={{ marginLeft: 4 }}>
-                    {selectedDomains.length + selectedEntityTypes.length}
+                    {selectedEntityTypes.length}
                   </Tag>
                 )}
               </Button>
 
-              {(selectedDomains.length > 0 || selectedEntityTypes.length > 0) && (
+              {selectedEntityTypes.length > 0 && (
                 <Button
                   icon={<ClearOutlined />}
-                  onClick={handleClearFilters}
+                  onClick={handleClearEntityTypes}
                   size="small"
                 >
                   Clear Filters
@@ -344,29 +367,6 @@ export const UnifiedSearch: React.FC<UnifiedSearchProps> = ({
             {showFilters && (
               <Card size="small" style={{ marginTop: 16 }}>
                 <Space direction="vertical" style={{ width: '100%' }}>
-                  <div>
-                    <Text strong>Domains:</Text>
-                    <div style={{ marginTop: 8 }}>
-                      <Select
-                        mode="multiple"
-                        placeholder="Select domains"
-                        value={selectedDomains}
-                        onChange={setSelectedDomains}
-                        style={{ width: '100%' }}
-                        options={DOMAIN_OPTIONS.map((d) => ({
-                          label: (
-                            <Space>
-                              <Tag color={d.color}>{d.label}</Tag>
-                            </Space>
-                          ),
-                          value: d.value,
-                        }))}
-                      />
-                    </div>
-                  </div>
-
-                  <Divider style={{ margin: '12px 0' }} />
-
                   <div>
                     <Text strong>Entity Types:</Text>
                     <div style={{ marginTop: 8 }}>
@@ -399,11 +399,6 @@ export const UnifiedSearch: React.FC<UnifiedSearchProps> = ({
               <Text>
                 Searching for <Text strong>"{query}"</Text>
               </Text>
-              {selectedDomains.length > 0 && (
-                <Text>
-                  in <Text strong>{selectedDomains.join(', ')}</Text>
-                </Text>
-              )}
               {searchResults && (
                 <Text type="secondary">
                   ({searchResults.length} results)
@@ -451,8 +446,11 @@ export const UnifiedSearch: React.FC<UnifiedSearchProps> = ({
                     children: (
                       <div>
                         <Row gutter={[16, 16]}>
-                          {filteredResults.map((result) => (
-                            <Col key={result.entity_id} xs={24} sm={12} lg={8}>
+                          {filteredResults.map((result) => {
+                            // Use element_id or primary_id as key since backend returns element_id
+                            const resultKey = result.element_id || result.primary_id || result.name || Math.random().toString();
+                            return (
+                            <Col key={resultKey} xs={24} sm={12} lg={8}>
                               <Card
                                 hoverable
                                 size="small"
@@ -460,23 +458,33 @@ export const UnifiedSearch: React.FC<UnifiedSearchProps> = ({
                                   if (onResultClick) {
                                     onResultClick(result);
                                   } else {
-                                    navigate(`/entity/${result.entity_type}/${result.entity_id}`);
+                                    // Backend API expects primary_id (like "CHEMBL123"), NOT element_id (Neo4j format)
+                                    // element_id is in format "4:xxx:xxx" which is not URL-friendly
+                                    // For entities where primary_id is null, use name as fallback (e.g., ChEMBL compounds)
+                                    const id = result.primary_id || result.name || result.entity_id || result.element_id || '';
+                                    if (id) {
+                                      const detailPath = getEntityDetailPath(result.entity_type, id);
+                                      navigate(detailPath);
+                                    }
                                   }
                                 }}
                                 style={{
-                                  borderColor: DOMAIN_COLORS[result.domain]?.primary,
+                                  borderColor: DOMAIN_COLORS[result.domain]?.primary || '#d9d9d9',
                                 }}
                               >
                                 <Space direction="vertical" size="small" style={{ width: '100%' }}>
                                   <div>
-                                    <Tag color={DOMAIN_COLORS[result.domain]?.primary}>
+                                    <Tag color={DOMAIN_COLORS[result.domain]?.primary || 'default'}>
                                       {result.entity_type}
                                     </Tag>
-                                    <Tooltip title={`Relevance: ${result.relevance_score.toFixed(2)}`}>
-                                      <Tag color="blue">
-                                        {Math.round(result.relevance_score * 100)}% match
-                                      </Tag>
-                                    </Tooltip>
+                                    {/* Use score instead of relevance_score */}
+                                    {result.score !== undefined && result.score !== null && (
+                                      <Tooltip title={`Relevance: ${result.score.toFixed(2)}`}>
+                                        <Tag color="blue">
+                                          {Math.round(result.score * 100)}% match
+                                        </Tag>
+                                      </Tooltip>
+                                    )}
                                   </div>
 
                                   <Title level={5} style={{ margin: 0 }}>
@@ -505,7 +513,8 @@ export const UnifiedSearch: React.FC<UnifiedSearchProps> = ({
                                 </Space>
                               </Card>
                             </Col>
-                          ))}
+                            );
+                          })}
                         </Row>
 
                         {/* Pagination */}
@@ -588,9 +597,7 @@ export const UnifiedSearch: React.FC<UnifiedSearchProps> = ({
                         type="link"
                         onClick={() => {
                           handleSearch(savedQuery.query);
-                          if (savedQuery.filters.domains) {
-                            setSelectedDomains(savedQuery.filters.domains);
-                          }
+                          // Note: 'domains' field removed from saved queries
                           if (savedQuery.filters.entityTypes) {
                             setSelectedEntityTypes(savedQuery.filters.entityTypes);
                           }

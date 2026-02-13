@@ -99,6 +99,11 @@ bash scripts/health_check.sh
 - Don't use relative paths for logs when starting from subdirectories
 - Don't start backend before Neo4j is ready (wait 8+ seconds)
 
+**Service Paths**:
+- Neo4j installation: `/root/autodl-tmp/pj-pharmaKG/neo4j/current`
+- Log files: `logs/backend.log`, `logs/frontend.log`
+- PID files: `logs/backend.pid`, `logs/frontend.pid`
+
 ### Frontend Service
 ```bash
 # Start Vite dev server
@@ -120,6 +125,12 @@ npm run preview
 ```bash
 # Import small test dataset (100 compounds, 50 targets)
 python3 scripts/quick_test_data.py
+
+# Add test relationships for cross-domain queries
+python3 scripts/add_test_relationships.py
+
+# Create test relationships between entities
+python3 scripts/create_test_relationships.py
 ```
 
 ### ETL Pipelines
@@ -614,6 +625,8 @@ tests/                        # Test suite (if implemented)
 - **`frontend/vite.config.ts`**: Vite configuration with API proxy setup
 - **`frontend/src/shared/api/client.ts`**: Axios-based API client (uses `/api` prefix)
 - **`frontend/src/pages/dashboardHooks.tsx`**: React Query hooks for dashboard data
+- **`frontend/src/pages/CrossDomainPage.tsx`**: Visual cross-domain query builder with graph visualization
+- **`frontend/src/pages/CrossDomainResultsPage.tsx`**: Cross-domain query results display
 - **`frontend/.env.development`**: Frontend environment variables (`VITE_API_BASE_URL=/api`)
 
 ### Data Collection (NEW)

@@ -1,14 +1,40 @@
-import React, { useState } from 'react';
-import { Layout, Tabs, Button, Space, Typography, message } from 'antd';
-import { SearchOutlined, FilterOutlined } from '@ant-design/icons';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { UnifiedSearch, AdvancedSearch, SearchResults, SearchFilters } from '../shared/search';
 import { FullTextSearchResult } from '../shared/search/types';
+import { EntityType } from '../shared/types';
 import { useFullTextSearch } from '../shared/search/api';
+import { Layout, Space, Button, Typography } from 'antd';
+import { SearchOutlined, FilterOutlined } from '@ant-design/icons';
 
-const { Header, Content, Sider } = Layout;
-const { Title, Text } = Typography;
+const { Title } = Typography;
+const { Sider, Content } = Layout;
+
+// Helper function to map entity types to their detail page routes
+const getEntityDetailPath = (entityType: EntityType, id: string): string => {
+  const routeMap: Record<string, string> = {
+    'Compound': `/rd/compounds/${id}`,
+    'Target': `/rd/targets/${id}`,
+    'Assay': `/rd/assays/${id}`,
+    'Pathway': `/rd/pathways/${id}`,
+    'ClinicalTrial': `/clinical/trials/${id}`,
+    'Trial': `/clinical/trials/${id}`,
+    'Subject': `/clinical/subjects/${id}`,
+    'Intervention': `/clinical/interventions/${id}`,
+    'Outcome': `/clinical/outcomes/${id}`,
+    'Manufacturer': `/supply/manufacturers/${id}`,
+    'DrugProduct': `/supply/drugs/${id}`,
+    'Facility': `/supply/facilities/${id}`,
+    'Submission': `/regulatory/submissions/${id}`,
+    'Approval': `/regulatory/approvals/${id}`,
+    'Agency': `/regulatory/agencies/${id}`,
+    'Document': `/regulatory/documents/${id}`,
+  };
+  return routeMap[entityType] || `/`;
+};
 
 const SearchPage: React.FC = () => {
+  const navigate = useNavigate();
   const [searchMode, setSearchMode] = useState<'unified' | 'advanced'>('unified');
   const [currentFilters, setCurrentFilters] = useState<SearchFilters | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -19,15 +45,13 @@ const SearchPage: React.FC = () => {
     currentFilters
       ? {
           query: currentFilters.query,
-          entity_types: currentFilters.entityTypes,
-          domains: currentFilters.domains,
+          entity_types: currentFilters.entityTypes?.map(String),
           limit: pageSize,
-          offset: (currentPage - 1) * pageSize,
-          fuzzy: false,
+          skip: (currentPage - 1) * pageSize
         }
       : ({} as any),
     {
-      enabled: false,
+      enabled: !!currentFilters?.query && currentFilters.query.length > 0,
     }
   );
 
@@ -35,21 +59,36 @@ const SearchPage: React.FC = () => {
   const handleUnifiedSearch = (filters: SearchFilters) => {
     setCurrentFilters(filters);
     setCurrentPage(1);
-    refetch();
   };
 
   // Handle search from AdvancedSearch
   const handleAdvancedSearch = (filters: SearchFilters) => {
     setCurrentFilters(filters);
     setCurrentPage(1);
-    refetch();
   };
+
+  // Auto-trigger search when filters change
+  useEffect(() => {
+    if (currentFilters?.query && currentFilters.query.length > 0) {
+      refetch();
+    }
+  }, [currentFilters, refetch]);
 
   // Handle result click
   const handleResultClick = (result: FullTextSearchResult) => {
-    message.info(`Clicked on ${result.entity_type}: ${result.name}`);
-    // Navigate to entity detail page
-    // navigate(`/entity/${result.entity_type}/${result.entity_id}`);
+    console.log(`Clicked on ${result.entity_type}: ${result.name}`);
+
+    // Backend API expects primary_id (like "CHEMBL123"), NOT element_id (Neo4j format)
+    // element_id is in format "4:xxx:xxx" which is not URL-friendly
+    // For entities where primary_id is null, use name as fallback (e.g., ChEMBL compounds)
+    const id = result.primary_id || result.name || result.entity_id || result.element_id;
+
+    if (id) {
+      const detailPath = getEntityDetailPath(result.entity_type, id);
+      navigate(detailPath);
+    } else {
+      console.error('No valid ID found for navigation:', result);
+    }
   };
 
   // Handle page change
@@ -60,14 +99,6 @@ const SearchPage: React.FC = () => {
 
   return (
     <Layout style={{ minHeight: '100vh', background: '#f0f2f5' }}>
-      <Header style={{ background: '#fff', padding: '0 24px', borderBottom: '1px solid #f0f0f0' }}>
-        <div style={{ display: 'flex', alignItems: 'center', height: '100%' }}>
-          <Title level={3} style={{ margin: 0 }}>
-            PharmaKG Search
-          </Title>
-        </div>
-      </Header>
-
       <Layout>
         <Sider width={300} style={{ background: '#fff', padding: '24px' }}>
           <Space direction="vertical" style={{ width: '100%' }} size="large">
@@ -91,52 +122,29 @@ const SearchPage: React.FC = () => {
                   Advanced Search
                 </Button>
               </Space>
+
+              {searchMode === 'unified' ? (
+                <div>
+                  <Title level={4}>Quick Tips</Title>
+                  <ul style={{ fontSize: '14px', color: '#666', paddingLeft: '16px' }}>
+                    <li>Use quotes for exact phrases: "drug discovery"</li>
+                    <li>Use AND/OR to combine terms</li>
+                    <li>Filter by entity type</li>
+                    <li>Save frequent searches for quick access</li>
+                  </ul>
+                </div>
+              ) : (
+                <div>
+                  <Title level={4}>Advanced Tips</Title>
+                  <ul style={{ fontSize: '14px', color: '#666', paddingLeft: '16px' }}>
+                    <li>Build complex queries with multiple conditions</li>
+                    <li>Use range filters for numerical values</li>
+                    <li>Combine with boolean operators (AND/OR/NOT)</li>
+                    <li>Save queries for future use</li>
+                  </ul>
+                </div>
+              )}
             </div>
-
-            {searchMode === 'unified' ? (
-              <div>
-                <Title level={4}>Quick Tips</Title>
-                <ul style={{ fontSize: '14px', color: '#666', paddingLeft: '16px' }}>
-                  <li>Use quotes for exact phrases: "drug discovery"</li>
-                  <li>Use AND/OR to combine terms</li>
-                  <li>Filter by domain or entity type</li>
-                  <li>Save frequent searches for quick access</li>
-                </ul>
-              </div>
-            ) : (
-              <div>
-                <Title level={4}>Advanced Tips</Title>
-                <ul style={{ fontSize: '14px', color: '#666', paddingLeft: '16px' }}>
-                  <li>Build complex queries with multiple conditions</li>
-                  <li>Use range filters for numerical values</li>
-                  <li>Combine with boolean operators (AND/OR/NOT)</li>
-                  <li>Save queries for future use</li>
-                </ul>
-              </div>
-            )}
-
-            {currentFilters && (
-              <div>
-                <Title level={4}>Current Search</Title>
-                <Text type="secondary" style={{ fontSize: '12px' }}>
-                  Query: "{currentFilters.query}"
-                </Text>
-                {currentFilters.domains && currentFilters.domains.length > 0 && (
-                  <div style={{ marginTop: 8 }}>
-                    <Text type="secondary" style={{ fontSize: '12px' }}>
-                      Domains: {currentFilters.domains.join(', ')}
-                    </Text>
-                  </div>
-                )}
-                {currentFilters.entityTypes && currentFilters.entityTypes.length > 0 && (
-                  <div style={{ marginTop: 8 }}>
-                    <Text type="secondary" style={{ fontSize: '12px' }}>
-                      Types: {currentFilters.entityTypes.join(', ')}
-                    </Text>
-                  </div>
-                )}
-              </div>
-            )}
           </Space>
         </Sider>
 

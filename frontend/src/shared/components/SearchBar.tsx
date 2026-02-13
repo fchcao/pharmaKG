@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useRef, KeyboardEvent } from 'react';
+import React, { useState, useEffect, useRef, KeyboardEvent, useMemo, useCallback } from 'react';
 import { AutoComplete, Input, Select, Button, Space, Tag, Dropdown } from 'antd';
 import { SearchOutlined, HistoryOutlined, ClearOutlined } from '@ant-design/icons';
 import { useSearchSuggestions, useSaveSearch } from '../api/hooks';
 import { Domain, SearchFilters, RecentSearch } from '../types';
-import { debounce, storage } from '../utils/helpers';
+import { storage } from '../utils/helpers';
 
 const { Option } = Select;
 
@@ -36,12 +36,12 @@ export const SearchBar: React.FC<SearchBarProps> = ({
   const [query, setQuery] = useState('');
   const [selectedDomain, setSelectedDomain] = useState<Domain>(defaultDomain);
   const [recentSearches, setRecentSearches] = useState<RecentSearch[]>([]);
-  const [options, setOptions] = useState<{ value: string; label: string }[]>([]);
 
   const { data: suggestions, isLoading: suggestionsLoading } = useSearchSuggestions(query);
   const saveSearchMutation = useSaveSearch();
 
   const searchInputRef = useRef<any>(null);
+  const optionsUpdateRef = useRef(false);
 
   // Load recent searches from localStorage
   useEffect(() => {
@@ -51,11 +51,11 @@ export const SearchBar: React.FC<SearchBarProps> = ({
     }
   }, [showRecentSearches]);
 
-  // Debounced suggestions update
-  const debouncedSetOptions = debounce((queryText: string, suggestionData: typeof suggestions) => {
-    if (!queryText) {
-      setOptions([]);
-      return;
+  // Memoized options to prevent unnecessary re-renders that cause focus loss
+  const options = useMemo(() => {
+    if (!query || optionsUpdateRef.current) {
+      optionsUpdateRef.current = false;
+      return [];
     }
 
     const opts: { value: string; label: string }[] = [];
@@ -63,7 +63,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
     // Add recent searches
     if (showRecentSearches && recentSearches.length > 0) {
       const matchingRecent = recentSearches
-        .filter((s) => s.query.toLowerCase().includes(queryText.toLowerCase()))
+        .filter((s) => s.query.toLowerCase().includes(query.toLowerCase()))
         .slice(0, 3);
       matchingRecent.forEach((search) => {
         opts.push({
@@ -79,16 +79,15 @@ export const SearchBar: React.FC<SearchBarProps> = ({
     }
 
     // Add suggestions
-    if (suggestionData && suggestionData.length > 0) {
-      suggestionData.slice(0, 5).forEach((suggestion) => {
+    if (suggestions && suggestions.length > 0) {
+      suggestions.slice(0, 5).forEach((suggestion) => {
         if (!opts.find((o) => o.value === suggestion.text)) {
           opts.push({
             value: suggestion.text,
             label: (
               <div>
-                <Tag>{suggestion.type}</Tag>
                 {suggestion.text}
-                {suggestion.count && <span style={{ marginLeft: 8, color: '#999' }}>({suggestion.count})</span>}
+                {suggestion.frequency && <span style={{ marginLeft: 8, color: '#999' }}>({suggestion.frequency})</span>}
               </div>
             ),
           });
@@ -96,11 +95,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
       });
     }
 
-    setOptions(opts);
-  }, 300);
-
-  useEffect(() => {
-    debouncedSetOptions(query, suggestions);
+    return opts;
   }, [query, suggestions, recentSearches, showRecentSearches]);
 
   const handleSearch = (searchQuery?: string) => {
@@ -139,8 +134,14 @@ export const SearchBar: React.FC<SearchBarProps> = ({
   };
 
   const handleSelect = (value: string) => {
-    setQuery(value);
+    // Don't update query state here to avoid focus loss
+    // Directly call handleSearch with the selected value
     handleSearch(value);
+    // Clear query after a small delay to avoid focus loss during render
+    setTimeout(() => {
+      setQuery('');
+      optionsUpdateRef.current = true; // Prevent showing options immediately after selection
+    }, 0);
   };
 
   const handleClearRecentSearches = () => {
@@ -180,8 +181,14 @@ export const SearchBar: React.FC<SearchBarProps> = ({
           onSelect={handleSelect}
           style={{ flex: 1 }}
           placeholder={placeholder}
-          disabled={suggestionsLoading}
+          // Don't disable the input while loading - this causes focus loss
+          // disabled={suggestionsLoading}
           notFoundContent={null}
+          // Use built-in debounce for search instead of external state management
+          onSearch={(text) => {
+            // This triggers when user types, but we use useSearchSuggestions hook
+            // which already handles debouncing via react-query
+          }}
         >
           <Input
             suffix={

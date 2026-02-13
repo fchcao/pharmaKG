@@ -973,7 +973,12 @@ class ShortestPathRequest(BaseModel):
 
 @app.post("/advanced/path/shortest", tags=["Advanced Queries"])
 async def find_shortest_path_post(request: ShortestPathRequest):
-    """查找两个实体之间的最短路径 (POST method - for complex queries)"""
+    """查找两个实体之间的最短路径 (POST method - for complex queries)
+
+    Enhanced to support both entity IDs and entity types:
+    - If start_entity_id is provided, use it directly
+    - If only start_entity_type is provided, find first entity of that type
+    """
     service = AdvancedQueryService()
 
     # Convert comma-separated relationship_types to list
@@ -981,15 +986,39 @@ async def find_shortest_path_post(request: ShortestPathRequest):
     if request.relationship_types:
         rel_types = request.relationship_types.split(',')
 
+    # Resolve start entity ID
+    start_id = request.start_entity_id
+    if not start_id and request.start_entity_type:
+        # Find first entity of the specified type
+        start_id = service.get_first_entity_by_type(request.start_entity_type)
+
+    # Resolve end entity ID
+    end_id = request.end_entity_id
+    if not end_id and request.end_entity_type:
+        # Find first entity of the specified type
+        end_id = service.get_first_entity_by_type(request.end_entity_type)
+
+    if not start_id:
+        raise HTTPException(
+            status_code=422,
+            detail=f"Start entity not specified and could not find entity of type '{request.start_entity_type}'"
+        )
+
+    if not end_id:
+        raise HTTPException(
+            status_code=422,
+            detail=f"End entity not specified and could not find entity of type '{request.end_entity_type}'"
+        )
+
     paths = service.find_shortest_path(
-        request.start_entity_id,
-        request.end_entity_id,
+        start_id,
+        end_id,
         max_path_length=request.max_path_length,
         relationship_types=rel_types
     )
     return {
-        "start_entity": request.start_entity_id,
-        "end_entity": request.end_entity_id,
+        "start_entity": start_id,
+        "end_entity": end_id,
         "paths": paths,
         "count": len(paths)
     }
@@ -1331,6 +1360,8 @@ async def get_pathway_coverage_analysis():
 @app.post("/api/v1/search/fulltext", response_model=FullTextSearchResponse, tags=["Search"])
 async def fulltext_search(request: FullTextSearchRequest):
     """全文搜索 - 在知识图谱中搜索实体"""
+    logger.info(f"=== DEBUG: fulltext_search endpoint called with query='{request.query}' ===")
+    print(f"=== DEBUG: fulltext_search endpoint called with query='{request.query}' ===")
     try:
         service = SearchService()
         result = service.fulltext_search(
